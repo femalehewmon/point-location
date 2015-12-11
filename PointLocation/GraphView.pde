@@ -9,4 +9,9 @@ class GraphView extends View {
     fill(this.background);
     rect(x1, y1, w, h);
   }
+
+  void handleMouseClickEvent(MouseEvent e) {
+    if (pointInView(e.getX(), e.getY())) {
+    }
+  }
 }

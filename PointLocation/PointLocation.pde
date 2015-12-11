@@ -18,5 +18,10 @@ void draw() {
 }
 
 void mouseClicked(MouseEvent e) {
-  println("Mouse clicked");
+  geomView.handleMouseClickEvent(e);
+  graphView.handleMouseClickEvent(e);
+}
+
+void mousePressed(MouseEvent e) {
+  geomView.handleMousePressEvent(e);
 }
