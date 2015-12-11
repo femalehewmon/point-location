@@ -2,7 +2,7 @@
 class Polygon extends Drawable {
 
   // TODO: don't allow intersecting edges
-  
+
   private ArrayList<Point> points;
   private ArrayList<Edge> edges;
 
@@ -19,7 +19,7 @@ class Polygon extends Drawable {
     this.testerPoint = new Point(0, 0);
   }
 
-  void tryPoint() {
+  void tryPointInPolygon() {
     // cannot try a point after polygon is complete
     if (!isComplete) {
       tryPoint = true;
@@ -56,17 +56,18 @@ class Polygon extends Drawable {
 
   void render() {
     int i;
-    if (tryPoint) {
-      testerPoint.updatePosition(mouseX, mouseY);
-      if (points.size() > 0) {
-        new Edge(points.get(points.size() - 1), testerPoint).render();
-      }
-    }
     for (i = 0; i < edges.size(); i++) {
       edges.get(i).render();
     }
     for (i = 0; i < points.size(); i++) {
       points.get(i).render();
+    }
+    if (tryPoint) {
+      testerPoint.updatePosition(mouseX, mouseY);
+      if (points.size() > 0) {
+        new Edge(points.get(points.size() - 1), testerPoint).render();
+      }
+      testerPoint.render();
     }
   }
 }
@@ -75,20 +76,20 @@ class Point extends Drawable {
 
   float x, y;
   float rad;
-  color background, stroke, highlight;
+  color cbackground, cstroke, chighlight;
 
   public Point(float _x, float _y, float _rad, color _background, color _stroke, color _highlight) {
     super();
     this.x = _x;
     this.y = _y;
     this.rad = _rad;
-    this.background = _background;
-    this.stroke = _stroke;
-    this.highlight = _highlight;
+    this.cbackground = _background;
+    this.cstroke = _stroke;
+    this.chighlight = _highlight;
   }
 
   public Point(float _x, float _y) { 
-    this(_x, _y, 5, color(0), color(0), color(0));
+    this(_x, _y, 5, color(255, 0, 0), color(255, 0, 0), color(255, 0, 0));
   }
 
   void updatePosition(float _x, float _y) {
@@ -101,9 +102,9 @@ class Point extends Drawable {
   }
 
   void render(boolean isSelected) {
-    color fillColor = isSelected ? background: highlight;
-    stroke(background);
-    fill(fillColor);
+    color cfill = isSelected ? cbackground: chighlight;
+    stroke(cstroke);
+    fill(cfill);
     ellipse(x, y, rad, rad);
   }
 }
@@ -111,7 +112,7 @@ class Point extends Drawable {
 class Edge extends Drawable {  
 
   float x1, x2, y1, y2;
-  color stroke, highlight;
+  color cstroke, chighlight;
 
   public Edge(float _x1, float _y1, float _x2, float _y2, color _stroke, color _highlight) {
     super();
@@ -119,8 +120,8 @@ class Edge extends Drawable {
     this.y1 = _y1;
     this.x2 = _x2;
     this.y2 = _y2;
-    this.stroke = _stroke;
-    this.highlight = _highlight;
+    this.cstroke = _stroke;
+    this.chighlight = _highlight;
   }
 
   public Edge(float _x1, float _y1, float _x2, float _y2) { 
@@ -136,7 +137,7 @@ class Edge extends Drawable {
   }
 
   void render(boolean isSelected) {
-    color fillColor = isSelected ? stroke: highlight;
+    color fillColor = isSelected ? cstroke: chighlight;
     stroke(fillColor);
     line(x1, y1, x2, y2);
   }

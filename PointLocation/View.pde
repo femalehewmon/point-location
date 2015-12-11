@@ -1,11 +1,13 @@
 class View {
 
   float x1, x2, y1, y2, w, h; // local view dimensions
-  color background;
+  color cbackground, cstroke, chighlight;
 
   public View(float _x1, float _y1, float _x2, float _y2) {
     this.updateSize(_x1, _y1, _x2, _y2);
-    this.background = color(255);
+    this.cbackground = color(255);
+    this.cstroke = color(0);
+    this.chighlight = color(255);
   }
 
   void updateSize(float _x1, float _y1, float _x2, float _y2) {
