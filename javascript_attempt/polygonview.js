@@ -23,7 +23,6 @@ var Edge = function(p1, p2, background, highlight) {
 
 var PolygonCreationView = function(svg) {
     this.svg = svg;
-    this.path = svg.append("g").selectAll("path");
     this.points = new Array();
     this.edges = new Array();
     this.vertices = new Array();
@@ -38,6 +37,28 @@ var PolygonCreationView = function(svg) {
         this.addEdge(this.points[this.points.length - 1], this.points[0]);
         this.triangulate();
         return this;
+    }
+
+    this.triangulate = function(){
+        var contour = new Array();
+        for(var i in this.points){
+            contour.push(
+                new poly2tri.Point(
+                    this.points[i].x, this.points[i].y));
+        }
+        var swctx = new poly2tri.SweepContext(contour);
+        swctx.triangulate();
+        var triangles = swctx.getTriangles();
+        var _this = this;
+        triangles.forEach(function(t){
+            var p1 = new Point(t.getPoint(0).x, t.getPoint(0).y);
+            var p2 = new Point(t.getPoint(1).x, t.getPoint(1).y);
+            var p3 = new Point(t.getPoint(2).x, t.getPoint(2).y);
+            _this.addEdge(p1, p2);
+            _this.addEdge(p1, p3);
+            _this.addEdge(p2, p3);
+        })
+
     }
 
     this.addEdge = function(p1, p2){
@@ -82,18 +103,6 @@ var PolygonCreationView = function(svg) {
             }
         }
         return this;
-    }
-
-    this.triangulate = function() {
-        if(this.points.length > 2) {
-            this.path = this.path.data(d3.geom.delaunay(this.points).map(
-                function(d) {
-                    return "M" + d.join("L") + "Z"; }), String);
-            this.path.exit().remove();
-            this.path.enter().append("path").attr("class",
-                function(d, i) {
-                    return "q" + (i % 9) + "-9"; }).attr("d", String);
-        }
     }
 
     var clickCB = function() {
