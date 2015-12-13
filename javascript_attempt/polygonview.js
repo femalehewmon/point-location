@@ -23,8 +23,10 @@ var Edge = function(p1, p2, background, highlight) {
 
 var PolygonCreationView = function(svg) {
     this.svg = svg;
+    this.path = svg.append("g").selectAll("path");
     this.points = new Array();
     this.edges = new Array();
+    this.vertices = new Array();
 
     this.isComplete = false;
     this.tryPoint = true;
@@ -34,6 +36,7 @@ var PolygonCreationView = function(svg) {
         this.isComplete = true;
         this.tryPoint = false;
         this.addEdge(this.points[this.points.length - 1], this.points[0]);
+        this.triangulate();
         return this;
     }
 
@@ -69,6 +72,7 @@ var PolygonCreationView = function(svg) {
             if(newPoint){
                 console.log("New point " + x + " " + y);
                 this.points.push(newPoint);
+                this.vertices.push([newPoint.x, newPoint.y]);
                 var element = document.createElementNS(NS, "circle");
                 element.setAttribute("cx", newPoint.x);
                 element.setAttribute("cy", newPoint.y);
@@ -78,6 +82,18 @@ var PolygonCreationView = function(svg) {
             }
         }
         return this;
+    }
+
+    this.triangulate = function() {
+        if(this.points.length > 2) {
+            this.path = this.path.data(d3.geom.delaunay(this.points).map(
+                function(d) {
+                    return "M" + d.join("L") + "Z"; }), String);
+            this.path.exit().remove();
+            this.path.enter().append("path").attr("class",
+                function(d, i) {
+                    return "q" + (i % 9) + "-9"; }).attr("d", String);
+        }
     }
 
     var clickCB = function() {
@@ -95,9 +111,9 @@ function init() {
     document.body.appendChild(svg);
 
     var polyView = new PolygonCreationView(svg);
-
     window.requestAnimationFrame(draw);
 }
+
 
 function draw(){
     window.requestAnimationFrame(draw);
