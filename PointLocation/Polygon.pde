@@ -1,5 +1,5 @@
 
-class Polygon extends Drawable {
+class Polygon {
 
   // TODO: don't allow intersecting edges
 
@@ -13,7 +13,6 @@ class Polygon extends Drawable {
   float equiThreshold = 3;
 
   public Polygon() {
-    super();
     this.points = new ArrayList<Point>();
     this.edges = new ArrayList<Edge>();
     this.testerPoint = new Point(0, 0);
@@ -72,17 +71,16 @@ class Polygon extends Drawable {
   }
 }
 
-class Point extends Drawable {
+class Point {
 
   float x, y;
-  float rad;
+  float RAD;
   color cbackground, cstroke, chighlight;
 
-  public Point(float _x, float _y, float _rad, color _background, color _stroke, color _highlight) {
-    super();
+  public Point(float _x, float _y, float _RAD, color _background, color _stroke, color _highlight) {
     this.x = _x;
     this.y = _y;
-    this.rad = _rad;
+    this.RAD = _RAD;
     this.cbackground = _background;
     this.cstroke = _stroke;
     this.chighlight = _highlight;
@@ -105,17 +103,16 @@ class Point extends Drawable {
     color cfill = isSelected ? cbackground: chighlight;
     stroke(cstroke);
     fill(cfill);
-    ellipse(x, y, rad, rad);
+    ellipse(x, y, RAD, RAD);
   }
 }
 
-class Edge extends Drawable {  
+class Edge {  
 
   float x1, x2, y1, y2;
   color cstroke, chighlight;
 
   public Edge(float _x1, float _y1, float _x2, float _y2, color _stroke, color _highlight) {
-    super();
     this.x1 = _x1;
     this.y1 = _y1;
     this.x2 = _x2;

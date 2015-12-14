@@ -1,25 +1,45 @@
 
-class GraphView extends View {
+class TreeView extends View {
+  
+  // can add tree nodes to this view, used to visualize time complexity
 
-  Tree tree;
+  Tree root = null;
+  TreeDrawHelper treeDrawHelper;
 
-  public GraphView(float _x1, float _y1, float _x2, float _y2) {
+  public TreeView(float _x1, float _y1, float _x2, float _y2) {
     super(_x1, _y1, _x2, _y2);
-    this.tree = new Tree("root");
+    treeDrawHelper = new TreeDrawHelper();
+    root = new Tree("root");
   }
 
   void render() {
     stroke(this.cstroke);
     fill(this.cbackground);
     rect(x1, y1, w, h);
-    Tree btree = buchheim(tree);
-    btree.render();
-  }
+    if (root != null && root.childCount > 1) {
+      treeDrawHelper.buchheim(root);
 
-  Tree buchheim(Tree tree) {
-    Tree dt = firstWalk(tree);
-    secondWalk(dt);
-    return dt;
+      // get max/min bounds of graph layout
+      BoundingBox boundBox = new BoundingBox();
+      root.updateBounds(boundBox);
+      println("Bounds " + boundBox.x1 + " " + boundBox.y1 + " " + boundBox.x2 + " " + boundBox.y2);
+      // calculate scaling ratio based on bounds
+      boundBox.setScreenBounds(this.x1 + 10 + root.RAD, this.y1 + 10 + root.RAD, this.x2 - 10 - root.RAD, this.y2 - 10 - root.RAD);
+      
+      root.render(boundBox);
+    }
+  }
+}
+
+class TreeDrawHelper {
+  // based on: http://billmill.org/pymag-trees/, license is open
+
+  void buchheim(Tree tree) {
+    if (!tree.isDrawn) {
+      Tree dt = firstWalk(tree);
+      secondWalk(dt);
+      tree.isDrawn = true;
+    }
   }
 
   Tree firstWalk(Tree v) {
@@ -28,8 +48,12 @@ class GraphView extends View {
 
   Tree firstWalk(Tree v, float distance) {
     if (v.children.size() == 0) {
-      if (v.getLeftBrother() != null) {
-        v.x = v.getLeftBrother().x + distance;
+      if (v.getLeftmostSibling() != null) {
+        if (v.getLeftBrother() != null) {
+          v.x = v.getLeftBrother().x + distance;
+        } else {
+          v.x = distance;
+        }
       } else {
         v.x = 0;
       }
@@ -139,123 +163,5 @@ class GraphView extends View {
     for (int i = 0; i < v.childCount; i++) {
       secondWalk(v.children.get(i), m + v.mod, depth + 1);
     }
-  }
-
-  void handleMouseClickEvent() {
-    if (pointInView(mouseX, mouseY)) {
-    }
-  }
-}
-
-class Tree extends Drawable {
-  String id;
-  Tree parent;
-  ArrayList<Tree> children;
-  ArrayList<String> childIds;
-  int childCount = 0;
-  float x, y;
-
-  Tree leftmostSibling, thread, ancestor;
-  float mod, change, shift;
-  int number;
-
-  public Tree(String id, Tree parent, float depth, int number) {
-    this.id = id;
-    this.parent = null;
-    this.children = new ArrayList<Tree>();
-    this.childIds = new ArrayList<String>();
-
-    //buccheim specific variables
-    this.x = -1;
-    this.y = depth;
-    this.thread = null;
-    this.mod = 0;
-    this.ancestor = this;
-    this.change = 0;
-    this.shift = 0;
-    this.leftmostSibling = null;
-    this.number = number;
-  }
-
-  public Tree(String id) {
-    this(id, null, 0, 1);
-  }
-
-  void render() {
-    for (int i =0; i < childCount; i++) {
-      children.get(i).render();
-    }
-  }
-
-  void addChild(Tree child) {
-    child.setParent(this);
-    children.add(child);
-    childIds.add(child.id);
-    childCount++;
-  }
-
-  Tree getChild(String name) {
-    Tree child = null;
-    if (childIds.contains(name)) {
-      child = children.get(childIds.indexOf(name));
-    } else {
-      for (int i = 0; i < children.size(); i++) {
-        children.get(i).getChild(name);
-      }
-    }
-    return child;
-  }
-
-  void setParent(Tree parent) {
-    this.parent = parent;
-  }
-
-  void setPosition(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  Tree left() {
-    Tree left = thread;
-    if (left == null) {
-      if (childCount > 0) {
-        left = children.get(0);
-      }
-    }
-    return left;
-  }
-
-  Tree right() {
-    Tree right = thread;
-    if (right == null) {
-      if (childCount > 0) {
-        right = children.get(childCount - 1);
-      }
-    }
-    return right;
-  }
-
-  Tree getLeftBrother() {
-    Tree lbro = null;
-    if (parent != null) {
-      for (int i = 0; i < parent.children.size(); i++) {
-        Tree pchild = parent.children.get(i);
-        if (pchild.id == this.id) {
-          return lbro;
-        } else {
-          lbro = pchild;
-        }
-      }
-    }
-    return lbro;
-  }
-
-  Tree getLeftmostSibling() {
-    if (leftmostSibling == null) {
-      if (parent != null && parent.children.size() > 0) {
-        leftmostSibling = parent.children.get(0);
-      }
-    }
-    return leftmostSibling;
   }
 }
