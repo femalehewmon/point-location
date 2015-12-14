@@ -1,10 +1,19 @@
+import megamu.mesh.*;
 
-PolygonView polyView;
+ViewFactory viewFactory;
+
+CreatePolygon polyView;
 TreeView treeView;
 
 void setup() {
   size(1300, 800);
-  polyView = new PolygonView(0, 0, width/2, height);
+
+  viewFactory = new ViewFactory();
+
+  Canvas leftCanvas = new Canvas(0, 0, width/2, height, 20, 20);
+  Canvas rightCanvas = new Canvas(width/2, 0, width, height);
+
+  polyView = new CreatePolygon(leftCanvas);
   treeView = new TreeView(width/2, 0, width, height);
 }
 

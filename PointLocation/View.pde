@@ -1,13 +1,27 @@
-class View {
+abstract class View extends Drawable {
 
-  float x1, x2, y1, y2, w, h; // local view dimensions
   color cbackground, cstroke, chighlight;
+  String id;
 
-  public View(float _x1, float _y1, float _x2, float _y2) {
-    this.updateSize(_x1, _y1, _x2, _y2);
+  public View(String id) {
+    this.id = id;
     this.cbackground = color(255);
     this.cstroke = color(0);
-    this.chighlight = color(255);
+    this.chighlight = color(0);
+  }
+
+  abstract void render();
+  abstract boolean pointInView(float x, float y);
+  abstract PVector boundPoint(float x, float y);
+}
+
+class SquareView extends View {
+
+  float x1, x2, y1, y2, w, h; // local view dimensions
+
+  public SquareView(float _x1, float _y1, float _x2, float _y2) {
+    super("tmp");
+    this.updateSize(_x1, _y1, _x2, _y2);
   }
 
   void updateSize(float _x1, float _y1, float _x2, float _y2) {
@@ -25,7 +39,31 @@ class View {
     }
     return false;
   }
+
+  PVector boundPoint(float x, float y) {
+    PVector boundedPoint = new PVector(x, y);
+    if (!pointInView(x, y)) {
+      if (x < x1) {
+        x = x1;
+      } else if (x > x2) {
+        x = x2;
+      }
+      if (y < y1) {
+        y= y1;
+      } else if (y > y2) {
+        y = y2;
+      }
+    }
+    return boundedPoint;
+  }
+
+  void render() {
+    stroke(this.cstroke);
+    fill(this.cbackground);
+    rect(x1, y1, w, h);
+  }
 }
+
 
 class BoundingBox {
 

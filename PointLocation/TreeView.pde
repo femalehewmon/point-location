@@ -1,6 +1,6 @@
 
-class TreeView extends View {
-  
+class TreeView extends SquareView {
+
   // can add tree nodes to this view, used to visualize time complexity
 
   Tree root = null;
@@ -13,9 +13,7 @@ class TreeView extends View {
   }
 
   void render() {
-    stroke(this.cstroke);
-    fill(this.cbackground);
-    rect(x1, y1, w, h);
+    super.render();
     if (root != null && root.childCount > 1) {
       treeDrawHelper.buchheim(root);
 
@@ -25,7 +23,7 @@ class TreeView extends View {
       println("Bounds " + boundBox.x1 + " " + boundBox.y1 + " " + boundBox.x2 + " " + boundBox.y2);
       // calculate scaling ratio based on bounds
       boundBox.setScreenBounds(this.x1 + 10 + root.RAD, this.y1 + 10 + root.RAD, this.x2 - 10 - root.RAD, this.y2 - 10 - root.RAD);
-      
+
       root.render(boundBox);
     }
   }
