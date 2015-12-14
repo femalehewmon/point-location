@@ -1,23 +1,23 @@
 
-GeometricView geomView;
+PolygonView polyView;
 TreeView treeView;
 
 void setup() {
   size(1300, 800);
-  geomView = new GeometricView(0, 0, width/2, height);
+  polyView = new PolygonView(0, 0, width/2, height);
   treeView = new TreeView(width/2, 0, width, height);
 }
 
 void draw() {
   //background(0);
-  geomView.render();
+  polyView.render();
   treeView.render();
 }
 
 void mouseClicked(MouseEvent e) {
-  geomView.handleMouseClickEvent();
+  polyView.handleMouseClickEvent();
 }
 
 void mousePressed(MouseEvent e) {
-  geomView.handleMousePressEvent();
+  polyView.handleMousePressEvent();
 }
