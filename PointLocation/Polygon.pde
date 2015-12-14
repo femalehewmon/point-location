@@ -95,7 +95,7 @@ class Polygon extends Drawable {
     float area = getSignedArea();
     xCenter = (1/(6*area))*xCenter;
     yCenter = (1/(6*area))*yCenter;
-    
+
     for (i = 0; i < edges.size(); i++) {
       edges.get(i).resizeEdge(scalingFactor, xCenter, yCenter);
     }

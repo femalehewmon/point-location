@@ -21,20 +21,7 @@ class CreatePolygon {
   }
 
   void triangulatePolygon(Polygon polygon) {
-    float [][] points = new float[polygon.points.size()][2];
-    for (int i =0; i < polygon.points.size(); i++) {
-      points[i][0] = polygon.points.get(i).x;
-      points[i][1] = polygon.points.get(i).y;
-    }
-    Delaunay del = new Delaunay(points);
-    float[][] edges = del.getEdges();
-    for (int i = 0; i < edges.length; i++) {
-      float x1 = edges[i][0];
-      float y1 = edges[i][1];
-      float x2 = edges[i][2];
-      float y2 = edges[i][3];
-      line(x1, y1, x2, y2);
-    }
+    //cVertexList vl = new cVertexList();
   }
 
   void handleMouseClickEvent() {
