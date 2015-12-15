@@ -1,17 +1,25 @@
+
+TriangPoint maxLeft = null;
+TriangPoint maxTop = null;
+TriangPoint maxRight = null;
+
 class Triangulation {
 
   Triang rootTriang;
   HashMap<String, ArrayList<Triang>> triangMap;
 
-  TriangPoint maxLeft = null;
-  TriangPoint maxTop = null;
-  TriangPoint maxRight = null;
+  ArrayList<Triang> removedTriangles;
+  ArrayList<Triang> newTriangles;
+  ArrayList<TriangPoint> removedPoints;
 
   int level = 0;
 
   public Triangulation() {
     this.rootTriang = null;
     this.triangMap = new HashMap<String, ArrayList<Triang>>();
+    this.removedTriangles = new ArrayList<Triang>();
+    this.removedPoints = new ArrayList<TriangPoint>();
+    this.newTriangles = new ArrayList<Triang>();
   }
 
   public void render() {    
@@ -20,6 +28,14 @@ class Triangulation {
       for (int i = 0; i < triangs.size (); i++) {
         triangs.get(i).render();
       }
+    }
+    for (int i = 0; i < removedTriangles.size(); i++) {
+      removedTriangles.get(i).render();
+    }
+
+    for (int i = 0; i < removedPoints.size(); i++) {
+      removedPoints.get(i).mark();
+      removedPoints.get(i).render();
     }
   }
 
@@ -75,7 +91,27 @@ class Triangulation {
     }
   }
 
-  boolean removeLowDegreeIndependentSet(Polygon poly) {
+  void retriangulateHole() {
+    // add new triangles to hash map
+    addTriangles(newTriangles);
+    for (int ittter = 0; ittter < newTriangles.size (); ittter++) {
+      Triang newTriangle = newTriangles.get(ittter);
+      for (int k = 0; k < removedTriangles.size (); k++) {
+        removedTriangles.get(k).addParent(newTriangle);
+        newTriangle.addChild(removedTriangles.get(k));
+      }
+      rootTriang = newTriangle;
+    }
+    newTriangles.clear();
+  }
+
+  void removeMarkedVertices() {
+    removedTriangles.clear();
+    removedPoints.clear();
+  }
+
+  boolean markLowDegreeIndependentSet(Polygon poly) {
+    println("MARKING");
     //step through all triangles
     ArrayList<String> pointsToSearch = new ArrayList<String>();
     for (String key : triangMap.keySet ()) {
@@ -90,15 +126,15 @@ class Triangulation {
 
     // still more to reduce
     if (pointsToSearch.size() != neighbors.size()) {
-      ArrayList<Triang> removedTriangles = new ArrayList<Triang>(); // kept to assign child/parent relationships
+      removedTriangles = new ArrayList<Triang>(); // kept to assign child/parent relationships
       for (int i = 0; i < pointsToSearch.size (); i++) {
         TriangPoint currPoint = new TriangPoint(pointsToSearch.get(i));
         if (currPoint.id.equals(maxLeft.id) || currPoint.id.equals(maxTop.id) || currPoint.id.equals(maxRight.id)) {
           // don't try to remove outer vertex points
           continue;
         }
-
         int degree = triangMap.get(currPoint.id).size();
+        println("set, degree: " + degree);
         if (degree <= 8 && !neighbors.contains(currPoint.id)) {
           ArrayList<Triang> connectedTris = triangMap.get(currPoint.id);
           println("Found independent set, degree: " + degree);
@@ -152,10 +188,8 @@ class Triangulation {
               currHullPoint = addPointToList(
                 emptyPolyPoints, p2, p1, currHullPoint);
             }
-            removedTriangles.add(currTri);
             removeTriangle(currTri);
           }
-
           // remove old point from hashmap
           removePoint(currPoint);
 
@@ -168,7 +202,8 @@ class Triangulation {
           println("Hole points added: " + triPointsToMerge.size() + ", removed: " + removedTriangles.size());
           for (int ittter = 0; ittter < triPointsToMerge.size (); ittter++) {
             Triang newTriangle = new Triang(triPointsToMerge.get(ittter));
-            addTriangle(newTriangle);
+            newTriangles.add(newTriangle);
+            //addTriangle(newTriangle);
             for (int k = 0; k < removedTriangles.size (); k++) {
               removedTriangles.get(k).addParent(newTriangle);
               newTriangle.addChild(removedTriangles.get(k));
@@ -178,13 +213,12 @@ class Triangulation {
 
           setLevel(level++);
         }
-        return false;
       }
+      return false;
     } else {
       // set if fully reduced, you are done!
       return true;
     }
-    return false; // not sure why it would get here
   }
 
   TriangPoint addPointToList(
@@ -211,29 +245,32 @@ class Triangulation {
   }
 
   public void addTriangles(ArrayList dts) {
+    ColorPalette cp = cgenerator.getNextColorPalette();
     for (int i = 0; i < dts.size (); i++) {
       try {
-        addTriangle((Triang)dts.get(i));
+        addTriangle((Triang)dts.get(i), cp);
       } 
       catch(Exception e) {
-        addTriangle((DelaunayTriangle)dts.get(i));
+        addTriangle((DelaunayTriangle)dts.get(i), cp);
       }
     }
     //printHashMap();
   }
 
-  public void addTriangle(DelaunayTriangle dt) {
+  public void addTriangle(DelaunayTriangle dt, ColorPalette cp) {
     TriangPoint tp1 = new TriangPoint(dt.points[0]);
     TriangPoint tp2 = new TriangPoint(dt.points[1]);
     TriangPoint tp3 = new TriangPoint(dt.points[2]);
     Triang tri = new Triang(tp1, tp2, tp3);
-    addTriangle(tri);
+    addTriangle(tri, cp);
   }
 
-  public void addTriangle(Triang triang) {
+  public void addTriangle(Triang triang, ColorPalette cp) {
     addPointToMap(triang.points[0], triang);
     addPointToMap(triang.points[1], triang);
     addPointToMap(triang.points[2], triang);
+    triang.cbackground = cp;
+    triang.chighlight = cp;
     println("Adding triangle: " + triang.id);
     //treeView.addToPotentialTrees(triang.id);
   }
@@ -249,6 +286,7 @@ class Triangulation {
         }
       }
     }
+    removedPoints.add(tp);
   }
 
   public void removeTriangle(Triang triang) {
@@ -259,6 +297,8 @@ class Triangulation {
         removeCount ++;
       }
     }
+
+    removedTriangles.add(triang);
   }
 
   private void setLevel(int level) {
@@ -313,11 +353,14 @@ class TriangPoint extends Drawable {
   float x, y;
   String id;
   float rad = 10;
+  boolean toRemove = false;
+  color ctoRemove;
 
   public TriangPoint(float x, float y) {
     this.x = x;
     this.y = y;
     this.id = x + " " + y;
+    this.ctoRemove = color(255, 0, 0);
   }
 
   public TriangPoint(TriangulationPoint p1) {
@@ -331,14 +374,21 @@ class TriangPoint extends Drawable {
     this.id = id;
   }
 
+  public void mark() {
+    toRemove = true;
+  }
+
   public void render() {
-    stroke(this.cstroke);
-    color cfill = isSelected() ? chighlight: cbackground;
-    fill(cfill);
-    ellipse(x, y, rad, rad);
-    if (isSelected()) {
-      fill(color(255, 0, 0));
-      text("node: " + id, 20, 20);
+    if (!id.equals(maxLeft.id) && !id.equals(maxTop.id) && !id.equals(maxRight.id)) {
+      stroke(this.cstroke.getColor());
+      color cfill = toRemove ? ctoRemove : cbackground.getColor();
+      cfill = isSelected() ? chighlight.getColor() : cfill;
+      fill(cfill);
+      ellipse(x, y, rad, rad);
+      if (isSelected()) {
+        //fill(color(255, 0, 0));
+        //text("node: " + id, 20, 20);
+      }
     }
   }
 
@@ -434,8 +484,9 @@ class Triang extends Drawable {
   }
 
   void render() {
-    stroke(this.cstroke);
-    fill(this.cbackground);
+    stroke(this.cstroke.getColor());
+    color cfill = isSelected() ? color(39, 58, 200): cbackground.getColor();
+    fill(cfill);
     triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
     points[0].render();
     points[1].render();

@@ -5,18 +5,29 @@ class ControlsView {
   ControlButton leftControl;
   ControlButton rightControl;
 
+  String text;
+
   public ControlsView(Canvas canvas) {
     this.canvas = canvas;
-    playPauseButton = new PlayPauseButton(canvas.x1 + canvas.w/2, canvas.y1, canvas.x1 + canvas.w/2 + 10, canvas.y2);
+    //playPauseButton = new PlayPauseButton(canvas.x1 + canvas.w/2, canvas.y1, canvas.x1 + canvas.w/2 + 10, canvas.y2);
     //leftControl = new ControlButton();
-    rightControl = new ControlButton(canvas.x1, canvas.y1, canvas.x1 + 10, canvas.y2);
+    //rightControl = new ControlButton(canvas.x1, canvas.y1, canvas.x1 + 10, canvas.y2);
+  }
+
+  void setText(String text) {
+    this.text = text;
   }
 
   void render() {
     canvas.render();
-    playPauseButton.render();
+    if (text != null && text.length() > 0) {
+      fill(color(0));
+      textAlign(LEFT);
+      text(text, canvas.x1 + 10, canvas.y1 + canvas.h/2, canvas.x1);
+    }
+    //playPauseButton.render();
     //leftControl.render(canvas.x1 + canvas.w/2, canvas.y1, canvas.x1 + canvas.w/2 + 10, canvas.y2);
-    rightControl.render();
+    //rightControl.render();
   }
 }
 

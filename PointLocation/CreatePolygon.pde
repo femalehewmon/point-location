@@ -1,7 +1,11 @@
 
 class CreatePolygon {
 
-  int STEPS = 10;
+  int STEPS = 100;
+
+
+  int loopCount = 0;
+  int loopMax = 0;
 
   Canvas canvas;
   TriangleView triView;
@@ -13,53 +17,90 @@ class CreatePolygon {
   Triangulation triangulation;
 
   int stage = 0;
+  int substage = 0;
+
   int counter = 0;
+  int counter2 = 0;
 
   public CreatePolygon(Canvas canvas) {
     this.canvas = canvas;
     this.triView = viewFactory.getTriangleView(canvas.x1, canvas.y2, canvas.x1 + canvas.w/2, canvas.y1, canvas.x2, canvas.y2);
     this.polygon = new PolygonPL();
     this.triangulation = new Triangulation();
+    controlsView.setText("Click in above triangle to create non-overlapping polygon");
   }
 
   void render() {
     canvas.render();
     triView.render();
-    polygon.render(triView);
     if (polygon.isComplete) {
       if (stage == 0) {
         if (counter >= STEPS) {
+          loopCount++;
           println("Triangulated inner");
           triangulateInnerPolygon();
           stage = 1;
           counter = 0;
+          controlsView.setText("Triangulated Polygon");
+        } else {
+          polygon.render(triView);
+          controlsView.setText("Well done, your polygon is now complete!");
         }
         counter++;
       } else if (stage == 1) {
         if (counter >= STEPS) {
+          loopCount++;
           println("Triangulated outer");
           triangulateOuterPolygon();
           stage = 2;
           counter = 0;
+          triView.cbackground = color(240, 240, 240);
+          controlsView.setText("Triangulated the surrounding area outside your polygon");
         }
         counter++;
       } else if (stage == 2) {
+        if (substage == 0) {
+          controlsView.setText("Searching for non-adjacent vertices with a degree <= 8");
+        }
         if (counter >= STEPS) {
-          println("Remove independent low vertex set");
-          if (triangulation.removeLowDegreeIndependentSet(innerPoly)) {
-            stage = 3;
+          loopCount++;
+          if (substage == 0) {
+            println("Remove independent low vertex set");
+            if (triangulation.markLowDegreeIndependentSet(innerPoly)) {
+              stage = 3;
+              triangulation.removeMarkedVertices();
+              triangulation.retriangulateHole();
+            }
+            controlsView.setText("Found some!");
+            substage = 1;
+          } else if (substage == 1) {
+            triangulation.removeMarkedVertices();
+            controlsView.setText("Now let's remove them...");
+            substage = 2;
+          } else if (substage == 2) {
+            triangulation.retriangulateHole();
+            controlsView.setText("...and fill them in with new triangles.");
+            substage = 3;
+          } else if (substage == 3) {
+            substage = 0;
           }
+
           counter = 0;
         }
         counter++;
       } else if (stage == 3) {
+        controlsView.setText("Whew! Finally our data structure is done. If I were a faster programmer we would now take a look at that data structure, but that will have to come later.");
         println("here");
         stage = 4;
         //triangulation.rootTriang.buildTree(treeView);
-        treeView.loadTree(triangulation);
+        if (treeView != null) {
+          treeView.loadTree(triangulation);
+        }
       }
       triangulation.render();
       //polygon.render(triView);
+    } else {
+      polygon.render(triView);
     }
   }
 

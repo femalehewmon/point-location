@@ -169,6 +169,7 @@ class Tree {
   }
 
   public void setX(float x) {
+    println("setting to " + x);
     this.x = x;
     updateMinMaxX(x);
   }
@@ -246,7 +247,6 @@ class Tree {
         left = children.get(0);
       }
     }
-    println("found left borther " + left);
     return left;
   }
 
@@ -263,11 +263,8 @@ class Tree {
   Tree getLeftBrother() {
     Tree lbro = null;
     if (parent != null) {
-      println("parent is not null");
       for (int i = 0; i < parent.children.size(); i++) {
         Tree pchild = parent.children.get(i);
-
-        println("looking at parent child, is " + pchild.id + " equal to " + id);
         if (pchild.id == this.id) {
           return lbro;
         } else {

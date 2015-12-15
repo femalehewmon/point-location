@@ -157,7 +157,7 @@ class Point {
   }
 
   public Point(float _x, float _y) { 
-    this(_x, _y, 5, color(255, 0, 0), color(255, 0, 0), color(255, 0, 0));
+    this(_x, _y, 10, color(0, 0, 0), color(0, 0, 0), color(0, 0, 0));
   }
 
   void updatePosition(float _x, float _y) {
@@ -195,7 +195,7 @@ class Edge {
   }
 
   public Edge(float _x1, float _y1, float _x2, float _y2) { 
-    this(_x1, _y1, _x2, _y2, color(0), color(255, 0, 0));
+    this(_x1, _y1, _x2, _y2, color(0), color(0, 0, 0));
   }
 
   public Edge(Point p1, Point p2) {
@@ -215,6 +215,7 @@ class Edge {
 
   void render(boolean isSelected) {
     color fillColor = isSelected ? cstroke: chighlight;
+    strokeWeight(1);
     stroke(fillColor);
     line(x1, y1, x2, y2);
   }
