@@ -4,6 +4,11 @@ class CreatePolygon {
   Canvas canvas;
   TriangleView triView;
   PolygonPL polygon;
+  Polygon triangulatedPoly = null;
+  Polygon outerPoly = null;
+
+  int stage = 0;
+  int counter = 0;
 
   public CreatePolygon(Canvas canvas) {
     this.canvas = canvas;
@@ -16,28 +21,49 @@ class CreatePolygon {
     triView.render();
     polygon.render(triView);
     if (polygon.isComplete) {
-      triangulatePolygon();
+      triangulateInnerPolygon();
+      triangulateOuterPolygon();
     }
   }
 
-  void triangulatePolygon() {
-    ArrayList<PolygonPoint> polyPoints = new ArrayList<PolygonPoint>();
-    for (int i = 0; i < polygon.points.size (); i++) {
-      polyPoints.add(new PolygonPoint((int)polygon.points.get(i).x, (int)polygon.points.get(i).y));
+  void triangulateInnerPolygon() {
+    if (triangulatedPoly == null) {
+      ArrayList<PolygonPoint> polyPoints = new ArrayList<PolygonPoint>();
+      for (int i = 0; i < polygon.points.size (); i++) {
+        polyPoints.add(new PolygonPoint((int)polygon.points.get(i).x, (int)polygon.points.get(i).y));
+      }
+      triangulatedPoly = new Polygon(polyPoints);
+      Poly2Tri.triangulate(triangulatedPoly);
     }
-    Polygon pol2tri = new Polygon(polyPoints);
-    Poly2Tri.triangulate(pol2tri);
-    ArrayList<DelaunayTriangle> triPoints = (ArrayList)pol2tri.getTriangles();
+    drawTriangulatedPoly(triangulatedPoly, color(0));
+  }
+
+  void triangulateOuterPolygon() {
+    if (counter >= 100) {
+      if (outerPoly == null) {
+        outerPoly =  new Polygon(new PolygonPoint(triView.x1, triView.y1), 
+        new PolygonPoint(triView.x2, triView.y2), new PolygonPoint(triView.x3, triView.y3));
+        outerPoly.addHole(triangulatedPoly);
+        Poly2Tri.triangulate(outerPoly);
+      }
+      drawTriangulatedPoly(outerPoly, color(255, 0, 0));
+    } else {
+      counter+=1;
+    }
+  }
+
+  void drawTriangulatedPoly(Polygon poly, color col) {
+    ArrayList<DelaunayTriangle> triPoints = (ArrayList)poly.getTriangles();
     for (int i = 0; i < triPoints.size (); i++) {
       TriangulationPoint p1 = triPoints.get(i).points[0];
       TriangulationPoint p2 = triPoints.get(i).points[1];
       TriangulationPoint p3 = triPoints.get(i).points[2];
       fill(0);
+      stroke(col);
       line((float)p1.getX(), (float)p1.getY(), (float)p2.getX(), (float)p2.getY());
       line((float)p3.getX(), (float)p3.getY(), (float)p2.getX(), (float)p2.getY());
       line((float)p1.getX(), (float)p1.getY(), (float)p3.getX(), (float)p3.getY());
     }
-    //dtri.Start(vl);
   }
 
   void handleMouseClickEvent() {
@@ -52,7 +78,6 @@ class CreatePolygon {
     }
   }
 }
-
 
 class TriangleView extends View {
 
