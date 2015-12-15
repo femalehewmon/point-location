@@ -1,5 +1,6 @@
 class Triangulation {
 
+  Triang rootTriang;
   HashMap<String, ArrayList<Triang>> triangMap;
 
   TriangPoint maxLeft = null;
@@ -7,6 +8,7 @@ class Triangulation {
   TriangPoint maxRight = null;
 
   public Triangulation() {
+    this.rootTriang = null;
     this.triangMap = new HashMap<String, ArrayList<Triang>>();
   }
 
@@ -34,6 +36,7 @@ class Triangulation {
 
     // still more to reduce
     if (pointsToSearch.size() != neighbors.size()) {
+      ArrayList<Triang> removedTriangles = new ArrayList<Triang>(); // kept to assign child/parent relationships
       for (int i = 0; i < pointsToSearch.size (); i++) {
         TriangPoint currPoint = new TriangPoint(pointsToSearch.get(i));
         if (currPoint.id.equals(maxLeft.id) || currPoint.id.equals(maxTop.id) || currPoint.id.equals(maxRight.id)) {
@@ -94,24 +97,26 @@ class Triangulation {
               currHullPoint = addPointToList(
               emptyPolyPoints, p2, p1, currHullPoint);
             }
+            removedTriangles.add(currTri);
             removeTriangle(currTri);
           }
           // remove old point from hashmap
           removePoint(currPoint);
 
+          // triangulate the hole left behind
           Polygon emptyPoly = new Polygon(emptyPolyPoints);
           Poly2Tri.triangulate(emptyPoly);
-          // drawTriangulatedPoly(emptyPoly, color(0, 255, 255));
-
           ArrayList<DelaunayTriangle> triPointsToMerge = (ArrayList)emptyPoly.getTriangles();
           // add new triangles to hash map
           for (int ittter = 0; ittter < triPointsToMerge.size (); ittter++) {
-            addTriangle(triPointsToMerge.get(ittter));
+            Triang newTriangle = new Triang(triPointsToMerge.get(ittter));
+            for (int k = 0; k < removedTriangles.size (); k++) {
+              removedTriangles.get(k).addParent(newTriangle);
+              newTriangle.addChild(removedTriangles.get(k));
+            }
+            addTriangle(newTriangle);
+            rootTriang = newTriangle;
           }
-
-          Polygon newPoly = new Polygon(emptyPolyPoints);
-          Poly2Tri.triangulate(newPoly);
-          newPoly.addTriangles(triPointsToMerge);
         }
         return false;
       }
@@ -281,6 +286,9 @@ class Triang extends Drawable {
   float y23, x32, y31, x13, det, minD, maxD;
   TriangPoint[] points;
 
+  ArrayList<Triang> parents;
+  ArrayList<Triang> children;
+
   public Triang(float x1, float y1, float x2, float y2, float x3, float y3) {
     points = new TriangPoint[3];
     points[0] = new TriangPoint(x1, y1);
@@ -293,10 +301,26 @@ class Triang extends Drawable {
     this.det = y23 * x13 - x32 * y31;
     this.minD = Math.min(det, 0);
     this.maxD = Math.max(det, 0);
+    this.parents = new ArrayList<Triang>();
+    this.children = new ArrayList<Triang>();
   }
 
   public Triang(TriangPoint p1, TriangPoint p2, TriangPoint p3) {
     this(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+  }
+
+  public Triang(DelaunayTriangle dt) { 
+    this((float)dt.points[0].getX(), (float)dt.points[0].getY(), 
+    (float)dt.points[1].getX(), (float)dt.points[1].getY(), 
+    (float)dt.points[2].getX(), (float)dt.points[2].getY());
+  }
+
+  public void addParent(Triang parent) {
+    parents.add(parent);
+  }
+
+  public void addChild(Triang child) {
+    children.add(child);
   }
 
   public boolean contains(TriangPoint tp) {
