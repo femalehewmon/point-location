@@ -1,42 +1,53 @@
 class Triangulation {
 
-  HashMap<TriangPoint, ArrayList<Triang>> triangMap;
+  HashMap<String, ArrayList<Triang>> triangMap;
 
   TriangPoint maxLeft = null;
   TriangPoint maxTop = null;
   TriangPoint maxRight = null;
 
   public Triangulation() {
-    this.triangMap = new HashMap<TriangPoint, ArrayList<Triang>>();
+    this.triangMap = new HashMap<String, ArrayList<Triang>>();
   }
 
-  void removeLowDegreeIndependentSet(Polygon poly) {
+
+  public void render() {    
+    for (String key : triangMap.keySet ()) {
+      ArrayList<Triang> triangs = triangMap.get(key);
+      for (int i = 0; i < triangs.size (); i++) {
+        triangs.get(i).render();
+      }
+    }
+  }
+
+
+  boolean removeLowDegreeIndependentSet(Polygon poly) {
     //step through all triangles
-    ArrayList<TriangPoint> pointsToSearch = new ArrayList<TriangPoint>();
-    for (TriangPoint key : triangMap.keySet ()) {
+    ArrayList<String> pointsToSearch = new ArrayList<String>();
+    for (String key : triangMap.keySet ()) {
       pointsToSearch.add(key);
     }
     println("Found " + pointsToSearch.size() + " to search");
-    ArrayList<TriangPoint> neighbors = new ArrayList<TriangPoint>();
+    ArrayList<String> neighbors = new ArrayList<String>();
     for (int i = 0; i < pointsToSearch.size (); i++) {
-      TriangPoint currPoint = pointsToSearch.get(i);
-      if (currPoint == maxLeft || currPoint == maxTop || currPoint == maxRight) {
+      TriangPoint currPoint = new TriangPoint(pointsToSearch.get(i));
+      if (currPoint.id.equals(maxLeft.id) || currPoint.id.equals(maxTop.id) || currPoint.id.equals(maxRight.id)) {
         // don't try to remove outer vertex points
         println("Skipping outer point");
         continue;
       }
       println("Looking at " + currPoint.x + " " + currPoint.y);
-      int degree = triangMap.get(currPoint).size();
-      if (degree <= 8 && !neighbors.contains(currPoint)) {
+      int degree = triangMap.get(currPoint.id).size();
+      if (degree <= 8 && !neighbors.contains(currPoint.id)) {
         println("point has degrees " + degree);
-        ArrayList<Triang> connectedTris = triangMap.get(currPoint);
+        ArrayList<Triang> connectedTris = triangMap.get(currPoint.id);
 
         // maintain independent set
         // done by adding current point's neighbors to a block list
         for (int k = 0; k < degree; k++) {
-          neighbors.add(connectedTris.get(k).points[0]);
-          neighbors.add(connectedTris.get(k).points[1]);
-          neighbors.add(connectedTris.get(k).points[2]);
+          neighbors.add(connectedTris.get(k).points[0].id);
+          neighbors.add(connectedTris.get(k).points[1].id);
+          neighbors.add(connectedTris.get(k).points[2].id);
         }
 
         // for each triangle attached to deleted point
@@ -64,37 +75,33 @@ class Triangulation {
             if (!tmp) {
               println("NEXT TRI NOT FOUND!!! was looking for point " +
                 currHullPoint.x + " " + currHullPoint.y);
+              printHashMap();
+              return false;
             }
           }
 
+          println("currPoint " + currPoint.id);
+          println("currTri " + currTri.getId());
           TriangPoint p1 = currTri.points[0];
           TriangPoint p2 = currTri.points[1];
           TriangPoint p3 = currTri.points[2];
-          if (p1.x == currPoint.x && p1.y == currPoint.y) {
+          if (p1.id.equals(currPoint.id)) {
             //use p2 and p3
             currHullPoint = addPointToList(
             emptyPolyPoints, p2, p3, currHullPoint);
-          } else if (p2.x == currPoint.x && p2.y == currPoint.y) {
+          } else if (p2.id.equals(currPoint.id)) {
             currHullPoint = addPointToList(
             emptyPolyPoints, p1, p3, currHullPoint);
-          } else if (p3.x == currPoint.x && p3.y == currPoint.y) {
+          } else if (p3.id.equals(currPoint.id)) {
             currHullPoint = addPointToList(
             emptyPolyPoints, p2, p1, currHullPoint);
           }
-          //connectedTris.remove(currTri);
-          for (TriangPoint key : triangMap.keySet ()) {
-            if (triangMap.get(key).contains(currTri)) {
-              triangMap.get(key).remove(currTri);
-            }
-          }
+          removeTriangle(currTri);
         }
         // remove old point from hashmap
-        triangMap.remove(currPoint);
-        println("REMOVED FROM MAP: " + currPoint.x + " " + currPoint.y);
+        removePoint(currPoint);
 
         println("size of empty poly " + emptyPolyPoints.size());
-
-
         Polygon emptyPoly = new Polygon(emptyPolyPoints);
         Poly2Tri.triangulate(emptyPoly);
         // drawTriangulatedPoly(emptyPoly, color(0, 255, 255));
@@ -111,6 +118,7 @@ class Triangulation {
       }
     }
     printHashMap();
+    return true;
   }
 
   TriangPoint addPointToList(
@@ -127,7 +135,7 @@ class Triangulation {
       currHullPoint = p2;
     } else {
       // only add point that is not already added
-      if (p1 == currHullPoint) {
+      if (p1.id.equals(currHullPoint.id)) {
         println("Added second point " + p2.x + " " + p2.y);
         emptyPoly.add(new PolygonPoint(p2.x, p2.y));
         currHullPoint = p2;
@@ -140,7 +148,6 @@ class Triangulation {
     return currHullPoint;
   }
 
-
   public void addTriangles(ArrayList dts) {
     for (int i = 0; i < dts.size (); i++) {
       try {
@@ -150,6 +157,7 @@ class Triangulation {
         addTriangle((DelaunayTriangle)dts.get(i));
       }
     }
+    printHashMap();
   }
 
   public void addTriangle(DelaunayTriangle dt) {
@@ -161,9 +169,36 @@ class Triangulation {
   }
 
   public void addTriangle(Triang triang) {
+    println("Adding triangle to map.. " + triang.getId());
     addPointToMap(triang.points[0], triang);
     addPointToMap(triang.points[1], triang);
     addPointToMap(triang.points[2], triang);
+  }
+
+  public void removePoint(TriangPoint tp) {
+    triangMap.remove(tp.id); // remove list of triangles for this point
+    for (String key : triangMap.keySet ()) {
+      ArrayList<Triang> triangs = triangMap.get(key);
+      boolean removeTriang = false;
+      for (int i = 0; i < triangs.size (); i++) { // for list of triangles for each point
+        if (triangs.get(i).contains(tp)) { // if triangle contains point, remove triangle
+          removeTriangle(triangs.get(i));
+        }
+      }
+    }
+    println("REMOVED FROM MAP: " + tp.x + " " + tp.y);
+  }
+
+  public void removeTriangle(Triang triang) {
+    println("Removing " + triang.getId());
+    int removeCount = 0;
+    for (String key : triangMap.keySet ()) {
+      if (triangMap.get(key).contains(triang)) {
+        triangMap.get(key).remove(triang);
+        removeCount ++;
+      }
+    }
+    println("Removed from " + removeCount);
   }
 
   private void addPointToMap(TriangPoint tp) {
@@ -171,11 +206,12 @@ class Triangulation {
   }
 
   private void addPointToMap(TriangPoint tp, Triang tri) {
-    if (!triangMap.containsKey(tp)) {
-      triangMap.put(tp, new ArrayList<Triang>());
+    updateMaxPoints(tp);
+    if (!triangMap.containsKey(tp.id)) {
+      triangMap.put(tp.id, new ArrayList<Triang>());
     }
     if (tri != null) {
-      triangMap.get(tp).add(tri);
+      triangMap.get(tp.id).add(tri);
     }
   }
 
@@ -193,9 +229,9 @@ class Triangulation {
 
   void printHashMap() {
     println("HASH MAP:");
-    for (TriangPoint key : triangMap.keySet ()) {
+    for (String key : triangMap.keySet ()) {
       ArrayList<Triang> dtris = triangMap.get(key);
-      println("Point: " + key.x + " " + key.y + " has " + dtris.size() + " triangles");
+      println("Point: " + key + " has " + dtris.size() + " triangles");
       for (int i = 0; i < dtris.size (); i++) {
         println("  Triangle: " + dtris.get(i).getId());
       }
@@ -204,18 +240,46 @@ class Triangulation {
   }
 }
 
-class TriangPoint {
+class TriangPoint extends Drawable {
 
   float x, y;
+  String id;
+  float rad = 10;
 
   public TriangPoint(float x, float y) {
     this.x = x;
     this.y = y;
+    this.id = x + " " + y;
   }
 
   public TriangPoint(TriangulationPoint p1) {
-    this.x = (float)p1.getX();
-    this.y = (float)p1.getY();
+    this((float)p1.getX(), (float)p1.getY());
+  }
+
+  public TriangPoint(String id) {
+    String [] split = id.split(" ");
+    this.x = Float.parseFloat(split[0]);
+    this.y = Float.parseFloat(split[1]);
+    this.id = id;
+  }
+
+  public void render() {
+    stroke(this.cstroke);
+    color cfill = isSelected() ? chighlight: cbackground;
+    fill(cfill);
+    ellipse(x, y, rad, rad);
+    if (isSelected()) {
+      fill(color(255, 0, 0));
+      text("node: " + id, 20, 20);
+    }
+  }
+
+
+  boolean isSelected() {
+    if (mouseX >= x - rad && mouseX <= x + rad && mouseY >= y - rad && mouseY <= y + rad) {
+      return true;
+    }
+    return false;
   }
 }
 
@@ -266,6 +330,12 @@ class Triang extends Drawable {
   }
 
   void render() {
+    stroke(this.cstroke);
+    fill(this.cbackground);
+    triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+    points[0].render();
+    points[1].render();
+    points[2].render();
   }
 
   boolean isSelected() {

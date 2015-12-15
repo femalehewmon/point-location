@@ -23,7 +23,6 @@ class TreeView extends SquareView {
       println("Bounds " + boundBox.x1 + " " + boundBox.y1 + " " + boundBox.x2 + " " + boundBox.y2);
       // calculate scaling ratio based on bounds
       boundBox.setScreenBounds(this.x1 + 10 + root.RAD, this.y1 + 10 + root.RAD, this.x2 - 10 - root.RAD, this.y2 - 10 - root.RAD);
-
       root.render(boundBox);
     }
   }
