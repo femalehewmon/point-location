@@ -30,7 +30,7 @@ void setup() {
 
   controlsView = new ControlsView(controlCanvas);
   polyView = new CreatePolygon(fullCanvas);
-  //polyView.loadDemo("demosmall.poly");
+  polyView.loadDemo("demo8x8.poly");
   //treeView = new ComplexityTree(rightCanvas);
 }
 

@@ -1,8 +1,7 @@
 
 class CreatePolygon {
 
-  int STEPS = 100;
-
+  int STEPS = 120;
 
   int loopCount = 0;
   int loopMax = 0;
@@ -36,7 +35,6 @@ class CreatePolygon {
     if (polygon.isComplete) {
       if (stage == 0) {
         if (counter >= STEPS) {
-          loopCount++;
           println("Triangulated inner");
           triangulateInnerPolygon();
           stage = 1;
@@ -49,9 +47,16 @@ class CreatePolygon {
         counter++;
       } else if (stage == 1) {
         if (counter >= STEPS) {
-          loopCount++;
           println("Triangulated outer");
           triangulateOuterPolygon();
+          stage = 11;
+          counter = 0;
+          triView.cbackground = color(240, 240, 240);
+          controlsView.setText("Triangulated the surrounding area outside your polygon");
+        }
+        counter++;
+      } else if (stage == 11) {
+        if (counter >= STEPS/2) {
           stage = 2;
           counter = 0;
           triView.cbackground = color(240, 240, 240);
@@ -60,11 +65,21 @@ class CreatePolygon {
         counter++;
       } else if (stage == 2) {
         if (substage == 0) {
-          controlsView.setText("Searching for non-adjacent vertices with a degree <= 8");
+          String text = "Searching for non-adjacent vertices with a degree <= 8";
+          if (loopCount == 1) {
+            text += "...    Keep going!";
+          } else if (loopCount == 2) {
+            text += "...    Seems a bit Sysiphean, doesn't it?";
+          } else if (loopCount == 3) {
+            text += "...    Almost there..";
+          } else if (loopCount == 4) {
+            text += "...    Just kidding, there's still more to go!";
+          }
+          controlsView.setText(text);
         }
         if (counter >= STEPS) {
-          loopCount++;
           if (substage == 0) {
+            loopCount++;
             println("Remove independent low vertex set");
             if (triangulation.markLowDegreeIndependentSet(innerPoly)) {
               stage = 3;
@@ -89,7 +104,7 @@ class CreatePolygon {
         }
         counter++;
       } else if (stage == 3) {
-        controlsView.setText("Whew! Finally our data structure is done. If I were a faster programmer we would now take a look at that data structure, but that will have to come later.");
+        controlsView.setText("Whew! Finally our data structure is done.\nIf I were a faster programmer we would now take a look at that data structure, but that will have to come later.");
         println("here");
         stage = 4;
         //triangulation.rootTriang.buildTree(treeView);
