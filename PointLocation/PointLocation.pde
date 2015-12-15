@@ -15,7 +15,7 @@ boolean demo;
 boolean welcome = true;
 
 void setup() {
-  size(800, 800);
+  size(700, 700);
 
   viewFactory = new ViewFactory();
   cgenerator = new ColorPaletteGenerator();
@@ -30,7 +30,7 @@ void setup() {
 
   controlsView = new ControlsView(controlCanvas);
   polyView = new CreatePolygon(fullCanvas);
-  polyView.loadDemo("demo8x8.poly");
+  polyView.loadDemo("demo7x7.poly");
   //treeView = new ComplexityTree(rightCanvas);
 }
 

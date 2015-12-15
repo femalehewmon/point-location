@@ -1,7 +1,7 @@
 
 class CreatePolygon {
 
-  int STEPS = 120;
+  int STEPS = 12;
 
   int loopCount = 0;
   int loopMax = 0;
@@ -104,7 +104,7 @@ class CreatePolygon {
         }
         counter++;
       } else if (stage == 3) {
-        controlsView.setText("Whew! Finally our data structure is done.\nIf I were a faster programmer we would now take a look at that data structure, but that will have to come later.");
+        controlsView.setText("Whew! Finally our data structure is done.\nIf I were a faster programmer we would now take a look at that data structure, but that will have to come later.\nThanks for looking!");
         println("here");
         stage = 4;
         //triangulation.rootTriang.buildTree(treeView);
@@ -132,9 +132,9 @@ class CreatePolygon {
   void triangulateOuterPolygon() {
     if (outerPoly == null) {
       outerPoly =  new Polygon(
-        new PolygonPoint(triView.x1, triView.y1), 
-        new PolygonPoint(triView.x2, triView.y2), 
-        new PolygonPoint(triView.x3, triView.y3));
+      new PolygonPoint(triView.x1, triView.y1), 
+      new PolygonPoint(triView.x2, triView.y2), 
+      new PolygonPoint(triView.x3, triView.y3));
       outerPoly.addHole(innerPoly);
       Poly2Tri.triangulate(outerPoly);
     }
@@ -170,3 +170,4 @@ class CreatePolygon {
     }
   }
 }
+
