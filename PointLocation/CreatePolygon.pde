@@ -3,12 +3,12 @@ class CreatePolygon {
 
   Canvas canvas;
   TriangleView triView;
-  Polygon polygon;
+  PolygonPL polygon;
 
   public CreatePolygon(Canvas canvas) {
     this.canvas = canvas;
     this.triView = viewFactory.getTriangleView(canvas.x1, canvas.y2, canvas.x1 + canvas.w/2, canvas.y1, canvas.x2, canvas.y2);
-    this.polygon = new Polygon();
+    this.polygon = new PolygonPL();
   }
 
   void render() {
@@ -16,12 +16,28 @@ class CreatePolygon {
     triView.render();
     polygon.render(triView);
     if (polygon.isComplete) {
-      triangulatePolygon(polygon);
+      triangulatePolygon();
     }
   }
 
-  void triangulatePolygon(Polygon polygon) {
-    //cVertexList vl = new cVertexList();
+  void triangulatePolygon() {
+    ArrayList<PolygonPoint> polyPoints = new ArrayList<PolygonPoint>();
+    for (int i = 0; i < polygon.points.size (); i++) {
+      polyPoints.add(new PolygonPoint((int)polygon.points.get(i).x, (int)polygon.points.get(i).y));
+    }
+    Polygon pol2tri = new Polygon(polyPoints);
+    Poly2Tri.triangulate(pol2tri);
+    ArrayList<DelaunayTriangle> triPoints = (ArrayList)pol2tri.getTriangles();
+    for (int i = 0; i < triPoints.size (); i++) {
+      TriangulationPoint p1 = triPoints.get(i).points[0];
+      TriangulationPoint p2 = triPoints.get(i).points[1];
+      TriangulationPoint p3 = triPoints.get(i).points[2];
+      fill(0);
+      line((float)p1.getX(), (float)p1.getY(), (float)p2.getX(), (float)p2.getY());
+      line((float)p3.getX(), (float)p3.getY(), (float)p2.getX(), (float)p2.getY());
+      line((float)p1.getX(), (float)p1.getY(), (float)p3.getX(), (float)p3.getY());
+    }
+    //dtri.Start(vl);
   }
 
   void handleMouseClickEvent() {
@@ -94,3 +110,4 @@ class TriangleView extends View {
     triangle(x1, y1, x2, y2, x3, y3);
   }
 }
+

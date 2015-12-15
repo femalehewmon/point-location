@@ -1,6 +1,4 @@
-import megamu.mesh.*;
-import org.orourke.*;
-import org.orourke.cVertexList;
+import org.poly2tri.*;
 
 ViewFactory viewFactory;
 
@@ -11,7 +9,7 @@ ControlsView controlsView;
 int CONTROLS_HEIGHT = 100;
 
 void setup() {
-  size(1300, 800);
+  size(1000, 500);
 
   viewFactory = new ViewFactory();
 

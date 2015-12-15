@@ -1,5 +1,5 @@
 
-class Polygon extends Drawable {
+class PolygonPL extends Drawable {
 
   // TODO: don't allow intersecting edges
 
@@ -14,7 +14,7 @@ class Polygon extends Drawable {
 
   float minX, maxX, minY, maxY;
 
-  public Polygon() {
+  public PolygonPL() {
     this.points = new ArrayList<Point>();
     this.edges = new ArrayList<Edge>();
     this.testerPoint = new Point(0, 0);
