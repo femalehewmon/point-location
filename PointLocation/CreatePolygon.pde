@@ -8,7 +8,7 @@ class CreatePolygon {
   Polygon innerPoly = null;
   Polygon outerPoly = null;
 
-  Triangulation triang;
+  Triangulation triangulation;
 
   int stage = 0;
   int counter = 0;
@@ -17,77 +17,53 @@ class CreatePolygon {
     this.canvas = canvas;
     this.triView = viewFactory.getTriangleView(canvas.x1, canvas.y2, canvas.x1 + canvas.w/2, canvas.y1, canvas.x2, canvas.y2);
     this.polygon = new PolygonPL();
+    this.triangulation = new Triangulation();
   }
 
   void render() {
     canvas.render();
     triView.render();
-    if (!polygon.isComplete) {
-      polygon.render(triView);
-    } else {
+    polygon.render(triView);
+    if (polygon.isComplete) {
       if (stage == 0) {
-        triangulateInnerPolygon();
-        drawTriangulatedPoly(innerPoly, color(0));
         if (counter >= 100) {
+          println("Triangulated inner");
+          triangulateInnerPolygon();
           stage = 1;
           counter = 0;
-          println("end of stage 1: inner poly has " + innerPoly.getTriangles().size());
         }
         counter++;
       } else if (stage == 1) {
-        triangulateOuterPolygon();
-        drawTriangulatedPoly(innerPoly, color(0));
-        drawTriangulatedPoly(outerPoly, color(255, 0, 0));
         if (counter >= 100) {
+          println("Triangulated outer");
+          triangulateOuterPolygon();
           stage = 2;
           counter = 0;
-          triang = mergePolygons(innerPoly, outerPoly);
-          println("end of stage 2: outer poly has " + outerPoly.getTriangles().size());
-          println("end of stage 2: inner poly has " + innerPoly.getTriangles().size());
         }
         counter++;
       } else if (stage == 2) {
-        drawTriangulatedPoly(innerPoly, color(0, 255, 0));
-        stage = 3;
-        counter = 0;
-        println("end of stage 22: inner poly has " + innerPoly.getTriangles().size());
-      } else if (stage == 3) {
-        //drawTriangulatedPoly(innerPoly, color(0, 255, 0));
-        triang.render();
         if (counter >= 100) {
-          if (!done) {
-            done = !triang.removeLowDegreeIndependentSet(innerPoly);
-            println("end of stage 3: inner poly has " + innerPoly.getTriangles().size());
+          println("Remove independent low vertex set");
+          if (triangulation.removeLowDegreeIndependentSet(innerPoly)) {
+            stage = 3;
           }
-          //triangulateInnerPolygon();
-          //drawTriangulatedPoly(innerPoly, color(0, 0, 255));
           counter = 0;
         }
         counter++;
       }
+      triangulation.render();
+      //polygon.render(triView);
     }
-
-    //polygon.render(triView);
   }
-
-  boolean done = false;
 
   void triangulateInnerPolygon() {
-    triangulateInnerPolygon(false);
-  }
-
-  void triangulateInnerPolygon(boolean force) {
-    if (force || innerPoly == null) {
-      if (innerPoly != null) {
-        innerPoly.clearTriangulation();
-      }
-      ArrayList<PolygonPoint> polyPoints = new ArrayList<PolygonPoint>();
-      for (int i = 0; i < polygon.points.size (); i++) {
-        polyPoints.add(new PolygonPoint((int)polygon.points.get(i).x, (int)polygon.points.get(i).y));
-      }
-      innerPoly = new Polygon(polyPoints);
-      Poly2Tri.triangulate(innerPoly);
+    ArrayList<PolygonPoint> polyPoints = new ArrayList<PolygonPoint>();
+    for (int i = 0; i < polygon.points.size (); i++) {
+      polyPoints.add(new PolygonPoint((int)polygon.points.get(i).x, (int)polygon.points.get(i).y));
     }
+    innerPoly = new Polygon(polyPoints);
+    Poly2Tri.triangulate(innerPoly);
+    triangulation.addTriangles((ArrayList)innerPoly.getTriangles());
   }
 
   void triangulateOuterPolygon() {
@@ -99,29 +75,7 @@ class CreatePolygon {
       outerPoly.addHole(innerPoly);
       Poly2Tri.triangulate(outerPoly);
     }
-  }
-
-  Triangulation mergePolygons(Polygon poly1, Polygon poly2) {
-    ArrayList<DelaunayTriangle> triPoints = (ArrayList)poly2.getTriangles();
-    poly1.addTriangles(triPoints);
-    triPoints = (ArrayList)poly1.getTriangles();
-    Triangulation completeTriangulation = new Triangulation();
-    completeTriangulation.addTriangles(triPoints);
-    return completeTriangulation;
-  }
-
-  void drawTriangulatedPoly(Polygon poly, color col) {
-    ArrayList<DelaunayTriangle> triPoints = (ArrayList)poly.getTriangles();
-    for (int i = 0; i < triPoints.size (); i++) {
-      TriangulationPoint p1 = triPoints.get(i).points[0];
-      TriangulationPoint p2 = triPoints.get(i).points[1];
-      TriangulationPoint p3 = triPoints.get(i).points[2];
-      fill(0);
-      stroke(col);
-      line((float)p1.getX(), (float)p1.getY(), (float)p2.getX(), (float)p2.getY());
-      line((float)p3.getX(), (float)p3.getY(), (float)p2.getX(), (float)p2.getY());
-      line((float)p1.getX(), (float)p1.getY(), (float)p3.getX(), (float)p3.getY());
-    }
+    triangulation.addTriangles((ArrayList)outerPoly.getTriangles());
   }
 
   void handleMouseClickEvent() {
