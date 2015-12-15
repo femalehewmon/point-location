@@ -4,7 +4,8 @@ class CreatePolygon {
   Canvas canvas;
   TriangleView triView;
   PolygonPL polygon;
-  Polygon triangulatedPoly = null;
+
+  Polygon innerPoly = null;
   Polygon outerPoly = null;
 
   int stage = 0;
@@ -21,34 +22,155 @@ class CreatePolygon {
     triView.render();
     polygon.render(triView);
     if (polygon.isComplete) {
-      triangulateInnerPolygon();
-      triangulateOuterPolygon();
+      if (stage == 0) {
+        triangulateInnerPolygon();
+        drawTriangulatedPoly(innerPoly, color(0));
+        if (counter >= 100) {
+          stage = 1;
+          counter = 0;
+        }
+        counter++;
+      } else if (stage == 1) {
+        triangulateOuterPolygon();
+        drawTriangulatedPoly(innerPoly, color(0));
+        drawTriangulatedPoly(outerPoly, color(255, 0, 0));
+        if (counter >= 100) {
+          stage = 2;
+          counter = 0;
+          mergePolygons(innerPoly, outerPoly);
+        }
+        counter++;
+      } else if (stage == 2) {
+        drawTriangulatedPoly(innerPoly, color(0, 255, 0));
+        stage = 3;
+        counter = 0;
+        mergePolygons(innerPoly, outerPoly);
+      } else if (stage == 3) {
+        drawTriangulatedPoly(innerPoly, color(0, 255, 0));
+        if (counter >= 100) {
+          removeLowDegreeIndependentSet(innerPoly);
+          triangulateInnerPolygon();
+          drawTriangulatedPoly(innerPoly, color(0, 0, 255));
+          counter = 0;
+        }
+        counter++;
+      }
     }
   }
 
   void triangulateInnerPolygon() {
-    if (triangulatedPoly == null) {
+    triangulateInnerPolygon(false);
+  }
+
+  void triangulateInnerPolygon(boolean force) {
+    if (force || innerPoly == null) {
       ArrayList<PolygonPoint> polyPoints = new ArrayList<PolygonPoint>();
       for (int i = 0; i < polygon.points.size (); i++) {
         polyPoints.add(new PolygonPoint((int)polygon.points.get(i).x, (int)polygon.points.get(i).y));
       }
-      triangulatedPoly = new Polygon(polyPoints);
-      Poly2Tri.triangulate(triangulatedPoly);
+      innerPoly = new Polygon(polyPoints);
+      Poly2Tri.triangulate(innerPoly);
     }
-    drawTriangulatedPoly(triangulatedPoly, color(0));
   }
 
   void triangulateOuterPolygon() {
-    if (counter >= 100) {
-      if (outerPoly == null) {
-        outerPoly =  new Polygon(new PolygonPoint(triView.x1, triView.y1), 
-        new PolygonPoint(triView.x2, triView.y2), new PolygonPoint(triView.x3, triView.y3));
-        outerPoly.addHole(triangulatedPoly);
-        Poly2Tri.triangulate(outerPoly);
+    if (outerPoly == null) {
+      outerPoly =  new Polygon(
+      new PolygonPoint(triView.x1, triView.y1), 
+      new PolygonPoint(triView.x2, triView.y2), 
+      new PolygonPoint(triView.x3, triView.y3));
+      outerPoly.addHole(innerPoly);
+      Poly2Tri.triangulate(outerPoly);
+    }
+  }
+
+  void mergePolygons(Polygon poly1, Polygon poly2) {
+    ArrayList<DelaunayTriangle> triPoints = (ArrayList)poly2.getTriangles();
+    poly1.addTriangles(triPoints);
+    triPoints = (ArrayList)poly1.getTriangles();
+
+    for (int i = 0; i < triPoints.size (); i++) {
+      TriangulationPoint p1 = triPoints.get(i).points[0];
+      TriangulationPoint p2 = triPoints.get(i).points[1];
+      TriangulationPoint p3 = triPoints.get(i).points[2];
+      if (!polyPoints.contains(p1)) {  
+        polyPoints.add(p1);
+        triMap.put(p1, new ArrayList<DelaunayTriangle>());
+        println("adding " + p1.getX() + " " + p1.getY() + " " + i);
       }
-      drawTriangulatedPoly(outerPoly, color(255, 0, 0));
-    } else {
-      counter+=1;
+
+      if (!polyPoints.contains(p2)) {
+        polyPoints.add(p2);
+        triMap.put(p2, new ArrayList<DelaunayTriangle>());
+        println("adding " + p2.getX() + " " + p2.getY() + " " + i);
+      }
+
+      if (!polyPoints.contains(p3)) {
+        polyPoints.add(p3);
+        triMap.put(p3, new ArrayList<DelaunayTriangle>());
+        println("adding " + p3.getX() + " " + p3.getY() + " " + i);
+      }
+
+      triMap.get(p1).add(triPoints.get(i));
+      triMap.get(p2).add(triPoints.get(i));
+      triMap.get(p3).add(triPoints.get(i));
+    }
+  }
+
+  int[][] adj = null;
+  ArrayList<TriangulationPoint> polyPoints = new ArrayList<TriangulationPoint>();
+  HashMap<TriangulationPoint, ArrayList<DelaunayTriangle>> triMap = 
+    new HashMap<TriangulationPoint, ArrayList<DelaunayTriangle>>();
+
+  void removeLowDegreeIndependentSet(Polygon poly) {
+
+    PolygonPoint pp = poly.getPoint();
+    println("pp is " + poly.getPoints().size());
+
+    ArrayList<TriangulationPoint> triipoints = (ArrayList)poly.getPoints();
+    for (int i= 0; i < triipoints.size (); i++) {
+      println("trii point " + triipoints.get(i).getX() + " " + triipoints.get(i).getY()+ " " + ((PolygonPoint)triipoints.get(i)).getNext());
+    }
+
+    if (adj == null) {
+      adj = new int[polyPoints.size()][polyPoints.size()];
+      ArrayList<DelaunayTriangle> dTris = (ArrayList)poly.getTriangles();
+      for (int i = 0; i < dTris.size (); i++) {
+        TriangulationPoint p1 = dTris.get(i).points[0];
+        TriangulationPoint p2 = dTris.get(i).points[1];
+        TriangulationPoint p3 = dTris.get(i).points[2];
+        adj[polyPoints.indexOf(p1)][polyPoints.indexOf(p2)] = 1;
+        adj[polyPoints.indexOf(p1)][polyPoints.indexOf(p3)] = 1;
+        adj[polyPoints.indexOf(p3)][polyPoints.indexOf(p2)] = 1;
+        adj[polyPoints.indexOf(p2)][polyPoints.indexOf(p1)] = 1;
+        adj[polyPoints.indexOf(p3)][polyPoints.indexOf(p1)] = 1;
+        adj[polyPoints.indexOf(p2)][polyPoints.indexOf(p3)] = 1;
+      }
+    }
+    //for 1 point
+    //step through all triangles
+    ArrayList<Integer> neighbors = new ArrayList<Integer>();
+    for (int i = 0; i < adj.length; i++) {
+      int degree = 0;
+      ArrayList<Integer> currNeighbors = new ArrayList<Integer>();
+      for (int j = 0; j < adj.length; j++) {
+        if (adj[i][j] > 0) {
+          degree++;
+          currNeighbors.add(j);
+        }
+      }
+      if (degree <= 8) {
+        if (!neighbors.contains(i)) {
+          for (int k = 0; k < currNeighbors.size (); k++) {
+            neighbors.add(currNeighbors.get(k));
+          }
+          println("removing point! " + polyPoints.get(i).getX() + " " + polyPoints.get(i).getY() + " " + ((PolygonPoint)polyPoints.get(i)).getNext());
+          triipoints.remove(polyPoints.get(i));
+          for (TriangulationPoint key : triMap.keySet ()) {
+            
+          }
+        }
+      }
     }
   }
 

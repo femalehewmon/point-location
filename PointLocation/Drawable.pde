@@ -1,4 +1,4 @@
-class Drawable {
+abstract class Drawable {
 
   color cbackground, cstroke, chighlight;
 
@@ -12,8 +12,6 @@ class Drawable {
     this(color(255), color(0), color(0));
   }
 
-  void render(View boundingView) {
-  
-  }
-  
+  abstract void render();
 }
+
