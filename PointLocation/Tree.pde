@@ -1,25 +1,25 @@
 
-class Tree {
+class TreeOld {
   float RAD = 40;
 
   String id;
-  Tree parent;
-  ArrayList<Tree> children;
+  TreeOld parent;
+  ArrayList<TreeOld> children;
   ArrayList<String> childIds;
   int childCount = 0;
   float x, y;
   color cbackground, chighlight;
 
-  Tree leftmostSibling, thread, ancestor;
+  TreeOld leftmostSibling, thread, ancestor;
   float mod, change, shift;
   int number;
 
   boolean isDrawn = false;
 
-  public Tree(String id, Tree parent, float depth, int number) {
+  public TreeOld(String id, Tree parent, float depth, int number) {
     this.id = id;
     this.parent = null;
-    this.children = new ArrayList<Tree>();
+    this.children = new ArrayList<TreeOld>();
     this.childIds = new ArrayList<String>();
     this.cbackground = color(0, 0, 0);
     this.chighlight = color(255, 0, 0);
@@ -36,16 +36,25 @@ class Tree {
     this.number = number;
   }
 
-  public Tree(String id) {
+  public TreeOld(String id) {
     this(id, null, 0, 1);
   }
 
   void render(BoundingBox bounds) {
-    println("render " + id + " x " + x + " y " + y);
     color cfill = mouseInPoint(bounds) ? chighlight: cbackground;
     fill(cfill);
     ellipse(bounds.scaleX(this.x), bounds.scaleY(this.y), RAD, RAD);
+    boolean isOdd = true;
     for (int i =0; i < childCount; i++) {
+      if (childCount > 10) {
+        if (isOdd) {
+          bounds.y2 -= 10;
+          isOdd = false;
+        } else {
+          bounds.y2 += 10;
+          isOdd = true;
+        }
+      }
       children.get(i).render(bounds);
       line(bounds.scaleX(this.x), bounds.scaleY(this.y) + RAD/2, 
         bounds.scaleX(children.get(i).x), bounds.scaleY(children.get(i).y) - RAD/2);
@@ -53,7 +62,6 @@ class Tree {
   }
 
   boolean mouseInPoint(BoundingBox bounds) {
-    println("render " + id + " x " + x + " y " + y + " mouseX " + mouseX + " " + mouseY);
     boolean mouseInPoint = false;
     if (mouseX >= (bounds.scaleX(this.x) - RAD) && mouseX <= (bounds.scaleX(this.x) + RAD)
       && mouseY >= (bounds.scaleY(this.y) - RAD) && mouseY <= (bounds.scaleY(this.y) + RAD)) {
@@ -80,7 +88,7 @@ class Tree {
     }
   }
 
-  void addChild(Tree child) {
+  void addChild(TreeOld child) {
     child.setParent(this);
     if (childIds.contains(child.id)) {
       children.set(childIds.indexOf(child.id), child);
@@ -92,8 +100,8 @@ class Tree {
     isDrawn = false;
   }
 
-  Tree getChild(String name) {
-    Tree child = null;
+  TreeOld getChild(String name) {
+    TreeOld child = null;
     if (childIds.contains(name)) {
       child = children.get(childIds.indexOf(name));
     } else {
@@ -107,7 +115,7 @@ class Tree {
     return child;
   }
 
-  void setParent(Tree parent) {
+  void setParent(TreeOld parent) {
     this.parent = parent;
   }
 
@@ -116,8 +124,8 @@ class Tree {
     this.y = y;
   }
 
-  Tree left() {
-    Tree left = thread;
+  TreeOld left() {
+    TreeOld left = thread;
     if (left == null) {
       if (childCount > 0) {
         left = children.get(0);
@@ -126,8 +134,8 @@ class Tree {
     return left;
   }
 
-  Tree right() {
-    Tree right = thread;
+  TreeOld right() {
+    TreeOld right = thread;
     if (right == null) {
       if (childCount > 0) {
         right = children.get(childCount - 1);
@@ -136,11 +144,11 @@ class Tree {
     return right;
   }
 
-  Tree getLeftBrother() {
-    Tree lbro = null;
+  TreeOld getLeftBrother() {
+    TreeOld lbro = null;
     if (parent != null) {
       for (int i = 0; i < parent.children.size(); i++) {
-        Tree pchild = parent.children.get(i);
+        TreeOld pchild = parent.children.get(i);
         if (pchild.id == this.id) {
           return lbro;
         } else {
@@ -151,7 +159,7 @@ class Tree {
     return lbro;
   }
 
-  Tree getLeftmostSibling() {
+  TreeOld getLeftmostSibling() {
     if (leftmostSibling == null) {
       if (parent != null && parent.children.size() > 0) {
         leftmostSibling = parent.children.get(0);

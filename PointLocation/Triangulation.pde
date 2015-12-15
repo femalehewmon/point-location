@@ -7,6 +7,8 @@ class Triangulation {
   TriangPoint maxTop = null;
   TriangPoint maxRight = null;
 
+  int level = 0;
+
   public Triangulation() {
     this.rootTriang = null;
     this.triangMap = new HashMap<String, ArrayList<Triang>>();
@@ -18,6 +20,58 @@ class Triangulation {
       for (int i = 0; i < triangs.size (); i++) {
         triangs.get(i).render();
       }
+    }
+  }
+
+  HashMap<String, Tree> treeNodes = new HashMap<String, Tree>();
+  public void resetTrees() {
+    treeNodes.clear();
+  }
+
+  public Tree buildTree() {
+    Tree pointLocStructure = null;
+    resetTrees();
+    if (rootTriang != null) {
+      createBaseTrees(rootTriang);
+      buildTreeHelper(rootTriang);
+      pointLocStructure = treeNodes.get(rootTriang.id);
+    }
+    return pointLocStructure;
+  }
+
+  private void createBaseTrees(Triang triang) {
+    if (!treeNodes.containsKey(triang.id)) {
+      Tree tree = new Tree(triang.id);
+      treeNodes.put(triang.id, tree);
+    }
+    for (int j = 0; j < triang.children.size(); j++) {
+      Triang child = triang.children.get(j);
+      createBaseTrees(child);
+    }
+  }
+
+  private void buildTreeHelper(Triang triang) {
+    Tree tree;
+    if (treeNodes.containsKey(triang.id)) {
+      tree = treeNodes.get(triang.id);
+    } else {
+      println("TREE NOT FOUND!!!");
+      return;
+    }
+
+    Tree parentTree;
+    for (int i = 0; i < triang.parents.size(); i++) { // for each parent, add this node to its tree
+      if (treeNodes.containsKey(triang.parents.get(i).id)) {
+        parentTree = treeNodes.get(triang.parents.get(i).id);
+        if (!parentTree.contains(tree)) {
+          parentTree.addChildNode(tree);
+        }
+      } else {
+        println("SOMETHIGN IS WRONG, missing node " + triang.parents.get(i).id);
+      }
+    }
+    for (int j = 0; j < triang.children.size(); j++) {
+      buildTreeHelper(triang.children.get(j));
     }
   }
 
@@ -47,6 +101,7 @@ class Triangulation {
         int degree = triangMap.get(currPoint.id).size();
         if (degree <= 8 && !neighbors.contains(currPoint.id)) {
           ArrayList<Triang> connectedTris = triangMap.get(currPoint.id);
+          println("Found independent set, degree: " + degree);
 
           // maintain independent set
           // done by adding current point's neighbors to a block list
@@ -61,7 +116,7 @@ class Triangulation {
           TriangPoint currHullPoint = null;
           ArrayList<PolygonPoint> emptyPolyPoints = new ArrayList<PolygonPoint>();
           int numberOfTriangles = connectedTris.size();
-          for (int iter = 0; iter < numberOfTriangles - 1; iter++) {
+          for (int iter = 0; iter < numberOfTriangles; iter++) {
             // skip last triangle to prevent double adding start point
             Triang currTri = null;
             if (currHullPoint == null) {
@@ -89,17 +144,18 @@ class Triangulation {
             if (p1.id.equals(currPoint.id)) {
               //use p2 and p3
               currHullPoint = addPointToList(
-              emptyPolyPoints, p2, p3, currHullPoint);
+                emptyPolyPoints, p2, p3, currHullPoint);
             } else if (p2.id.equals(currPoint.id)) {
               currHullPoint = addPointToList(
-              emptyPolyPoints, p1, p3, currHullPoint);
+                emptyPolyPoints, p1, p3, currHullPoint);
             } else if (p3.id.equals(currPoint.id)) {
               currHullPoint = addPointToList(
-              emptyPolyPoints, p2, p1, currHullPoint);
+                emptyPolyPoints, p2, p1, currHullPoint);
             }
             removedTriangles.add(currTri);
             removeTriangle(currTri);
           }
+
           // remove old point from hashmap
           removePoint(currPoint);
 
@@ -107,16 +163,20 @@ class Triangulation {
           Polygon emptyPoly = new Polygon(emptyPolyPoints);
           Poly2Tri.triangulate(emptyPoly);
           ArrayList<DelaunayTriangle> triPointsToMerge = (ArrayList)emptyPoly.getTriangles();
+
           // add new triangles to hash map
+          println("Hole points added: " + triPointsToMerge.size() + ", removed: " + removedTriangles.size());
           for (int ittter = 0; ittter < triPointsToMerge.size (); ittter++) {
             Triang newTriangle = new Triang(triPointsToMerge.get(ittter));
+            addTriangle(newTriangle);
             for (int k = 0; k < removedTriangles.size (); k++) {
               removedTriangles.get(k).addParent(newTriangle);
               newTriangle.addChild(removedTriangles.get(k));
             }
-            addTriangle(newTriangle);
             rootTriang = newTriangle;
           }
+
+          setLevel(level++);
         }
         return false;
       }
@@ -128,9 +188,9 @@ class Triangulation {
   }
 
   TriangPoint addPointToList(
-  ArrayList<PolygonPoint> emptyPoly, 
-  TriangPoint p1, TriangPoint p2, 
-  TriangPoint currHullPoint) {
+    ArrayList<PolygonPoint> emptyPoly, 
+    TriangPoint p1, TriangPoint p2, 
+    TriangPoint currHullPoint) {
 
     TriangulationPoint tmpPoint;
     if (currHullPoint == null) {
@@ -174,6 +234,8 @@ class Triangulation {
     addPointToMap(triang.points[0], triang);
     addPointToMap(triang.points[1], triang);
     addPointToMap(triang.points[2], triang);
+    println("Adding triangle: " + triang.id);
+    //treeView.addToPotentialTrees(triang.id);
   }
 
   public void removePoint(TriangPoint tp) {
@@ -195,6 +257,14 @@ class Triangulation {
       if (triangMap.get(key).contains(triang)) {
         triangMap.get(key).remove(triang);
         removeCount ++;
+      }
+    }
+  }
+
+  private void setLevel(int level) {
+    for (String key : triangMap.keySet ()) {
+      for (int i = 0; i < triangMap.get(key).size (); i++) { // for list of triangles for each point
+        triangMap.get(key).get(i).level = level;
       }
     }
   }
@@ -289,6 +359,9 @@ class Triang extends Drawable {
   ArrayList<Triang> parents;
   ArrayList<Triang> children;
 
+  int level = 0;
+  String id;
+
   public Triang(float x1, float y1, float x2, float y2, float x3, float y3) {
     points = new TriangPoint[3];
     points[0] = new TriangPoint(x1, y1);
@@ -303,6 +376,7 @@ class Triang extends Drawable {
     this.maxD = Math.max(det, 0);
     this.parents = new ArrayList<Triang>();
     this.children = new ArrayList<Triang>();
+    this.id = x1 + " " + y1 + " " + x2 + " " + y2 + " " + x3 + " " + y3;
   }
 
   public Triang(TriangPoint p1, TriangPoint p2, TriangPoint p3) {
@@ -311,8 +385,21 @@ class Triang extends Drawable {
 
   public Triang(DelaunayTriangle dt) { 
     this((float)dt.points[0].getX(), (float)dt.points[0].getY(), 
-    (float)dt.points[1].getX(), (float)dt.points[1].getY(), 
-    (float)dt.points[2].getX(), (float)dt.points[2].getY());
+      (float)dt.points[1].getX(), (float)dt.points[1].getY(), 
+      (float)dt.points[2].getX(), (float)dt.points[2].getY());
+  }
+
+  public void buildTree(TreeView treeView) {
+    for (int i = 0; i < parents.size(); i++) {
+      treeView.addChild(parents.get(i).id, this.id);
+    }
+    if (parents.size() <= 0) {
+      treeView.addChild(null, this.id);
+    }
+
+    for (int i = 0; i < children.size(); i++) {
+      children.get(i).buildTree(treeView);
+    }
   }
 
   public void addParent(Triang parent) {
@@ -371,4 +458,3 @@ class Triang extends Drawable {
     return true;
   }
 }
-

@@ -1,6 +1,8 @@
 
 class CreatePolygon {
 
+  int STEPS = 10;
+
   Canvas canvas;
   TriangleView triView;
   PolygonPL polygon;
@@ -26,7 +28,7 @@ class CreatePolygon {
     polygon.render(triView);
     if (polygon.isComplete) {
       if (stage == 0) {
-        if (counter >= 100) {
+        if (counter >= STEPS) {
           println("Triangulated inner");
           triangulateInnerPolygon();
           stage = 1;
@@ -34,7 +36,7 @@ class CreatePolygon {
         }
         counter++;
       } else if (stage == 1) {
-        if (counter >= 100) {
+        if (counter >= STEPS) {
           println("Triangulated outer");
           triangulateOuterPolygon();
           stage = 2;
@@ -42,7 +44,7 @@ class CreatePolygon {
         }
         counter++;
       } else if (stage == 2) {
-        if (counter >= 100) {
+        if (counter >= STEPS) {
           println("Remove independent low vertex set");
           if (triangulation.removeLowDegreeIndependentSet(innerPoly)) {
             stage = 3;
@@ -50,6 +52,11 @@ class CreatePolygon {
           counter = 0;
         }
         counter++;
+      } else if (stage == 3) {
+        println("here");
+        stage = 4;
+        //triangulation.rootTriang.buildTree(treeView);
+        treeView.loadTree(triangulation);
       }
       triangulation.render();
       //polygon.render(triView);
@@ -69,17 +76,34 @@ class CreatePolygon {
   void triangulateOuterPolygon() {
     if (outerPoly == null) {
       outerPoly =  new Polygon(
-      new PolygonPoint(triView.x1, triView.y1), 
-      new PolygonPoint(triView.x2, triView.y2), 
-      new PolygonPoint(triView.x3, triView.y3));
+        new PolygonPoint(triView.x1, triView.y1), 
+        new PolygonPoint(triView.x2, triView.y2), 
+        new PolygonPoint(triView.x3, triView.y3));
       outerPoly.addHole(innerPoly);
       Poly2Tri.triangulate(outerPoly);
     }
     triangulation.addTriangles((ArrayList)outerPoly.getTriangles());
   }
 
+  void loadDemo(String file) {
+    String[] lines = loadStrings(file);
+    for (int i = 0; i < lines.length; i++) {
+      String[] split = split(lines[i], " ");
+      polygon.addPoint(Float.parseFloat(split[0]), Float.parseFloat(split[1]));
+    }
+    polygon.finishPolygon();
+  }
+
+  void loadPoints(int[][] points) {
+    for (int i = 0; i < points.length; i++) {
+      polygon.addPoint(points[i][0], points[i][1]);
+    }
+    polygon.finishPolygon();
+  }
+
   void handleMouseClickEvent() {
     if (triView.pointInView(mouseX, mouseY)) {
+      println(mouseX + " " + mouseY);
       polygon.addPoint(mouseX, mouseY);
     }
   }
@@ -90,4 +114,3 @@ class CreatePolygon {
     }
   }
 }
-

@@ -3,10 +3,12 @@ import org.poly2tri.*;
 ViewFactory viewFactory;
 
 CreatePolygon polyView;
-TreeView treeView;
+ComplexityTree treeView;
 ControlsView controlsView;
 
 int CONTROLS_HEIGHT = 100;
+
+boolean demo;
 
 void setup() {
   size(1000, 500);
@@ -18,7 +20,8 @@ void setup() {
   Canvas controlCanvas = new Canvas(0, height - CONTROLS_HEIGHT, width/2, height);
 
   polyView = new CreatePolygon(leftCanvas);
-  treeView = new TreeView(width/2, 0, width, height);
+  polyView.loadDemo("demosmall.poly");
+  treeView = new ComplexityTree(rightCanvas);
   controlsView = new ControlsView(controlCanvas);
 }
 

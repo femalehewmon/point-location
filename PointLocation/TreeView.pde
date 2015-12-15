@@ -3,40 +3,71 @@ class TreeView extends SquareView {
 
   // can add tree nodes to this view, used to visualize time complexity
 
-  Tree root = null;
+  TreeOld root = null;
   TreeDrawHelper treeDrawHelper;
+
+  HashMap<String, TreeOld> nodes;
 
   public TreeView(float _x1, float _y1, float _x2, float _y2) {
     super(_x1, _y1, _x2, _y2);
+    nodes = new HashMap<String, TreeOld>();
     treeDrawHelper = new TreeDrawHelper();
-    root = new Tree("root");
   }
 
   void render() {
     super.render();
-    if (root != null && root.childCount > 1) {
-      treeDrawHelper.buchheim(root);
+    if (root != null ) {
+      // layout relative positions
+      //treeDrawHelper.buchheim(root);
+      // adjust on screen positions
+      //treeDrawHelper.layoutIcons();
+
 
       // get max/min bounds of graph layout
-      BoundingBox boundBox = new BoundingBox();
-      root.updateBounds(boundBox);
-      println("Bounds " + boundBox.x1 + " " + boundBox.y1 + " " + boundBox.x2 + " " + boundBox.y2);
+      //BoundingBox boundBox = new BoundingBox();
+      //root.updateBounds(boundBox);
       // calculate scaling ratio based on bounds
-      boundBox.setScreenBounds(this.x1 + 10 + root.RAD, this.y1 + 10 + root.RAD, this.x2 - 10 - root.RAD, this.y2 - 10 - root.RAD);
-      root.render(boundBox);
+      //boundBox.setScreenBounds(this.x1 + 10 + root.RAD, this.y1 + 10 + root.RAD, this.x2 - 10 - root.RAD, this.y2 - 10 - root.RAD);
+      //root.render(boundBox);
+    }
+  }
+
+  void addToPotentialTrees(String id) {
+    if (!nodes.containsKey(id)) {
+      nodes.put(id, new TreeOld(id));
+    }
+  }
+
+  void addChild(String parentId, String childId) {
+    println("adding child " + childId + " to parentId " + parentId);
+    if (parentId == null) {
+      if (root == null) {
+        root = new TreeOld(childId);
+        nodes.put(childId, root);
+      }
+      println("root size " + root.children.size());
+    } else {
+      if (nodes.containsKey(childId)) {
+        addToPotentialTrees(childId);
+      }
+      TreeOld childTree = nodes.get(childId);
+      //nodes.get(parentId).addChild(childTree);
+      root.addChild(childTree);
+      nodes.put(childId, childTree);
     }
   }
 }
 
 class TreeDrawHelper {
-  // based on: http://billmill.org/pymag-trees/, license is open
 
+  void layoutIcons(Tree tree, BoundingBox bounds) {
+    tree.setIconPosition(bounds);
+  }
+
+  // based on: http://billmill.org/pymag-trees/, license is open
   void buchheim(Tree tree) {
-    if (!tree.isDrawn) {
-      Tree dt = firstWalk(tree);
-      secondWalk(dt);
-      tree.isDrawn = true;
-    }
+    Tree dt = firstWalk(tree);
+    secondWalk(dt);
   }
 
   Tree firstWalk(Tree v) {
@@ -47,12 +78,12 @@ class TreeDrawHelper {
     if (v.children.size() == 0) {
       if (v.getLeftmostSibling() != null) {
         if (v.getLeftBrother() != null) {
-          v.x = v.getLeftBrother().x + distance;
+          v.setX(v.getLeftBrother().x + distance);
         } else {
-          v.x = distance;
+          v.setX(distance);
         }
       } else {
-        v.x = 0;
+        v.setX(0);
       }
     } else {
       Tree defaultAncestor = v.children.get(0);
@@ -69,10 +100,11 @@ class TreeDrawHelper {
       float midPoint = (ell.x + arr.x) / 2;
       w = v.getLeftBrother();
       if (w != null) {
-        v.x = w.x + distance;
+        println("setting x to " + (w.x + distance));
+        v.setX(w.x + distance);
         v.mod = v.x - midPoint;
       } else {
-        v.x = midPoint;
+        v.setX(midPoint);
       }
     }
     return v;
@@ -126,7 +158,7 @@ class TreeDrawHelper {
     wright.change -= shift / numSubtrees;
     wright.shift += shift;
     wleft.change += shift / numSubtrees;
-    wright.x += shift;
+    wright.setX(wright.x + shift);
     wright.mod += shift;
   }
 
@@ -135,7 +167,7 @@ class TreeDrawHelper {
     float change = 0;
     for (int i = 0; i < v.childCount - 1; i++) {
       Tree w = v.children.get(i);
-      w.x += shift;
+      w.setX(w.x + shift);
       w.mod += shift;
       change += w.change;
       shift += w.shift + change;
@@ -143,7 +175,7 @@ class TreeDrawHelper {
   }
 
   Tree ancestor(Tree vil, Tree v, Tree defaultAncestor) {
-    if (v.parent != null && v.parent.childIds.contains(vil.ancestor.id)) {
+    if (v.parent != null && v.parent.contains(vil.ancestor)) {
       return vil.ancestor;
     } else {
       return defaultAncestor;
@@ -155,8 +187,8 @@ class TreeDrawHelper {
   }
 
   void secondWalk(Tree v, float m, float depth) {
-    v.x += m;
-    v.y = depth;
+    v.setX(v.x + m);
+    v.setY(depth);
     for (int i = 0; i < v.childCount; i++) {
       secondWalk(v.children.get(i), m + v.mod, depth + 1);
     }
