@@ -1,8 +1,6 @@
 // Global and file-global constants
 NS ="http://www.w3.org/2000/svg";
 POINT_RAD = 10;
-CANVAS_WIDTH = 1200;
-CANVAS_HEIGHT = 800;
 
 var Point = function(x, y, rad, background, highlight) {
     this.x = x;
@@ -21,7 +19,7 @@ var Edge = function(p1, p2, background, highlight) {
     this.highlight = highlight || "rgb(0, 0, 0)";
 }
 
-var PolygonCreationView = function(svg) {
+var CPolygon = function(svg) {
     this.svg = svg;
     this.points = new Array();
     this.edges = new Array();
@@ -58,7 +56,6 @@ var PolygonCreationView = function(svg) {
             _this.addEdge(p1, p3);
             _this.addEdge(p2, p3);
         })
-
     }
 
     this.addEdge = function(p1, p2){
@@ -113,16 +110,15 @@ var PolygonCreationView = function(svg) {
 }
 
 function init() {
-    console.log("INIT");
+    console.log("Create polygon");
     svg = document.createElementNS(NS, "svg");
     svg.setAttribute("width", CANVAS_WIDTH);
     svg.setAttribute("height", CANVAS_HEIGHT);
     document.body.appendChild(svg);
 
-    var polyView = new PolygonCreationView(svg);
+    var polyView = new CPolygon(svg);
     window.requestAnimationFrame(draw);
 }
-
 
 function draw(){
     window.requestAnimationFrame(draw);
