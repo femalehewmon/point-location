@@ -6,11 +6,11 @@ var KPVertex = function(x, y, depth){
     this.x = x;
     this.y = y;
 
-    var render(){
+    var render = function(){
         this.svgelm.visibility = true;
     }
 
-    var hide(){
+    var hide = function(){
         this.svgelm.visibility = false;
     }
 }
@@ -29,25 +29,25 @@ var KPTriangle = function(id, v1, v2, v3, depth){
     this.v2 = v2;
     this.v3 = v3;
 
-    var render(){
+    var render = function(){
         this.svgelm.visibility = true;
     }
 
-    var hide(){
+    var hide = function(){
         this.svgelm.visibility = false;
     }
 
-    var setInPoly(){
+    var setInPoly = function(){
         this.isInPolygon = true;
     }
-    var setInOuterTri(){
+    var setInOuterTri = function(){
         this.isInOuterTri = true;
     }
-    var setInPolyHull(){
+    var setInPolyHull = function(){
         this.isInPolyHull = true;
     }
 
-    var setMidPoints(x, y){
+    var setMidPoints = function(x, y){
         if(x && y) {
             this.xmid = x;
             this.ymid = y;
@@ -62,6 +62,7 @@ var KPTriangle = function(id, v1, v2, v3, depth){
 var KPTStruct = function(){
     this.tri_id = 0;
     this.depth = 0;
+    this.drawdepth = 0;
 
     this.vertices = new Array();
     this.tris = new Array();
@@ -106,7 +107,8 @@ var KPTStruct = function(){
 
     // must be called after markILDV
     var removeILDV = function(){
-
+        // update draw depth to current depth
+        this.drawdepth = this.depth;
     }
 
     var getTrisHull = function(htris, centervert){
@@ -152,7 +154,7 @@ var KPTStruct = function(){
     }
 
     var render = function(){
-        render(this.depth);
+        render(this.drawdepth);
     }
 
     var render = function(depth){
@@ -174,11 +176,13 @@ var KPTStruct = function(){
         }
     }
 
-    var addTris = function(poly2tris){
+    var addTris = function(poly2tris, dont_increase_level){
         poly2tris.forEach(function(t){
             this.addTri(t, this.depth);
         })
-        this.depth += 1;
+        if(!dont_increase_level){
+            this.depth += 1;
+        }
     }
 
     var addTri = function(tri, depth){
@@ -203,13 +207,21 @@ var KPTStruct = function(){
     }
 }
 
-var triangulate = function(poly, kpts){
+var triangulate = function(poly, polyhole){
     var contour = new Array();
     for(var i in poly.points){
         contour.push(
             new poly2tri.Point(poly.points[i].x, poly.points[i].y));
     }
     var swctx = new poly2tri.SweepContext(contour);
+    if(polyhole){
+        var hole = new Array();
+        for(var i in polyhole.points){
+            hole.push(
+                new poly2tri.Point(polyhole.points[i].x, polyhole.points[i].y));
+        }
+        swctx.addHole(hole);
+    }
     swctx.triangulate();
     var triangles = swctx.getTriangles();
     triangles.forEach(function(t){
@@ -221,3 +233,43 @@ var triangulate = function(poly, kpts){
         poly.addEdge(p2, p3);
     })
 }
+
+loadPolygon = function(svg, vertices){
+    console.log("Load polygon");
+    var points = "";
+    for(var i=0; i < vertices.length; i++){
+        console.log("added point");
+        points += vertices[i].x + ", " + vertices[i].y + " ";
+    }
+    var element = document.createElementNS(NS, "polygon");
+    element.setAttribute("points", points);
+    svg.appendChild(element);
+    return element;
+}
+
+drawOuterTriangle = function(svg){
+    console.log("Draw outer tri");
+
+    topY = MARGIN;
+    bottomY = CANVAS_HEIGHT - MARGIN;
+    rightX = CANVAS_WIDTH/2 - MARGIN;
+    leftX = MARGIN;
+    centerX = CANVAS_WIDTH/4;
+
+    var points = "";
+    points += leftX + ", " + bottomY;
+    points += " ";
+    points += centerX + ", " + topY;
+    points += " ";
+    points += rightX + ", " + bottomY;
+    console.log("outer tri points: " + points);
+
+    var element = document.createElementNS(NS, "polygon");
+    element.setAttribute("id", "outerTri");
+    element.setAttribute("points", points);
+    //element.setAttribute("fill-opacity", 0);
+    element.setAttribute("stroke", "rgb(0,0,0)");
+    svg.appendChild(element);
+    return element;
+}
+

@@ -7,19 +7,89 @@
         </style>
     </head>
     <body>
-        <script src="js/d3.v3.min.js"></script>
-        <script src="js/three.min.js"></script>
         <script src="js/poly2tri.js"></script>
-        <script src="polygonview.js"></script>
+        <script src="polygoncreation.js"></script>
+        <script src="kirkpatpointloc.js"></script>
+        <script src="layeredfdg.js"></script>
         <script>
+            NS ="http://www.w3.org/2000/svg";
             CANVAS_WIDTH = 1200;
-            CANVAS_HEIGHT = 800;
+            CANVAS_HEIGHT = 600;
+            MARGIN = 20;
+            svg = document.createElementNS(NS, "svg");
+            svg.setAttribute("id", "polygon_svg");
+            svg.setAttribute("width", CANVAS_WIDTH);
+            svg.setAttribute("height", CANVAS_HEIGHT);
+            document.body.appendChild(svg);
 
             // create polygon
+            createPolygon(repositionPolygon);
 
-            // one polygon finish, pass polygon to kpt
+            kptstruct = new KPTStruct();
+            // triangulate polygon
+            polytris = triangulate(poly);
+            kptstruct.addTris(polytris);
+            // triangulate polygon convex hull
+            polyhull = getConvexHull(poly); 
+            hulltris = triangulate(polyhull, poly);
+            kptstruct.addTris(hulltris);
+            // triangulate outer triangle
+            outertri = createOuterTriangle
+            polytris = triangulate(poly);
+            kptstruct.addTris(polytris);
 
-            init();
+            function createPolygon(callbackOnComplete) {
+                console.log("Create polygon");
+                var polyView = new Poly(svg, callbackOnComplete);
+                window.requestAnimationFrame(draw);
+            }
+
+
+            function repositionPolygon(polyPoints){
+                console.log("Reposition polygon");
+
+                // remove all elements from svg
+                while(svg.firstChild){
+                    svg.removeChild(svg.firstChild);
+                }
+
+                // draw outer triangle
+                outerTri = drawOuterTriangle(svg);
+                outerTri.setAttribute("fill-opacity", "0");
+                oTriCentroid = getCentroid(outerTri.points);
+                oTriMaxPoints = getMaxPoints(outerTri.points);
+                oTriMaxPoints[4] = oTriMaxPoints[4]/2;
+                oTriMaxPoints[5] = oTriMaxPoints[5]/2;
+                console.log("Max points adjusted " + oTriMaxPoints[4] + " " + oTriMaxPoints[5]);
+
+                centroid = getCentroid(polyPoints);
+                maxPoints = getMaxPoints(polyPoints);
+
+                poly = loadPolygon(svg, polyPoints);
+                var xOffset = oTriCentroid[0] - centroid[0];
+                var yOffset = oTriCentroid[1] - centroid[1];
+                if (poly) {
+                    var transformAttr = 
+                        ' translate(' + xOffset + ',' + yOffset + ')';
+                    poly.setAttribute('transform', transformAttr);
+                    // scale if polygon width/height is greater than outer tri
+                    if(maxPoints[4] > oTriMaxPoints[4] ||
+                        maxPoints[5] > oTriMaxPoints[5]){
+                        console.log("Scaling poly by " + scaleRatio);
+                        wRatio = oTriMaxPoints[4]/maxPoints[4];
+                        hRatio = oTriMaxPoints[5]/maxPoints[5];
+                        scaleRatio = max(wRatio, hRatio);
+                        transformAttr = ' scale(' + scaleRatio + ')';
+                        poly.setAttribute('transform', transformAttr);
+                    }
+                }
+                draw();
+            }
+
+            function draw() {
+                window.requestAnimationFrame(draw);
+            }
+
         </script>
     </body>
 </html>
