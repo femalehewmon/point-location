@@ -12,6 +12,7 @@
         <script src="kirkpatpointloc.js"></script>
         <script src="layeredfdg.js"></script>
         <script>
+            kptstruct = null;
             NS ="http://www.w3.org/2000/svg";
             CANVAS_WIDTH = 1200;
             CANVAS_HEIGHT = 600;
@@ -23,27 +24,37 @@
             document.body.appendChild(svg);
 
             // create polygon
-            createPolygon(repositionPolygon);
+            testPointsLarge = new Array();
+            testPointsLarge.push(new PolyPoint(413, 185));
+            testPointsLarge.push(new PolyPoint(198, 44));
+            testPointsLarge.push(new PolyPoint(66, 265));
+            testPointsLarge.push(new PolyPoint(96, 433));
+            testPointsLarge.push(new PolyPoint(250, 311));
+            testPointsLarge.push(new PolyPoint(238, 178));
+            testPointsLarge.push(new PolyPoint(434, 351));
+            testPointsLarge.push(new PolyPoint(575, 193));
+            testPointsLarge.push(new PolyPoint(484, 82));
+            testPointsSmall = new Array();
+            testPointsSmall.push(new PolyPoint(106, 60));
+            testPointsSmall.push(new PolyPoint(73, 124));
+            testPointsSmall.push(new PolyPoint(122, 110));
+            testPointsSmall.push(new PolyPoint(91, 179));
+            testPointsSmall.push(new PolyPoint(45, 128));
+            testPointsSmall.push(new PolyPoint(47, 225));
+            testPointsSmall.push(new PolyPoint(185, 199));
+            testPointsSmall.push(new PolyPoint(168, 43));
+            testPointsSmall.push(new PolyPoint(145, 76));
+            testPointsSmall.push(new PolyPoint(101, 13));
 
-            kptstruct = new KPTStruct();
-            // triangulate polygon
-            polytris = triangulate(poly);
-            kptstruct.addTris(polytris);
-            // triangulate polygon convex hull
-            polyhull = getConvexHull(poly); 
-            hulltris = triangulate(polyhull, poly);
-            kptstruct.addTris(hulltris);
-            // triangulate outer triangle
-            outertri = createOuterTriangle
-            polytris = triangulate(poly);
-            kptstruct.addTris(polytris);
+            poly = createPolygon(repositionPolygon);
+            //repositionPolygon(testPointsSmall);
+
 
             function createPolygon(callbackOnComplete) {
                 console.log("Create polygon");
                 var polyView = new Poly(svg, callbackOnComplete);
                 window.requestAnimationFrame(draw);
             }
-
 
             function repositionPolygon(polyPoints){
                 console.log("Reposition polygon");
@@ -55,38 +66,57 @@
 
                 // draw outer triangle
                 outerTri = drawOuterTriangle(svg);
-                outerTri.setAttribute("fill-opacity", "0");
                 oTriCentroid = getCentroid(outerTri.points);
                 oTriMaxPoints = getMaxPoints(outerTri.points);
                 oTriMaxPoints[4] = oTriMaxPoints[4]/2;
                 oTriMaxPoints[5] = oTriMaxPoints[5]/2;
                 console.log("Max points adjusted " + oTriMaxPoints[4] + " " + oTriMaxPoints[5]);
 
-                centroid = getCentroid(polyPoints);
+                poly = loadPolygon(svg, polyPoints);
                 maxPoints = getMaxPoints(polyPoints);
 
-                poly = loadPolygon(svg, polyPoints);
-                var xOffset = oTriCentroid[0] - centroid[0];
-                var yOffset = oTriCentroid[1] - centroid[1];
                 if (poly) {
-                    var transformAttr = 
+                    transformAttr = "";
+                    if(maxPoints[4] > oTriMaxPoints[4] ||
+                        maxPoints[5] > oTriMaxPoints[5]){
+                        wRatio = oTriMaxPoints[4]/maxPoints[4];
+                        hRatio = oTriMaxPoints[5]/maxPoints[5];
+                        scaleRatio = Math.max(wRatio, hRatio);
+                        console.log("Scaling poly by " + scaleRatio);
+                        transformAttr += 'scale(' + 8 + ')';
+                    }
+                    centroid = getCentroid(polyPoints);
+                    var xOffset = oTriCentroid[0] - centroid[0];
+                    var yOffset = oTriCentroid[1] - centroid[1];
+                    transformAttr =  
                         ' translate(' + xOffset + ',' + yOffset + ')';
                     poly.setAttribute('transform', transformAttr);
                     // scale if polygon width/height is greater than outer tri
-                    if(maxPoints[4] > oTriMaxPoints[4] ||
-                        maxPoints[5] > oTriMaxPoints[5]){
-                        console.log("Scaling poly by " + scaleRatio);
-                        wRatio = oTriMaxPoints[4]/maxPoints[4];
-                        hRatio = oTriMaxPoints[5]/maxPoints[5];
-                        scaleRatio = max(wRatio, hRatio);
-                        transformAttr = ' scale(' + scaleRatio + ')';
-                        poly.setAttribute('transform', transformAttr);
-                    }
                 }
                 draw();
+                
+
+                kptstruct = new KPTStruct(svg);
+                // triangulate polygon
+                polytris = triangulate(poly);
+                kptstruct.addTris(polytris, false);
+                draw();
+                // triangulate polygon convex huel
+                //polyhull = getConvexHull(poly); 
+                //hulltris = triangulate(polyhull, poly);
+                //kptstruct.addTris(hulltris);
+                // triangulate outer triangle
+                polytris = triangulate(outerTri, poly);
+                kptstruct.addTris(polytris);
+
+
+                return poly;
             }
 
             function draw() {
+                if(kptstruct){
+                    kptstruct.render();
+                }
                 window.requestAnimationFrame(draw);
             }
 

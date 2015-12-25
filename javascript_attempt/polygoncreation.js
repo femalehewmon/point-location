@@ -34,7 +34,7 @@ Poly = function(svg, callbackOnComplete) {
         this.isComplete = true;
         this.tryPoint = false;
         this.addEdge(this.points[this.points.length - 1], this.points[0]);
-        this.callbackOnComplete(this.points);
+        return this.callbackOnComplete(this.points);
     }
 
     this.addEdge = function(p1, p2){
