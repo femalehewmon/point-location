@@ -17,18 +17,8 @@
             CANVAS_WIDTH = 1200;
             CANVAS_HEIGHT = 600;
             MARGIN = 20;
-            MIN_LEFT_X = MARGIN;
-            MIN_LEFT_Y = MARGIN;
             CENTER_LEFT_X = CANVAS_WIDTH/4;
             CENTER_LEFT_Y = CANVAS_HEIGHT/2;
-            MAX_LEFT_X = CANVAS_WIDTH/2 - MARGIN;
-            MAX_LEFT_Y = CANVAS_HEIGHT - MARGIN;
-            MIN_RIGHT_X = CANVAS_WIDTH/2 + MARGIN;
-            MIN_RIGHT_Y = MARGIN;
-            CENTER_RIGHT_X = CANVAS_WIDTH/4 * 3;
-            CENTER_RIGHT_Y = CANVAS_HEIGHT/2;
-            MAX_RIGHT_X = CANVAS_WIDTH - MARGIN;
-            MAX_RIGHT_Y = CANVAS_HEIGHT - MARGIN;
 
             svg = document.createElementNS(NS, "svg");
             svg.setAttribute("id", "polygon_svg");
@@ -134,7 +124,7 @@
 
                 fdg = new LayeredFDG();
                 fdg.init();
-                fdg.loadNodes(kptstruct.tris, kptstruct.depth);
+                loadNodes(kptstruct.tris, kptstruct.depth);
 
                 return poly;
             }

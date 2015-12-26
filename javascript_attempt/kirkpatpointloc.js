@@ -40,6 +40,8 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.vertices.push(v2.id);
     this.vertices.push(v3.id);
 
+    this.height = Math.max(v1.y, v2.y, v3.y) - Math.min(v1.y, v2.y, v3.y); 
+
     points = 
         v1.x + ", " + v1.y + " " +
         v2.x + "," + v2.y + " " +

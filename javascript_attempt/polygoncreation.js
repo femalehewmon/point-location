@@ -145,7 +145,6 @@ var getCentroid = function(vertices){
     sArea *= 0.5;
     cx /= (6*sArea);
     cy /= (6*sArea);
-    console.log("Centroid: " + cx + " " + cy);
     return [cx, cy];
 }
 
