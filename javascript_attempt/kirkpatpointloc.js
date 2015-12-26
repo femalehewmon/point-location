@@ -32,9 +32,9 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.isInOuterTri = false;
     this.isInPolyHull = false;
 
-    this.v1 = v1.id;
-    this.v2 = v2.id;
-    this.v3 = v3.id;
+    this.v1 = v1;
+    this.v2 = v2;
+    this.v3 = v3;
     this.vertices = new Array();
     this.vertices.push(v1.id);
     this.vertices.push(v2.id);
@@ -52,6 +52,8 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.element.setAttribute("stroke", "rgb(0,0,0)");
     svg.appendChild(this.element);
 
+    this.centroid = getCentroid(this.element.points);
+
     this.render = function(){
         this.element.setAttribute("visibility", "visible");
     }
@@ -62,9 +64,9 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
 
     this.containsVertex = function(vertexId){
         var contains = false;
-        if(vertexId === this.v1 || 
-            vertexId === this.v2 ||
-            vertexId === this.v3){
+        if(vertexId === this.v1.id || 
+            vertexId === this.v2.id ||
+            vertexId === this.v3.id){
             contains = true;
                 }
         return contains;
@@ -133,9 +135,9 @@ var KPTStruct = function(svg){
                         adjtri_id = hullTris[i];
                         adjtri = this.tris[adjtri_id];
                         // add adjacent vertices to neighbors list
-                        neighbors.push(adjtri.v1);
-                        neighbors.push(adjtri.v2);
-                        neighbors.push(adjtri.v3);
+                        neighbors.push(adjtri.v1.id);
+                        neighbors.push(adjtri.v2.id);
+                        neighbors.push(adjtri.v3.id);
                         // mark end depth to indicate that tri should be removed
                         this.tris[adjtri_id].endDepth = this.depth;
                     }
@@ -176,7 +178,13 @@ var KPTStruct = function(svg){
                 currVert = hullVerts[hullVerts.length - 1];
                 // find next triangle with a shared endpoint
                 var currTri = null;
+                console.log("CURRENT VERT: " + currVert.id);
+                console.log("CENTER VERT: " + centerVert.id);
+                console.log("CURRENT DEPTH: " + this.depth);
                 for(var j=0; j < trisInHull.length; j++){
+                    console.log("TRI DEPTH: " + this.tris[trisInHull[j]].endDepth);
+                    console.log("POSSIBLE VETS: " + trisInHull[j] + " " + 
+                            this.tris[trisInHull[j]].vertices);
                     if(this.tris[trisInHull[j]].containsVertex(currVert.id) &&
                       this.tris[trisInHull[j]].containsVertex(centerVert.id) &&
                       this.tris[trisInHull[j]].endDepth === this.depth){

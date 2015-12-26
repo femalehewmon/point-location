@@ -17,8 +17,18 @@
             CANVAS_WIDTH = 1200;
             CANVAS_HEIGHT = 600;
             MARGIN = 20;
+            MIN_LEFT_X = MARGIN;
+            MIN_LEFT_Y = MARGIN;
             CENTER_LEFT_X = CANVAS_WIDTH/4;
             CENTER_LEFT_Y = CANVAS_HEIGHT/2;
+            MAX_LEFT_X = CANVAS_WIDTH/2 - MARGIN;
+            MAX_LEFT_Y = CANVAS_HEIGHT - MARGIN;
+            MIN_RIGHT_X = CANVAS_WIDTH/2 + MARGIN;
+            MIN_RIGHT_Y = MARGIN;
+            CENTER_RIGHT_X = CANVAS_WIDTH/4 * 3;
+            CENTER_RIGHT_Y = CANVAS_HEIGHT/2;
+            MAX_RIGHT_X = CANVAS_WIDTH - MARGIN;
+            MAX_RIGHT_Y = CANVAS_HEIGHT - MARGIN;
 
             svg = document.createElementNS(NS, "svg");
             svg.setAttribute("id", "polygon_svg");
@@ -101,22 +111,30 @@
                 // scale if polygon width/height is greater than outer tri
 
                 kptstruct = new KPTStruct(svg);
-                // triangulate polygon
+
+                // triangulate polygon and add to kpt and fdg
                 polytris = triangulate(poly.points);
-                kptstruct.addTris(polytris, false);
+                kptstruct.addTris(polytris, true);
                 draw();
-                // triangulate polygon convex huel
+
+                // triangulate polygon convex hull
                 //polyhull = getConvexHull(poly); 
                 //hulltris = triangulate(polyhull.points, poly.points);
-                //kptstruct.addTris(hulltris);
+                //kptstruct.addTris(hulltris, true);
+                //fdg.addNodes(hulltris);
+
                 // triangulate outer triangle
-                polytris = triangulate(outerTri.points, poly.points);
-                kptstruct.addTris(polytris);
+                outertris = triangulate(outerTri.points, poly.points);
+                kptstruct.addTris(outertris);
 
                 while(kptstruct.markILDV()){
-                    kptstruct.removeILDV();
+                    removedToNewTris = kptstruct.removeILDV();
                     kptstruct.render();
                 }
+
+                fdg = new LayeredFDG();
+                fdg.init();
+                fdg.loadNodes(kptstruct.tris, kptstruct.depth);
 
                 return poly;
             }
