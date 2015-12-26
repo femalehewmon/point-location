@@ -2,7 +2,7 @@
 var KPVertex = function(svg, x, y, depth){
     this.id = x + ", " + y;
     this.startDepth = depth;
-    this.endDepth = Infinity;
+    this.endDepth = Number.MAX_VALUE;
     this.x = x;
     this.y = y;
 
@@ -14,27 +14,31 @@ var KPVertex = function(svg, x, y, depth){
     svg.appendChild(this.element);
 
     this.render = function(){
-        this.element.visibility = true;
+        this.element.setAttribute("visibility", "visible");
     }
 
     this.hide = function(){
-        this.element.visibility = false;
+        this.element.setAttribute("visibility", "hidden");
     }
 }
 
 var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.id = id;
     this.startDepth = depth;
-    this.endDepth = Infinity;
+    this.endDepth = Number.MAX_VALUE;
     this.xmid = 0;
     this.ymid = 0;
     this.isInPolygon = false;
     this.isInOuterTri = false;
     this.isInPolyHull = false;
 
-    this.v1 = v1;
-    this.v2 = v2;
-    this.v3 = v3;
+    this.v1 = v1.id;
+    this.v2 = v2.id;
+    this.v3 = v3.id;
+    this.vertices = new Array();
+    this.vertices.push(v1.id);
+    this.vertices.push(v2.id);
+    this.vertices.push(v3.id);
 
     points = 
         v1.x + ", " + v1.y + " " +
@@ -49,11 +53,21 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
     svg.appendChild(this.element);
 
     this.render = function(){
-        this.element.visibility = true;
+        this.element.setAttribute("visibility", "visible");
     }
 
     this.hide = function(){
-        this.element.visibility = false;
+        this.element.setAttribute("visibility", "hidden");
+    }
+
+    this.containsVertex = function(vertexId){
+        var contains = false;
+        if(vertexId === this.v1 || 
+            vertexId === this.v2 ||
+            vertexId === this.v3){
+            contains = true;
+                }
+        return contains;
     }
 
     this.setInPoly = function(){
@@ -77,107 +91,129 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
 
 }
 
-
 var KPTStruct = function(svg){
     this.svg = svg;
     this.triId = 0;
     this.depth = 0;
     this.drawDepth = 0;
 
-    this.vertices = new Array();
-    this.tris = new Array();
+    this.vertices = {};
+    this.tris = {};
     this.tris_by_vert = {};
 
-    this.overtices = new Array(); // do not delete outer vertices
+    this.oVertices = new Array(); // do not delete outer vertices
 
     // mark indepedent low-degree vertices
     this.markILDV = function(){
+        console.log("Marking ILDV");
+        ildv_found = false;
         neighbors = new Array();
-        for(v in this.vertices){
+        for(var key in this.vertices){
+            v = this.vertices[key];
             // vertex is still visible, check to see if it is a ILDV
-            if(v.end_depth == Infinity){ 
-                if(v.id in neighbors || v.id in this.overtices){
+            if(v.endDepth === Number.MAX_VALUE){ 
+                if(v.id in neighbors){
                     // vertex is a neighbor or an outer vertex, skip it
                     continue;
                 }
 
-                degree = this.tris_by_vert[v.id].length;
-                if(degree <= 8){
-                    for (var i=0; i < degree; i++) {
-                        adjtri = this.tris[this.tris_by_vert[v.id][i]];
-                        // add adjacent vertices to neighbors list
-                        neighbors.push(adjtri.v1.id);
-                        neighbors.push(adjtri.v2.id);
-                        neighbors.push(adjtri.v3.id);
-                        // mark end depth to indicate that tri should be removed
-                        this.adjtri.end_depth = this.depth;
-                        this.vertices[v1.id].end_depth = this.depth;
-                        this.vertices[v2.id].end_depth = this.depth;
-                        this.vertices[v3.id].end_depth = this.depth;
+                hullTris = new Array();
+                for(var i=0; i < this.tris_by_vert[v.id].length; i++){
+                    if(this.tris[this.tris_by_vert[v.id][i]].endDepth ===
+                            Number.MAX_VALUE){
+                        hullTris.push(this.tris_by_vert[v.id][i]);
                     }
+                }
+                degree = hullTris.length;
+                if(degree > 1 && degree <= 8){
+                    console.log("Found vertex to remove: " + v.id + 
+                            " with triangles " + hullTris);
+                    ildv_found = true;
+                    for (var i=0; i < degree; i++) {
+                        adjtri_id = hullTris[i];
+                        adjtri = this.tris[adjtri_id];
+                        // add adjacent vertices to neighbors list
+                        neighbors.push(adjtri.v1);
+                        neighbors.push(adjtri.v2);
+                        neighbors.push(adjtri.v3);
+                        // mark end depth to indicate that tri should be removed
+                        this.tris[adjtri_id].endDepth = this.depth;
+                    }
+                    this.vertices[v.id].endDepth = this.depth;
                     // get hull of hole to retriangulate
-                    hulltoremove = this.getTrisHull(this.tris_by_vert[v.id], v);
-                    holetris = triangulate(hulltoremove);
+                    hullToRemove = this.getTrisHull(hullTris, v);
+                    holeTris = triangulate(hullToRemove);
                     // add new triangles to kpt structure
-                    this.addTris(holetris);
+                    this.addTris(holeTris);
                 }
             }
         }
+        return ildv_found;
     }
 
     // must be called after markILDV
     this.removeILDV = function(){
+        console.log("Removing ILDV");
         // update draw depth to current depth
         this.drawDepth = this.depth;
     }
 
-    this.getTrisHull = function(htris, centervert){
-        hullverts = new Array();
-        if(htris.length > 0){
+    this.getTrisHull = function(trisInHull, centerVert){
+        console.log("GETTING HULL OF " + trisInHull.length + " triangles");
+        hullVerts = new Array();
+        if(trisInHull.length > 0){
             // add starting points for hull of triangles
-            currtri = this.tris[htris[0]]; 
+            currTri = this.tris[trisInHull[0]]; 
             for(var j=0; j < 3; j++){
-                if(currtri.vertices[j] != centervert){
-                    hullverts.push(currtri.vertices[j]);
+                if(currTri.vertices[j] != centerVert.id){
+                    hullVerts.push(this.vertices[currTri.vertices[j]]);
                 } 
             }
-            htris = htris.slice(1);
-            numtris = htris.length;
+            trisInHull = trisInHull.slice(1); // skip first value already added
+            numtris = trisInHull.length;
             // skip final tri to avoid double counting endpoint 
             for(var i=0; i < numtris-1; i++){
-                currvert = hullverts[-1];
+                currVert = hullVerts[hullVerts.length - 1];
                 // find next triangle with a shared endpoint
-                nvert_found = false;
-                for(var j=0; j < tris.length; j++){
-                    currtri = this.tris[htris[j]];
-                    if(currvert in currtri.vertices){
+                var currTri = null;
+                for(var j=0; j < trisInHull.length; j++){
+                    if(this.tris[trisInHull[j]].containsVertex(currVert.id) &&
+                      this.tris[trisInHull[j]].containsVertex(centerVert.id) &&
+                      this.tris[trisInHull[j]].endDepth === this.depth){
                         // found adjacent triangle!
-                        for(var k=0; k < 3; k++){ 
-                            if(currtri.vertices[k] != currvert &&
-                                   currtri.vertices[k] != centervert){
-                                hullverts.push(currtri.vertices[k]);
-                                nvert_found = true;
-                                break;
-                           }
-                        }
+                        currTri = this.tris[trisInHull[j]];
+                        break;
                     }
                 }
-                if(!nvert_found){
+                if(!currTri){
                     console.log("NEXT TRI NOT FOUND... something's wrong!");
-                    break;
+                    return false;
                 }
-                // remove adjacent tri from search list
-                htris.splice(htris.indexOf(currtri), 1);
+                // found adjacent triangle!
+                for(var k=0; k < 3; k++){ 
+                    // add next hull point 
+                    // that is not the center vertex
+                    // and is not the last added vertex
+                    if(currTri.vertices[k] != currVert.id &&
+                           currTri.vertices[k] != centerVert.id){
+                        hullVerts.push(this.vertices[currTri.vertices[k]]);
+                        break;
+                   }
+                }
+                // remove found tri from search list
+                trisInHull.splice(trisInHull.indexOf(currTri.id), 1);
             }
         }
-        return hullverts;
+        return hullVerts;
     }
 
     this.render = function(depth){
         if(!depth){
             depth = this.drawDepth;
         }
+        tcount = 0;
         for(var key in this.tris){
+            tcount++;
             if(this.tris[key].startDepth <= depth &&
                     this.tris[key].endDepth > depth){
                 this.tris[key].render();
@@ -185,14 +221,18 @@ var KPTStruct = function(svg){
                 this.tris[key].hide();
             }
         }
-        for(var i=0; i < this.vertices.length; i++){
-            if(this.vertices[i].startDepth <= depth &&
-                    this.vertices[i].endDepth > depth){
-                this.vertices[i].render();
+        vcount = 0;
+        for(var key in this.vertices){
+            vcount++;
+            if(this.vertices[key].startDepth <= depth &&
+                    this.vertices[key].endDepth > depth){
+                this.vertices[key].render();
             } else {
-                this.vertices[i].hide();
+                this.vertices[key].hide();
             }
         }
+        console.log("IN TOTAL: " + tcount + " triangles and " + 
+                vcount);
     }
 
     this.addTris = function(poly2tris, dont_increase_level){
@@ -200,8 +240,8 @@ var KPTStruct = function(svg){
             this.addTri(poly2tris[i], this.depth);
         }
         if(!dont_increase_level){
-            console.log("Increased level");
             this.depth += 1;
+            console.log("Increased depth to " + this.depth);
         }
     }
 
@@ -211,18 +251,18 @@ var KPTStruct = function(svg){
         v3 = this.addVertex(tri.getPoint(2).x, tri.getPoint(2).y, depth);
         this.triId += 1;
         tri = new KPTriangle(this.svg, this.triId, v1, v2, v3, depth);
-        console.log("Adding new tri: " + tri.id);
-        this.tris_by_vert[v1.id].push(tri);
-        this.tris_by_vert[v2.id].push(tri);
-        this.tris_by_vert[v3.id].push(tri);
+        console.log("Adding new tri: " + tri.id + " to " +
+               v1.id + " " + v2.id + " " + v3.id); 
+        this.tris_by_vert[v1.id].push(tri.id);
+        this.tris_by_vert[v2.id].push(tri.id);
+        this.tris_by_vert[v3.id].push(tri.id);
         this.tris[this.triId] = tri;
     }
 
-    this.addVertex = function(x, y){
-        vertex = new KPVertex(this.svg, x, y);
-        id = vertex.id;
+    this.addVertex = function(x, y, depth){
+        id = x + ", " + y;
         if(!(id in this.vertices)){
-            console.log("Adding new vertex: " + x + " " + y);
+            vertex = new KPVertex(this.svg, x, y, depth);
             this.vertices[id] = vertex;
             this.tris_by_vert[id] = new Array();
         }
@@ -230,21 +270,21 @@ var KPTStruct = function(svg){
     }
 }
 
-var triangulate = function(poly, polyhole){
+var triangulate = function(polyPoints, polyHolePoints){
     console.log("Triangulating");
     // add polygon points to triangulation
     var contour = new Array();
-    for(var i = 0; i < poly.points.length; i++){
+    for(var i = 0; i < polyPoints.length; i++){
         contour.push(
-            new poly2tri.Point(poly.points[i].x, poly.points[i].y));
+            new poly2tri.Point(polyPoints[i].x, polyPoints[i].y));
     }
     var swctx = new poly2tri.SweepContext(contour);
     // add holes if necessary
-    if(polyhole){
+    if(polyHolePoints){
         var hole = new Array();
-        for(var i = 0; i < polyhole.points.length; i++){
+        for(var i = 0; i < polyHolePoints.length; i++){
             hole.push(
-                new poly2tri.Point(polyhole.points[i].x, polyhole.points[i].y));
+                new poly2tri.Point(polyHolePoints[i].x, polyHolePoints[i].y));
         }
         console.log("Added hole of size " + hole.length);
         swctx.addHole(hole);
@@ -271,14 +311,23 @@ loadPolygon = function(svg, vertices){
     return element;
 }
 
-drawOuterTriangle = function(svg){
+drawOuterTriangle = function(svg, centroid){
     console.log("Draw outer tri");
+
+    halfHeight = (CANVAS_HEIGHT - MARGIN*2)/2;
+    halfWidth = (CANVAS_WIDTH/2 - MARGIN*2)/2;
 
     topY = MARGIN;
     bottomY = CANVAS_HEIGHT - MARGIN;
     rightX = CANVAS_WIDTH/2 - MARGIN;
     leftX = MARGIN;
     centerX = CANVAS_WIDTH/4;
+
+    topY = centroid[1] - halfHeight;
+    bottomY = centroid[1] + halfHeight;
+    rightX = centroid[0] + halfWidth;
+    leftX = centroid[0] - halfWidth;
+    centerX = centroid[0];
 
     var points = "";
     points += leftX + ", " + bottomY;
