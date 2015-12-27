@@ -22,6 +22,7 @@
             MARGIN = 20;
             CENTER_LEFT_X = CANVAS_WIDTH/4;
             CENTER_LEFT_Y = CANVAS_HEIGHT/2;
+            CENTER = [CENTER_LEFT_X,  CENTER_LEFT_Y];
 
             svg = document.createElementNS(NS, "svg");
             svg.setAttribute("id", "polygon_svg");
@@ -52,141 +53,143 @@
             testPointsSmall.push(new PolyPoint(145, 76));
             testPointsSmall.push(new PolyPoint(101, 13));
             testPoints = testPointsSmall;
+            TEST = true;
 
-            var updatedPoints = "";
-            for(var i=0; i < testPoints.length; i++){
-                // move point to center
-                updatedPoints += 
-                    testPoints[i].x + ", " + testPoints[i].y + " ";
-            }
-            var tpElement = document.createElementNS(NS, "polygon");
-            tpElement.setAttribute("points", updatedPoints);
-            tpElement.setAttribute("fill-opacity", "0");
-            tpElement.setAttribute("stroke", "rgb(0,0,0)");
-            svg.appendChild(tpElement);
-
-            //poly = createPolygon(repositionPolygon);
-            repositionPolygon(tpElement);
-
-            function createPolygon(callbackOnComplete) {
+            function createPolygon() {
                 console.log("Create polygon");
-                polyView = new Poly(svg, callbackOnComplete);
-            }
-
-            movePolygon = function(polygon, newCenter){
-
-            }
-
-            movePoint = function(oldPos, oldCenter, newCenter){
-                var centerOffset = oldCenter - oldPos; 
-                return newCenter + centerOffset;
-            }
-
-            scalePoint = function(oldPos, centerPos, scaleRatio){
-                var newPos = centerPos + 
-                    (oldPos - centerPos)*scaleRatio; 
-                return newPos;
-            }
-
-            function repositionPolygon(finishedPoly){
-                console.log("Reposition polygon");
-
-                // reposition polygon to center of screen
-                var oldCenter = getCentroid(finishedPoly.points);
-                var newCenter = [CENTER_LEFT_X,  CENTER_LEFT_Y];
-                var updatedPoints = "";
-                for(var i=0; i < finishedPoly.points.length; i++){
-                    // move point to center
-                    updatedPoints += 
-                            movePoint(
-                                    finishedPoly.points[i].x, 
-                                    oldCenter[0], newCenter[0]) 
-                            + ", " 
-                            + movePoint(
-                                    finishedPoly.points[i].y, 
-                                    oldCenter[1], newCenter[1])
-                            + " ";
-                }
-                finishedPoly.setAttribute("points", updatedPoints);
-
-                outerTri = drawOuterTriangle(svg, newCenter);
-                maxPoints = getMaxPoints(finishedPoly.points);
-                oTriMaxPoints = getMaxPoints(outerTri.points);
-
-                if(maxPoints[4] > oTriMaxPoints[4] ||
-                    maxPoints[5] > oTriMaxPoints[5]){
-                    wRatio = oTriMaxPoints[4]/maxPoints[4];
-                    hRatio = oTriMaxPoints[5]/maxPoints[5];
-                    scaleRatio = Math.max(wRatio, hRatio);
-
-                    updatedPoints = "";
-                    for(var i=0; i < finishedPoly.points.length; i++){
+                if(!TEST){
+                    poly = new Poly(svg, callbackOnComplete);
+                } else{
+                    var updatedPoints = "";
+                    for(var i=0; i < testPoints.length; i++){
                         // move point to center
                         updatedPoints += 
-                                scalePoint(
-                                        finishedPoly.points[i].x, 
-                                        oldCenter[0], scaleRatio) 
-                                + ", " 
-                                + scalePoint(
-                                        finishedPoly.points[i].y, 
-                                        oldCenter[1], scaleRatio)
-                                + " ";
+                            testPoints[i].x + ", " + testPoints[i].y + " ";
                     }
-                    finishedPoly.setAttribute("points", updatedPoints);
+
+                    var tpElement = document.createElementNS(NS, "polygon");
+                    tpElement.setAttribute("points", updatedPoints);
+                    tpElement.setAttribute("fill-opacity", "0");
+                    tpElement.setAttribute("stroke", "rgb(0,0,0)");
+                    svg.appendChild(tpElement);
+                    poly = tpElement;
                 }
+            }
 
-                polyPoints = finishedPoly.points;
+            function repositionPolygon(){
+                // reposition polygon to center of screen
+                console.log("Reposition polygon");
+                movePolygon(poly, CENTER);
 
-                draw();
-
-                // remove all elements from svg
-                while(svg.firstChild){
-                    svg.removeChild(svg.firstChild);
+                maxPoints = getMaxPoints(poly.points);
+                wRatio = CANVAS_WIDTH/maxPoints[4];
+                hRatio = CANVAS_HEIGHT/maxPoints[5];
+                scaleRatio = Math.min(wRatio, hRatio);
+                if(scaleRatio < 1){
+                    console.log("Scaling poly with ratio: " + scaleRatio);
+                    scalePolygon(poly, CENTER, scaleRatio);
                 }
-                centroid = getCentroid(polyPoints);
-                poly = loadPolygon(svg, polyPoints);
-                
-                kptstruct = new KPTStruct(svg);
-
-                // triangulate polygon and add to kpt and fdg
-                polytris = triangulate(poly.points);
-                kptstruct.addTris(polytris, true);
-
-                // triangulate polygon convex hull
-                //polyhull = getConvexHull(poly); 
-                //hulltris = triangulate(polyhull.points, poly.points);
-                //kptstruct.addTris(hulltris, true);
-                //fdg.addNodes(hulltris);
-
-                // triangulate outer triangle
-                outertris = triangulate(outerTri.points, poly.points);
-                kptstruct.addTris(outertris);
-
-                while(kptstruct.markILDV()){
-                    kptstruct.markILDV();
-                    removedToNewTris = kptstruct.removeILDV();
-                    kptstruct.render();
-                }
-
-                fdg = new LayeredFDG();
-                fdg.init();
-                loadNodes(kptstruct.tris, kptstruct.depth);
+                polyPoints = poly.points;
 
                 return poly;
             }
 
-            stage = 0;
-            function draw() {
-                window.requestAnimationFrame(draw);
-                if(fdg != null){
-                //    fdg.render();
+
+            CREATE_POLYGON = "createPoly";
+            SETUP_TRIANGULATION = "setupTris";
+            DRAW_TRIANGULATION = "drawTris";
+
+            MAX_COUNT = 100;
+            counter = 0;
+            stage = CREATE_POLYGON;
+            subStage = 0;
+            function draw(){
+                console.log("Stage is " + stage);
+                switch(stage){
+                    case CREATE_POLYGON:
+                        // at this point, poly is still custom
+                        // load into an svg polygon
+                        if(TEST){
+                            repositionPolygon();
+                            stage = SETUP_TRIANGULATION;
+                        }else{
+                            if(poly.isFinished){
+                                // reposition polygon
+                                while(svg.firstChild){
+                                    svg.removeChild(svg.firstChild);
+                                }
+                                poly = loadPolygon(svg, poly.points);
+                                repositionPolygon();
+                                stage = SETUP_TRIANGULATION;
+                            }
+                        }
+                        break;
+                    case SETUP_TRIANGULATION:
+                        switch(subStage){
+                            case 0:
+                                // triangulate main polygon
+                                kptstruct = new KPTStruct(svg);
+                                polytris = triangulate(poly.points);
+                                kptstruct.addTris(polytris, true);
+                                subStage++;
+                                break;
+                            case 1:
+                                // draw and triangulate convex hull
+                                // triangulate polygon convex hull
+                                //polyhull = getConvexHull(poly); 
+                                //hulltris = 
+                                //triangulate(polyhull.points, poly.points);
+                                //kptstruct.addTris(hulltris, true);
+                                //fdg.addNodes(hulltris);
+                                subStage++;
+                                break;
+                            case 2:
+                                // draw and triangulate outer triangle
+                                outerTri = drawOuterTriangle(svg, CENTER);
+                                outertris = 
+                                    triangulate(outerTri.points, poly.points);
+                                kptstruct.addTris(outertris);
+                                subStage++;
+                                break;
+                            case 3:
+                                // find and remove ILDVs
+                                while(kptstruct.markILDV()){
+                                    kptstruct.markILDV();
+                                    removedToNewTris = kptstruct.removeILDV();
+                                    kptstruct.render();
+                                }
+
+                                // create graph layout and load triangles
+                                fdg = new LayeredFDG();
+                                fdg.init();
+                                loadNodes(kptstruct.tris, kptstruct.depth);
+
+                                // move to next stage
+                                subStage = 0;
+                                stage = DRAW_TRIANGULATION;
+                                break;
+                        }
+                        break;
+                    case DRAW_TRIANGULATION:
+                        if(counter >= MAX_COUNT && subStage < fdg.maxLevel){
+                            console.log("UPDATING LEVEL: " + stage);
+                            subStage++;
+                            counter = 0;
+                        } 
+                        kptstruct.render(subStage);
+                        fdg.render(subStage);
+                        counter++;
+                        break;
                 }
+                window.requestAnimationFrame(draw);
             }
 
             var $draggable = $('.draggable').draggabilly({
                       // options...
             })
 
+            createPolygon();
+            draw();
 
         </script>
     </body>

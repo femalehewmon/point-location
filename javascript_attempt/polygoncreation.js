@@ -34,7 +34,6 @@ Poly = function(svg, callbackOnComplete) {
         this.isComplete = true;
         this.tryPoint = false;
         this.addEdge(this.points[this.points.length - 1], this.points[0]);
-        return this.callbackOnComplete(this.svg);
     }
 
     this.addEdge = function(p1, p2){
@@ -75,6 +74,7 @@ Poly = function(svg, callbackOnComplete) {
                 element.setAttribute("cy", newPoint.y);
                 element.setAttribute("fill", newPoint.background);
                 element.setAttribute("r", POINT_RAD);
+                element.setAttribute("isFinished", false);
                 this.svg.appendChild(element);
             }
         }
@@ -146,5 +146,51 @@ var getCentroid = function(vertices){
     cx /= (6*sArea);
     cy /= (6*sArea);
     return [cx, cy];
+}
+
+function movePolygon(polygon, newCenter){
+    var oldCenter = getCentroid(polygon.points);
+    var updatedPoints = "";
+    for(var i=0; i < polygon.points.length; i++){
+        // move point to center
+        updatedPoints += 
+                movePoint(
+                        polygon.points[i].x, 
+                        oldCenter[0], newCenter[0]) 
+                + ", " 
+                + movePoint(
+                        polygon.points[i].y, 
+                        oldCenter[1], newCenter[1])
+                + " ";
+    }
+    polygon.setAttribute("points", updatedPoints);
+}
+
+function scalePolygon(polygon, center, scale){
+    updatedPoints = "";
+    for(var i=0; i < polygon.points.length; i++){
+        // move point to center
+        updatedPoints += 
+                scalePoint(
+                        polygon.points[i].x, 
+                        center[0], scaleRatio) 
+                + ", " 
+                + scalePoint(
+                        polygon.points[i].y, 
+                        center[1], scaleRatio)
+                + " ";
+    }
+    polygon.setAttribute("points", updatedPoints);
+}
+
+function movePoint(oldPos, oldCenter, newCenter){
+    var centerOffset = oldCenter - oldPos; 
+    return newCenter + centerOffset;
+}
+
+function scalePoint(oldPos, centerPos, scaleRatio){
+    var newPos = centerPos + 
+        (oldPos - centerPos)*scaleRatio; 
+    return newPos;
 }
 
