@@ -73,9 +73,19 @@
                 polyView = new Poly(svg, callbackOnComplete);
             }
 
+            movePolygon = function(polygon, newCenter){
+
+            }
+
             movePoint = function(oldPos, oldCenter, newCenter){
                 var centerOffset = oldCenter - oldPos; 
                 return newCenter + centerOffset;
+            }
+
+            scalePoint = function(oldPos, centerPos, scaleRatio){
+                var newPos = centerPos + 
+                    (oldPos - centerPos)*scaleRatio; 
+                return newPos;
             }
 
             function repositionPolygon(finishedPoly){
@@ -98,6 +108,33 @@
                             + " ";
                 }
                 finishedPoly.setAttribute("points", updatedPoints);
+
+                outerTri = drawOuterTriangle(svg, newCenter);
+                maxPoints = getMaxPoints(finishedPoly.points);
+                oTriMaxPoints = getMaxPoints(outerTri.points);
+
+                if(maxPoints[4] > oTriMaxPoints[4] ||
+                    maxPoints[5] > oTriMaxPoints[5]){
+                    wRatio = oTriMaxPoints[4]/maxPoints[4];
+                    hRatio = oTriMaxPoints[5]/maxPoints[5];
+                    scaleRatio = Math.max(wRatio, hRatio);
+
+                    updatedPoints = "";
+                    for(var i=0; i < finishedPoly.points.length; i++){
+                        // move point to center
+                        updatedPoints += 
+                                scalePoint(
+                                        finishedPoly.points[i].x, 
+                                        oldCenter[0], scaleRatio) 
+                                + ", " 
+                                + scalePoint(
+                                        finishedPoly.points[i].y, 
+                                        oldCenter[1], scaleRatio)
+                                + " ";
+                    }
+                    finishedPoly.setAttribute("points", updatedPoints);
+                }
+
                 polyPoints = finishedPoly.points;
 
                 draw();
@@ -108,40 +145,7 @@
                 }
                 centroid = getCentroid(polyPoints);
                 poly = loadPolygon(svg, polyPoints);
-
-                // draw outer triangle
-                outerTri = drawOuterTriangle(svg, centroid);
-                oTriCentroid = getCentroid(outerTri.points);
-                oTriMaxPoints = getMaxPoints(outerTri.points);
-                oTriMaxPoints[4] = oTriMaxPoints[4]/2;
-                oTriMaxPoints[5] = oTriMaxPoints[5]/2;
-                console.log("Max points adjusted " + oTriMaxPoints[4] + 
-                        " " + oTriMaxPoints[5]);
-
-                maxPoints = getMaxPoints(polyPoints);
-                transformAttr = "";
-
-                if(maxPoints[4] > oTriMaxPoints[4] ||
-                    maxPoints[5] > oTriMaxPoints[5]){
-                    wRatio = oTriMaxPoints[4]/maxPoints[4];
-                    hRatio = oTriMaxPoints[5]/maxPoints[5];
-                    scaleRatio = Math.max(wRatio, hRatio);
-                    console.log("Scaling poly by " + scaleRatio);
-                    transformAttr += 'scale(' + scaleRatio + ') ';
-                }
-
-                var xOffset = 0;//oTriCentroid[0] - centroid[0];
-                var yOffset = 0;//oTriCentroid[1] - centroid[1];
-                xOffset = CENTER_LEFT_X - centroid[0];
-                yOffset = CENTER_LEFT_Y - centroid[1];
-
-                transformAttr +=  
-                    'translate(' + xOffset + ',' + yOffset + ') ';
-                console.log("Transform " + transformAttr);
-                poly.setAttribute('transform', transformAttr);
-                outerTri.setAttribute('transform', transformAttr);
-                // scale if polygon width/height is greater than outer tri
-
+                
                 kptstruct = new KPTStruct(svg);
 
                 // triangulate polygon and add to kpt and fdg
