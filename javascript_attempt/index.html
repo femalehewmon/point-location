@@ -13,6 +13,7 @@
         <script src="layeredfdg.js"></script>
         <script>
             kptstruct = null;
+            fdg = null;
             NS ="http://www.w3.org/2000/svg";
             CANVAS_WIDTH = 1200;
             CANVAS_HEIGHT = 600;
@@ -131,6 +132,9 @@
 
             function draw() {
                 window.requestAnimationFrame(draw);
+                if(fdg != null){
+                    fdg.render();
+                }
             }
 
         </script>
