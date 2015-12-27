@@ -1,0 +1,382 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+
+  <title>Draggabilly</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Montserrat:400,700" />
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+<body>
+
+  <div id="content">
+    <h1 id="draggabilly">Draggabilly</h1>
+<div class="demo demo--basic">
+  <div class="demo__positioner">
+    <div class="draggable">
+      <div class="total-centered">Drag me</div>
+    </div>
+    <p class="demo__edit-link">
+      <a href="http://codepen.io/desandro/pen/yyRapr">Edit this demo on CodePen</a> or
+      <a href="http://codepen.io/desandro/pen/EadgXx">vanilla JS demo</a>
+    </p>
+  </div>
+</div>
+
+<p class="tagline">Make that shiz draggable</p>
+
+<p><a href="http://github.com/desandro/draggabilly">github.com/desandro/draggabilly</a></p>
+<p>Rad because it supports IE8+ and multi-touch.</p>
+<h2 id="install">Install</h2>
+<p>Grab a packaged source file:</p>
+<ul>
+<li><a href="http://draggabilly.desandro.com/draggabilly.pkgd.min.js">draggabilly.pkgd.min.js</a> minified</li>
+<li><a href="http://draggabilly.desandro.com/draggabilly.pkgd.js">draggabilly.pkgd.js</a> un-minified</li>
+</ul>
+<h3 id="package-managers">Package managers</h3>
+<p>Install with <a href="http://bower.io">Bower</a>: <code>bower install draggabilly</code></p>
+<p>Install with <a href="https://www.npmjs.com/package/draggabilly">npm</a>: <code>npm install draggabilly</code></p>
+<h3 id="cdn">CDN</h3>
+<p>Link directly to <a href="https://cdnjs.com/libraries/draggabilly">Draggabilly files on cdnjs</a>.</p>
+<pre><code class="lang-html"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//cdnjs.cloudflare.com/ajax/libs/draggabilly/1.2.0/draggabilly.pkgd.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="comment">&lt;!-- or --&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//cdnjs.cloudflare.com/ajax/libs/draggabilly/1.2.0/draggabilly.pkgd.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></code></pre>
+<h2 id="usage">Usage</h2>
+<p>Initialize Draggabilly as a jQuery plugin</p>
+<pre><code class="lang-js"><span class="keyword">var</span> $draggable = $(<span class="string">'.draggable'</span>).draggabilly({
+  <span class="comment">// options...</span>
+})</code></pre>
+<p>Initialize Draggabilly with vanilla JS</p>
+<pre><code class="lang-js"><span class="keyword">var</span> elem = document.querySelector(<span class="string">'.draggable'</span>);
+<span class="keyword">var</span> draggie = <span class="keyword">new</span> Draggabilly( elem, {
+  <span class="comment">// options...</span>
+});
+
+<span class="comment">// or pass in selector string as first argument</span>
+<span class="keyword">var</span> draggie = <span class="keyword">new</span> Draggabilly( <span class="string">'.draggable'</span>, {
+  <span class="comment">// options...</span>
+});
+
+<span class="comment">// if you have multiple .draggable elements</span>
+<span class="comment">// get all draggie elements</span>
+<span class="keyword">var</span> draggableElems = document.querySelectorAll(<span class="string">'.draggable'</span>);
+<span class="comment">// array of Draggabillies</span>
+<span class="keyword">var</span> draggies = []
+<span class="comment">// init Draggabillies</span>
+<span class="keyword">for</span> ( <span class="keyword">var</span> i=<span class="number">0</span>, len = draggableElems.length; i &lt; len; i++ ) {
+  <span class="keyword">var</span> draggableElem = draggableElems[i];
+  <span class="keyword">var</span> draggie = <span class="keyword">new</span> Draggabilly( draggableElem, {
+    <span class="comment">// options...</span>
+  });
+  draggies.push( draggie );
+}</code></pre>
+<h3 id="classes">Classes</h3>
+<ul>
+<li><code>.is-pointer-down</code> added when the user&#39;s pointer (mouse, touch, pointer) first presses down.</li>
+<li><code>.is-dragging</code> added when elements starts to drag.</li>
+</ul>
+<h2 id="options">Options</h2>
+<h3 id="axis">axis</h3>
+<div class="demo demo--axis">
+  <div class="demo__positioner">
+    <div class="draggable draggable--squat">
+      <div class="total-centered">axis: &#39;x&#39;</div>
+    </div>
+    <p class="demo__edit-link">
+      <a href="http://codepen.io/desandro/pen/WbaGMa">Edit this demo on CodePen</a> or
+      <a href="http://codepen.io/desandro/pen/myzrXB">vanilla JS demo</a>
+    </p>
+  </div>
+</div>
+
+<p><strong>Type:</strong> <em>String</em></p>
+<p><strong>Values:</strong> <code>&#39;x&#39;</code> or <code>&#39;y&#39;</code></p>
+<pre><code class="lang-js">axis: <span class="string">'x'</span></code></pre>
+<p>Constrains movement to horizontal or vertical axis.</p>
+<h3 id="containment">containment</h3>
+<div class="demo demo--containment">
+  <div class="demo__positioner">
+    <div class="demo--containment__container">
+      <div class="draggable"></div>
+      <div class="draggable"></div>
+      <div class="draggable"></div>
+    </div>
+    <p class="demo__edit-link">
+      <a href="http://codepen.io/desandro/pen/azRmYv">Edit this demo on CodePen</a> or
+      <a href="http://codepen.io/desandro/pen/dPgpev">vanilla JS demo</a>
+    </p>
+  </div>
+</div>
+
+<p><strong>Type:</strong> <em>Element</em>, Selector <em>String</em>, or <em>Boolean</em></p>
+<pre><code class="lang-js">containment: <span class="string">'.container'</span></code></pre>
+<p>Contains movement to the bounds of the element. If <code>true</code>, the container will be the parent element.</p>
+<h3 id="grid">grid</h3>
+<div class="demo demo--grid">
+  <div class="demo__positioner">
+    <div class="draggable draggable--squat">
+      <div class="total-centered">grid: [ 20, 20 ]</div>
+    </div>
+    <p class="demo__edit-link">
+      <a href="http://codepen.io/desandro/pen/ZYqpRg">Edit this demo on CodePen</a> or
+      <a href="http://codepen.io/desandro/pen/XJxjBJ">vanilla JS demo</a>
+    </p>
+  </div>
+</div>
+
+<p><strong>Type:</strong> <em>Array</em></p>
+<p><strong>Values:</strong> <code>[ x, y ]</code></p>
+<pre><code class="lang-js">grid: [ <span class="number">20</span>, <span class="number">20</span> ]</code></pre>
+<p>Snaps the element to a grid, every x and y pixels.</p>
+<h3 id="handle">handle</h3>
+<div class="demo demo--handle">
+  <div class="demo__positioner">
+    <div class="draggable">
+      <div class="handle"></div>
+    </div>
+    <p class="demo__edit-link">
+      <a href="http://codepen.io/desandro/pen/xbyEyO">Edit this demo on CodePen</a> or
+      <a href="http://codepen.io/desandro/pen/NPOROE">vanilla JS demo</a>
+    </p>
+  </div>
+</div>
+
+<p><strong>Type:</strong> Selector <em>String</em></p>
+<pre><code class="lang-js">handle: <span class="string">'.handle'</span></code></pre>
+<p>Specifies on what element the drag interaction starts.</p>
+<p><code>handle</code> is useful for when you do not want all inner elements to be used for dragging, like inputs and forms. See <a href="http://codepen.io/desandro/pen/znAuH">back handle example on CodePen</a>.</p>
+<h2 id="events">Events</h2>
+<p>Bind events with jQuery with standard jQuery event methods <code>.on()</code>, <code>.off()</code>, and <code>.one()</code>. Inside jQuery event listeners <code>this</code> refers to the Draggabilly element.</p>
+<div class="demo demo--events">
+  <div class="demo__positioner">
+    <pre><code>
+
+
+</code></pre>
+    <div class="draggable"></div>
+  </div>
+</div>
+
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+<span class="function"><span class="keyword">function</span> <span class="title">listener</span><span class="params">(<span class="comment">/* parameters */</span>)</span> {</span>
+  <span class="comment">// get Draggabilly instance</span>
+  <span class="keyword">var</span> draggie = $(<span class="keyword">this</span>).data(<span class="string">'draggabilly'</span>);
+  console.log( <span class="string">'eventName happened'</span>, draggie.position.x, draggie.position.y );
+}
+<span class="comment">// bind event listener</span>
+$draggable.on( <span class="string">'eventName'</span>, listener );
+<span class="comment">// unbind event listener</span>
+$draggable.off( <span class="string">'eventName'</span>, listener );
+<span class="comment">// bind event listener to trigger once. note ONE not ON</span>
+$draggable.one( <span class="string">'eventName'</span>, <span class="keyword">function</span>() {
+  console.log(<span class="string">'eventName happened just once'</span>);
+});</code></pre>
+<p>Bind events with vanilla JS with <code>.on()</code>, <code>.off()</code>, and <code>.once()</code> methods. Inside vanilla JS event listeners <code>this</code> refers to the Draggabilly instance.</p>
+<pre><code class="lang-js"><span class="comment">// vanilla JS</span>
+<span class="function"><span class="keyword">function</span> <span class="title">listener</span><span class="params">(<span class="comment">/* parameters */</span>)</span> {</span>
+  console.log( <span class="string">'eventName happened'</span>, <span class="keyword">this</span>.position.x, <span class="keyword">this</span>.position.y );
+}
+<span class="comment">// bind event listener</span>
+draggie.on( <span class="string">'eventName'</span>, listener );
+<span class="comment">// unbind event listener</span>
+draggie.off( <span class="string">'eventName'</span>, listener );
+<span class="comment">// bind event listener to trigger once. note ONCE not ONE or ON</span>
+draggie.once( <span class="string">'eventName'</span>, <span class="keyword">function</span>() {
+  console.log(<span class="string">'eventName happened just once'</span>);
+});</code></pre>
+<h3 id="dragstart">dragStart</h3>
+<p>Triggered when dragging starts and the element starts moving. Dragging starts after the user&#39;s pointer has moved a couple pixels to allow for clicks.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'dragStart'</span>, <span class="keyword">function</span>( event, pointer ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'dragStart'</span>, <span class="keyword">function</span>( event, pointer ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mousedown</code> or <code>touchstart</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/KwGgGY">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/qEJaQq">vanilla JS demo</a>.</p>
+<h3 id="dragmove">dragMove</h3>
+<p>Triggered when dragging moves.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'dragMove'</span>, <span class="keyword">function</span>( event, pointer, moveVector ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'dragMove'</span>, <span class="keyword">function</span>( event, pointer, moveVector ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mousemove</code> or <code>touchmove</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+<li><code>moveVector</code> <strong>Type:</strong> <em>Object</em> - How far the pointer has moved from its start position <code>{ x: 20, y: -30 }</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/gbBwQe">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/QwZKJY">vanilla JS demo</a>.</p>
+<h3 id="dragend">dragEnd</h3>
+<p>Triggered when dragging ends.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'dragEnd'</span>, <span class="keyword">function</span>( event, pointer ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'dragEnd'</span>, <span class="keyword">function</span>( event, pointer ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mouseup</code> or <code>touchend</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/RNeGOQ">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/ByqLEq">vanilla JS demo</a>.</p>
+<h3 id="pointerdown">pointerDown</h3>
+<p>Triggered when the user&#39;s pointer (mouse, touch, pointer) presses down.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'pointerDown'</span>, <span class="keyword">function</span>( event, pointer ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'pointerDown'</span>, <span class="keyword">function</span>( event, pointer ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mousedown</code> or <code>touchstart</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/QwZKYo">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/NPORJe">vanilla JS demo</a>.</p>
+<h3 id="pointermove">pointerMove</h3>
+<p>Triggered when the user&#39;s pointer moves.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'pointerMove'</span>, <span class="keyword">function</span>( event, pointer, moveVector ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'pointerMove'</span>, <span class="keyword">function</span>( event, pointer, moveVector ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mousemove</code> or <code>touchmove</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+<li><code>moveVector</code> <strong>Type:</strong> <em>Object</em> - How far the pointer has moved from its start position <code>{ x: 20, y: -30 }</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/dPgpaR">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/ZYqpwE">vanilla JS demo</a>.</p>
+<h3 id="pointerup">pointerUp</h3>
+<p>Triggered when the user&#39;s pointer unpresses.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'pointerUp'</span>, <span class="keyword">function</span>( event, pointer ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'pointerUp'</span>, <span class="keyword">function</span>( event, pointer ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mouseup</code> or <code>touchend</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/zxmKQq">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/QwZKPP">vanilla JS demo</a>.</p>
+<h3 id="staticclick">staticClick</h3>
+<p>Triggered when the user&#39;s pointer is pressed and unpressed and has not moved enough to start dragging.</p>
+<p><code>click</code> events are hard to detect with draggable UI, as they are triggered whenever a user drags. Draggabilly&#39;s staticClick event resolves this, as it is triggered when the user has not dragged.</p>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.on( <span class="string">'staticClick'</span>, <span class="keyword">function</span>( event, pointer ) {...})
+<span class="comment">// vanilla JS</span>
+draggie.on( <span class="string">'staticClick'</span>, <span class="keyword">function</span>( event, pointer ) {...})</code></pre>
+<ul>
+<li><code>event</code> - <strong>Type:</strong> <em>Event</em> - the original <code>mouseup</code> or <code>touchend</code> event</li>
+<li><code>pointer</code> - <strong>Type:</strong> <em>MouseEvent</em> or <em>Touch</em> - the event object that has <code>.pageX</code> and <code>.pageY</code></li>
+</ul>
+<p><a href="http://codepen.io/desandro/pen/YPJGbE">Edit demo on CodePen</a> or <a href="http://codepen.io/desandro/pen/OPBRYo">vanilla JS demo</a>.</p>
+<h2 id="methods">Methods</h2>
+<h3 id="disable">disable</h3>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.draggabilly(<span class="string">'disable'</span>)
+<span class="comment">// vanilla JS</span>
+draggie.disable()</code></pre>
+<h3 id="enable">enable</h3>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.draggabilly(<span class="string">'enable'</span>)
+<span class="comment">// vanilla JS</span>
+draggie.enable()</code></pre>
+<h3 id="destroy">destroy</h3>
+<pre><code class="lang-js"><span class="comment">// jQuery</span>
+$draggable.draggabilly(<span class="string">'destroy'</span>)
+<span class="comment">// vanilla JS</span>
+draggie.destroy()</code></pre>
+<h3 id="jquery-fn-data-draggabilly-">jQuery.fn.data(&#39;draggabilly&#39;)</h3>
+<p>Get the Draggabilly instance from a jQuery object. Draggabilly instances are useful to access Draggabilly properties.</p>
+<pre><code class="lang-js"><span class="keyword">var</span> draggie = $(<span class="string">'.draggable'</span>).data(<span class="string">'draggabilly'</span>)
+<span class="comment">// access Draggabilly properties</span>
+console.log( <span class="string">'draggie at '</span> + draggie.position.x + <span class="string">', '</span> + draggie.position.y )</code></pre>
+<h2 id="properties">Properties</h2>
+<h3 id="position">position</h3>
+<p><code>{ x: 20, y: -30 }</code></p>
+<ul>
+<li><code>x</code> <em>Integer</em></li>
+<li><code>y</code> <em>Integer</em></li>
+</ul>
+<h2 id="requirejs">RequireJS</h2>
+<p>Draggabilly works with <a href="http://requirejs.org">RequireJS</a>.</p>
+<p>You can require <code>draggabilly.pkgd.js</code>..</p>
+<pre><code class="lang-js">requirejs( [
+  <span class="string">'path/to/draggabilly.pkgd.js'</span>,
+], <span class="keyword">function</span>( Draggabilly ) {
+  <span class="keyword">new</span> Draggabilly( ... );
+});</code></pre>
+<p>To use Draggabilly as a jQuery plugin with RequireJS and draggabilly.pkgd.js, you need to call jQuery Bridget.</p>
+<pre><code class="lang-js"><span class="comment">// require the require function</span>
+requirejs( [ <span class="string">'require'</span>, <span class="string">'jquery'</span>, <span class="string">'path/to/draggabilly.pkgd.js'</span> ],
+  <span class="keyword">function</span>( require, $, Draggabilly ) {
+    <span class="comment">// require jquery-bridget, it's included in draggabilly.pkgd.js</span>
+    require( [ <span class="string">'jquery-bridget/jquery.bridget'</span> ],
+    <span class="keyword">function</span>() {
+      <span class="comment">// make Draggabilly a jQuery plugin</span>
+      $.bridget( <span class="string">'draggabilly'</span>, Draggabilly );
+      <span class="comment">// now you can use $().draggabilly()</span>
+      $(<span class="string">'.draggable'</span>).draggabilly({...})
+    }
+  );
+});</code></pre>
+<p>Or, you can manage dependencies with <a href="http://bower.io">Bower</a>. Set <code>baseUrl</code> to <code>bower_components</code> and set a path config for all your application code.</p>
+<pre><code class="lang-js">requirejs.config({
+  baseUrl: <span class="string">'bower_components/'</span>,
+  paths: { <span class="comment">// path your your app</span>
+    app: <span class="string">'../'</span>
+  }
+});
+
+requirejs( [
+  <span class="string">'draggabilly/draggabilly'</span>,
+  <span class="string">'app/my-component.js'</span>
+], <span class="keyword">function</span>( Draggabilly, myComp ) {
+  <span class="keyword">new</span> Draggabilly( <span class="string">'.draggable'</span>, {...});
+});</code></pre>
+<p>You can require Bower dependencies and use Isotope as a jQuery plugin with jQuery Bridget.</p>
+<pre><code class="lang-js">requirejs.config({
+  baseUrl: <span class="string">'../bower_components'</span>,
+  paths: {
+    jquery: <span class="string">'jquery/jquery'</span>
+  }
+});
+
+requirejs( [
+    <span class="string">'jquery'</span>,
+    <span class="string">'draggabilly/draggabilly'</span>,
+    <span class="string">'jquery-bridget/jquery.bridget'</span>
+  ],
+  <span class="keyword">function</span>( $, Draggabilly ) {
+    <span class="comment">// make Draggabilly a jQuery plugin</span>
+    $.bridget( <span class="string">'draggabilly'</span>, Draggabilly );
+    <span class="comment">// now you can use $().draggabilly()</span>
+    $(<span class="string">'.draggable'</span>).draggabilly({...})
+});</code></pre>
+<h2 id="browserify">Browserify</h2>
+<p>Draggabilly works with <a href="http://browserify.org/">Browserify</a>. Install <a href="https://www.npmjs.com/package/draggabilly">Draggabilly with npm</a>.</p>
+<pre><code>npm install draggabilly</code></pre>
+<pre><code class="lang-js"><span class="keyword">var</span> Draggabilly = require(<span class="string">'draggabilly'</span>);
+
+<span class="keyword">var</span> draggie = <span class="keyword">new</span> Draggabilly( <span class="string">'.draggable'</span>, {
+  <span class="comment">// options</span>
+});</code></pre>
+<p>To use Draggabilly as a jQuery plugin with Browserify, you need to call jQuery Bridget.</p>
+<pre><code>npm install jquery-bridget</code></pre>
+<pre><code class="lang-js"><span class="keyword">var</span> $ = require(<span class="string">'jquery'</span>);
+require(<span class="string">'jquery-bridget'</span>);
+<span class="keyword">var</span> Draggabilly = require(<span class="string">'draggabilly'</span>);
+
+<span class="comment">// make Draggabilly a jQuery plugin</span>
+$.bridget( <span class="string">'draggabilly'</span>, Draggabilly );
+<span class="comment">// now you can use $().draggabilly()</span>
+$(<span class="string">'.draggable'</span>).draggabilly({...})</code></pre>
+<h2 id="license">License</h2>
+<p>Draggabilly is released under the <a href="http://desandro.mit-license.org/">MIT License</a>. Have at it.</p>
+
+  </div>
+
+<script src="draggabilly.pkgd.min.js"></script>
+<script src="doc-ready.js"></script>
+<script src="scripts.js"></script>
+
+</body>
+</html>

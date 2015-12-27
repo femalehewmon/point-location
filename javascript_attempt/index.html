@@ -8,6 +8,8 @@
     </head>
     <body>
         <script src="js/poly2tri.js"></script>
+        <script src="js/jquery-2.1.4.min.js"></script>
+        <script src="js/draggabilly.pkgd.min.js"></script>
         <script src="polygoncreation.js"></script>
         <script src="kirkpatpointloc.js"></script>
         <script src="layeredfdg.js"></script>
@@ -49,25 +51,63 @@
             testPointsSmall.push(new PolyPoint(168, 43));
             testPointsSmall.push(new PolyPoint(145, 76));
             testPointsSmall.push(new PolyPoint(101, 13));
+            testPoints = testPointsSmall;
+
+            var updatedPoints = "";
+            for(var i=0; i < testPoints.length; i++){
+                // move point to center
+                updatedPoints += 
+                    testPoints[i].x + ", " + testPoints[i].y + " ";
+            }
+            var tpElement = document.createElementNS(NS, "polygon");
+            tpElement.setAttribute("points", updatedPoints);
+            tpElement.setAttribute("fill-opacity", "0");
+            tpElement.setAttribute("stroke", "rgb(0,0,0)");
+            svg.appendChild(tpElement);
 
             //poly = createPolygon(repositionPolygon);
-            repositionPolygon(testPointsSmall);
+            repositionPolygon(tpElement);
 
             function createPolygon(callbackOnComplete) {
                 console.log("Create polygon");
-                var polyView = new Poly(svg, callbackOnComplete);
-                window.requestAnimationFrame(draw);
+                polyView = new Poly(svg, callbackOnComplete);
             }
 
-            function repositionPolygon(polyPoints){
+            movePoint = function(oldPos, oldCenter, newCenter){
+                var centerOffset = oldCenter - oldPos; 
+                return newCenter + centerOffset;
+            }
+
+            function repositionPolygon(finishedPoly){
                 console.log("Reposition polygon");
+
+                // reposition polygon to center of screen
+                var oldCenter = getCentroid(finishedPoly.points);
+                var newCenter = [CENTER_LEFT_X,  CENTER_LEFT_Y];
+                var updatedPoints = "";
+                for(var i=0; i < finishedPoly.points.length; i++){
+                    // move point to center
+                    updatedPoints += 
+                            movePoint(
+                                    finishedPoly.points[i].x, 
+                                    oldCenter[0], newCenter[0]) 
+                            + ", " 
+                            + movePoint(
+                                    finishedPoly.points[i].y, 
+                                    oldCenter[1], newCenter[1])
+                            + " ";
+                }
+                finishedPoly.setAttribute("points", updatedPoints);
+                polyPoints = finishedPoly.points;
+
+                draw();
 
                 // remove all elements from svg
                 while(svg.firstChild){
                     svg.removeChild(svg.firstChild);
                 }
-                poly = loadPolygon(svg, polyPoints);
                 centroid = getCentroid(polyPoints);
+                poly = loadPolygon(svg, polyPoints);
 
                 // draw outer triangle
                 outerTri = drawOuterTriangle(svg, centroid);
@@ -75,7 +115,8 @@
                 oTriMaxPoints = getMaxPoints(outerTri.points);
                 oTriMaxPoints[4] = oTriMaxPoints[4]/2;
                 oTriMaxPoints[5] = oTriMaxPoints[5]/2;
-                console.log("Max points adjusted " + oTriMaxPoints[4] + " " + oTriMaxPoints[5]);
+                console.log("Max points adjusted " + oTriMaxPoints[4] + 
+                        " " + oTriMaxPoints[5]);
 
                 maxPoints = getMaxPoints(polyPoints);
                 transformAttr = "";
@@ -106,7 +147,6 @@
                 // triangulate polygon and add to kpt and fdg
                 polytris = triangulate(poly.points);
                 kptstruct.addTris(polytris, true);
-                draw();
 
                 // triangulate polygon convex hull
                 //polyhull = getConvexHull(poly); 
@@ -119,6 +159,7 @@
                 kptstruct.addTris(outertris);
 
                 while(kptstruct.markILDV()){
+                    kptstruct.markILDV();
                     removedToNewTris = kptstruct.removeILDV();
                     kptstruct.render();
                 }
@@ -130,12 +171,18 @@
                 return poly;
             }
 
+            stage = 0;
             function draw() {
                 window.requestAnimationFrame(draw);
                 if(fdg != null){
-                    fdg.render();
+                //    fdg.render();
                 }
             }
+
+            var $draggable = $('.draggable').draggabilly({
+                      // options...
+            })
+
 
         </script>
     </body>

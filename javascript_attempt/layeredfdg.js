@@ -1,10 +1,10 @@
 // Global and file-global constants
 
 SPRING_CONST = 1;
-COULOMBS_CONST = 5000;
+COULOMBS_CONST = 50;
 TIME_STEP = 0.0002;
-levelBounds = {};
 
+levelBounds = {};
 function applyCoulombs(node1, node2cx, node2cy){
     var dx = node1.cx - node2cx;
     var dy = node1.cy - node2cy;
@@ -17,19 +17,6 @@ function applyCoulombs(node1, node2cx, node2cy){
         node1.addForces(fx, fy);
     }
 }
-
-function applyBounds(node1){
-    bounds = levelBounds[node1.level];
-    //left
-    //applyCoulombs(node1, bounds[0], node1.cy); 
-    //right
-    //applyCoulombs(node1, bounds[2], node1.cy); 
-    //top
-    //applyCoulombs(node1, node1.cx, bounds[1]); 
-    //bottom
-    //applyCoulombs(node1, node1.cx, bounds[3]); 
-}
-
 
 function applyHookes(node1, node2, edge){
     var dx = node1.cx - node2.cx;
@@ -48,8 +35,21 @@ function applyHookes(node1, node2, edge){
     node2.addForces(-1*fx, -1*fy);
 }
 
+function applyBounds(node1){
+    bounds = levelBounds[node1.level];
+    //left
+    //applyCoulombs(node1, bounds[0], node1.cy); 
+    //right
+    //applyCoulombs(node1, bounds[2], node1.cy); 
+    //top
+    //applyCoulombs(node1, node1.cx, bounds[1]); 
+    //bottom
+    //applyCoulombs(node1, node1.cx, bounds[3]); 
+}
+
 var FDGNode = function(nodeElement, level) {
     this.nodeElement = nodeElement;
+
     this.id = nodeElement.id;
     this.level = level;
 
@@ -193,10 +193,10 @@ var LayeredFDG = function() {
         for(var node1 in this.adjList){
             for(var node2 in this.adjList[node1]){
                 var currEdge = this.adjList[node1][node2];
-                //applyHookes(
-                //        this.nodes[node1], 
-                //        this.nodes[currEdge.endNode],
-                //        currEdge);
+                applyHookes(
+                        this.nodes[node1], 
+                        this.nodes[currEdge.endNode],
+                        currEdge);
             }
         }
         
@@ -287,6 +287,7 @@ var LayeredFDG = function() {
         triFDG.setAttribute("points", points);
         triFDG.setAttribute("fill-opacity", "0");
         triFDG.setAttribute("stroke", "rgb(0,0,0)");
+        triFDG.setAttribute("class","draggable");
         svgFDG.appendChild(triFDG);
 
         this.addNode(triFDG, level);
@@ -329,11 +330,12 @@ var LayeredFDG = function() {
         }
     }
 
-    FDG_CANVAS_HEIGHT = CANVAS_HEIGHT*2;
+    FDG_CANVAS_HEIGHT = CANVAS_HEIGHT;//*2;
     this.init = function() {
         console.log("Create force directed graph");
         svgFDG = document.createElementNS(NS, "svg");
         svgFDG.setAttribute("id", "svgFDG");
+        //svgFDG.setAttribute("class","draggable");
         svgFDG.setAttribute("width", CANVAS_WIDTH);
         svgFDG.setAttribute("height", FDG_CANVAS_HEIGHT);
         document.body.appendChild(svgFDG);
@@ -397,3 +399,10 @@ function loadNodes(kptTris, maxDepth){
 function draw(){
     window.requestAnimationFrame(draw);
 }
+
+
+function tester(){
+
+
+}
+

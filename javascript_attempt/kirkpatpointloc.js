@@ -306,11 +306,20 @@ var triangulate = function(polyPoints, polyHolePoints){
     return triangles;
 }
 
+movePoint = function(oldPos, oldCenter, newCenter){
+    var centerOffset = oldCenter - oldPos; 
+    return newCenter + centerOffset;
+}
+
 loadPolygon = function(svg, vertices){
     console.log("Load polygon");
     var points = "";
     for(var i=0; i < vertices.length; i++){
         console.log("added point");
+        // move point to center
+        //points += movePoint(vertices[i].x, oldCenter[0], newCenter[0]) 
+        //        + ", " 
+        //        + movePoint(vertices[i].y, oldCenter[1], newCenter[1]) + " ";
         points += vertices[i].x + ", " + vertices[i].y + " ";
     }
     var element = document.createElementNS(NS, "polygon");
