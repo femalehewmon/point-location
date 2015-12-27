@@ -13,13 +13,15 @@ var KPVertex = function(svg, x, y, depth){
 	this.element.setAttribute("r", 10);
     svg.appendChild(this.element);
 
-    this.render = function(){
+    this.show = function(){
         this.element.setAttribute("visibility", "visible");
     }
 
     this.hide = function(){
         this.element.setAttribute("visibility", "hidden");
     }
+
+    this.hide();
 }
 
 var KPTriangle = function(svg, id, v1, v2, v3, depth){
@@ -56,7 +58,7 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
 
     this.centroid = getCentroid(this.element.points);
 
-    this.render = function(){
+    this.show = function(){
         this.element.setAttribute("visibility", "visible");
     }
 
@@ -93,6 +95,7 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
         }
     }
 
+    this.hide();
 }
 
 var KPTStruct = function(svg){
@@ -130,8 +133,6 @@ var KPTStruct = function(svg){
                 }
                 degree = hullTris.length;
                 if(degree > 1 && degree <= 8){
-                    console.log("Found vertex to remove: " + v.id + 
-                            " with triangles " + hullTris);
                     ildv_found = true;
                     for (var i=0; i < degree; i++) {
                         adjtri_id = hullTris[i];
@@ -163,7 +164,6 @@ var KPTStruct = function(svg){
     }
 
     this.getTrisHull = function(trisInHull, centerVert){
-        console.log("GETTING HULL OF " + trisInHull.length + " triangles");
         hullVerts = new Array();
         if(trisInHull.length > 0){
             // add starting points for hull of triangles
@@ -180,13 +180,7 @@ var KPTStruct = function(svg){
                 currVert = hullVerts[hullVerts.length - 1];
                 // find next triangle with a shared endpoint
                 var currTri = null;
-                console.log("CURRENT VERT: " + currVert.id);
-                console.log("CENTER VERT: " + centerVert.id);
-                console.log("CURRENT DEPTH: " + this.depth);
                 for(var j=0; j < trisInHull.length; j++){
-                    console.log("TRI DEPTH: " + this.tris[trisInHull[j]].endDepth);
-                    console.log("POSSIBLE VETS: " + trisInHull[j] + " " + 
-                            this.tris[trisInHull[j]].vertices);
                     if(this.tris[trisInHull[j]].containsVertex(currVert.id) &&
                       this.tris[trisInHull[j]].containsVertex(centerVert.id) &&
                       this.tris[trisInHull[j]].endDepth === this.depth){
@@ -218,7 +212,7 @@ var KPTStruct = function(svg){
     }
 
     this.render = function(depth){
-        if(!depth){
+        if(depth === undefined || depth === null){
             depth = this.drawDepth;
         }
         tcount = 0;
@@ -226,7 +220,7 @@ var KPTStruct = function(svg){
             tcount++;
             if(this.tris[key].startDepth <= depth &&
                     this.tris[key].endDepth > depth){
-                this.tris[key].render();
+                this.tris[key].show();
             } else {
                 this.tris[key].hide();
             }
@@ -236,18 +230,16 @@ var KPTStruct = function(svg){
             vcount++;
             if(this.vertices[key].startDepth <= depth &&
                     this.vertices[key].endDepth > depth){
-                this.vertices[key].render();
+                this.vertices[key].show();
             } else {
                 this.vertices[key].hide();
             }
         }
-        console.log("IN TOTAL: " + tcount + " triangles and " + 
-                vcount);
     }
 
-    this.addTris = function(poly2tris, dont_increase_level){
+    this.addTris = function(poly2tris, dont_increase_level, show){
         for(var i = 0; i < poly2tris.length; i++){
-            this.addTri(poly2tris[i], this.depth);
+            var tri = this.addTri(poly2tris[i], this.depth, show);
         }
         if(!dont_increase_level){
             this.depth += 1;
@@ -255,18 +247,23 @@ var KPTStruct = function(svg){
         }
     }
 
-    this.addTri = function(tri, depth){
-        v1 = this.addVertex(tri.getPoint(0).x, tri.getPoint(0).y, depth);
-        v2 = this.addVertex(tri.getPoint(1).x, tri.getPoint(1).y, depth);
-        v3 = this.addVertex(tri.getPoint(2).x, tri.getPoint(2).y, depth);
+    this.addTri = function(tri, depth, show){
+        var v1 = this.addVertex(tri.getPoint(0).x, tri.getPoint(0).y, depth);
+        var v2 = this.addVertex(tri.getPoint(1).x, tri.getPoint(1).y, depth);
+        var v3 = this.addVertex(tri.getPoint(2).x, tri.getPoint(2).y, depth);
         this.triId += 1;
-        tri = new KPTriangle(this.svg, this.triId, v1, v2, v3, depth);
-        console.log("Adding new tri: " + tri.id + " to " +
-               v1.id + " " + v2.id + " " + v3.id); 
+        var tri = new KPTriangle(this.svg, this.triId, v1, v2, v3, depth);
         this.tris_by_vert[v1.id].push(tri.id);
         this.tris_by_vert[v2.id].push(tri.id);
         this.tris_by_vert[v3.id].push(tri.id);
         this.tris[this.triId] = tri;
+        if(show){
+            v1.show();
+            v2.show();
+            v3.show();
+            tri.show();
+        }
+        return tri;
     }
 
     this.addVertex = function(x, y, depth){
@@ -302,7 +299,6 @@ var triangulate = function(polyPoints, polyHolePoints){
     // triangulate
     swctx.triangulate();
     triangles = swctx.getTriangles();
-    console.log("triangulated into " + triangles.length);
     return triangles;
 }
 
@@ -315,7 +311,6 @@ loadPolygon = function(svg, vertices){
     console.log("Load polygon");
     var points = "";
     for(var i=0; i < vertices.length; i++){
-        console.log("added point");
         // move point to center
         //points += movePoint(vertices[i].x, oldCenter[0], newCenter[0]) 
         //        + ", " 
@@ -354,7 +349,6 @@ drawOuterTriangle = function(svg, centroid){
     points += centerX + ", " + topY;
     points += " ";
     points += rightX + ", " + bottomY;
-    console.log("outer tri points: " + points);
 
     var element = document.createElementNS(NS, "polygon");
     element.setAttribute("id", "outerTri");

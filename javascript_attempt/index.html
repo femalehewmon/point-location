@@ -53,11 +53,11 @@
             testPointsSmall.push(new PolyPoint(145, 76));
             testPointsSmall.push(new PolyPoint(101, 13));
             testPoints = testPointsSmall;
-            TEST = true;
+            DEMO = true;
 
             function createPolygon() {
                 console.log("Create polygon");
-                if(!TEST){
+                if(!DEMO){
                     poly = new Poly(svg, callbackOnComplete);
                 } else{
                     var updatedPoints = "";
@@ -109,7 +109,7 @@
                     case CREATE_POLYGON:
                         // at this point, poly is still custom
                         // load into an svg polygon
-                        if(TEST){
+                        if(DEMO){
                             repositionPolygon();
                             stage = SETUP_TRIANGULATION;
                         }else{
@@ -128,10 +128,16 @@
                         switch(subStage){
                             case 0:
                                 // triangulate main polygon
-                                kptstruct = new KPTStruct(svg);
-                                polytris = triangulate(poly.points);
-                                kptstruct.addTris(polytris, true);
-                                subStage++;
+                                if(counter >= MAX_COUNT){
+                                    console.log("Triangulate main poly");
+                                    poly.setAttribute("visibility", "hidden");
+                                    kptstruct = new KPTStruct(svg);
+                                    polytris = triangulate(poly.points);
+                                    kptstruct.addTris(polytris, true, true);
+                                    counter = 0;
+                                    subStage++;
+                                }
+                                counter++;
                                 break;
                             case 1:
                                 // draw and triangulate convex hull
@@ -145,18 +151,30 @@
                                 break;
                             case 2:
                                 // draw and triangulate outer triangle
-                                outerTri = drawOuterTriangle(svg, CENTER);
-                                outertris = 
-                                    triangulate(outerTri.points, poly.points);
-                                kptstruct.addTris(outertris);
-                                subStage++;
+                                if(counter >= MAX_COUNT){
+                                    console.log("Draw outer tri");
+                                    outerTri = drawOuterTriangle(svg, CENTER);
+                                    counter = 0;
+                                    subStage++;
+                                }
+                                counter++;
                                 break;
                             case 3:
+                                if(counter >= MAX_COUNT){
+                                    console.log("Triangulate outer tri");
+                                    outertris = triangulate(
+                                                outerTri.points, poly.points);
+                                    kptstruct.addTris(outertris);
+                                    counter = 0;
+                                    subStage++;
+                                }
+                                counter++;
+                                break;
+                            case 4:
                                 // find and remove ILDVs
                                 while(kptstruct.markILDV()){
                                     kptstruct.markILDV();
                                     removedToNewTris = kptstruct.removeILDV();
-                                    kptstruct.render();
                                 }
 
                                 // create graph layout and load triangles
@@ -176,6 +194,7 @@
                             subStage++;
                             counter = 0;
                         } 
+                        console.log("SUBSTAGE: " + subStage);
                         kptstruct.render(subStage);
                         fdg.render(subStage);
                         counter++;

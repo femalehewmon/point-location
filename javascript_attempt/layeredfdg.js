@@ -132,7 +132,7 @@ var FDGNode = function(nodeElement, level) {
         this.nodeElement.setAttribute("visibility", "visible");
     }
 
-    this.show();
+    this.hide();
 }
 
 var FDGEdge = function(edgeElement, startNodeId, endNodeId, length) {
@@ -159,6 +159,7 @@ var FDGEdge = function(edgeElement, startNodeId, endNodeId, length) {
         this.edgeElement.setAttribute("visibility", "visible");
     }
 
+    this.hide();
 }
 
 var LayeredFDG = function() {
@@ -174,7 +175,8 @@ var LayeredFDG = function() {
     this.nodes = {};    // point_id:drawable
 
     this.render = function(renderLevel){
-        if(!renderLevel){
+        if(renderLevel === undefined || renderLevel === null){
+            console.log("!!!!!!!NO RENDER LEVEL!!!!!!!!");
             renderLevel = this.maxLevel;
         }
         for(var key in this.levels){
@@ -188,7 +190,6 @@ var LayeredFDG = function() {
                 }
             } 
         }
-        
         
         for(var node1 in this.adjList){
             for(var node2 in this.adjList[node1]){
