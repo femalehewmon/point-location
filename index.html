@@ -33,6 +33,7 @@
             CANVAS_HEIGHT = 600;
             MARGIN = 20;
             CENTER = [CANVAS_WIDTH/2,  CANVAS_HEIGHT/2];
+            COLOR_GREY = "rgb(240, 240, 240)";
 
             svg = document.createElementNS(NS, "svg");
             svg.setAttribute("id", "polySVG");
@@ -138,10 +139,12 @@
                 outerTri = document.createElementNS(NS, "polygon");
                 outerTri.setAttribute("id", "outerTri");
                 outerTri.setAttribute("points", points);
-                outerTri.setAttribute("fill-opacity", "0");
+                outerTri.setAttribute("fill-opacity", "1");
+                outerTri.setAttribute("fill", "rgb(240, 240, 240)");
                 outerTri.setAttribute("stroke", "rgb(0,0,0)");
                 outerTri.setAttribute("visibility", "hidden");
-                svg.appendChild(outerTri);
+                //svg.appendChild(outerTri);
+                svg.insertBefore(outerTri, svg.firstChild);
             }
 
             var $draggable = $('.draggable').draggabilly({

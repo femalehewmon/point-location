@@ -51,10 +51,6 @@ function draw(){
             polytris = triangulate(poly.points);
             kpt.addPolyTris(polytris);
 
-            poly.setAttribute("visibility", "hidden");
-            kpt.drawPolyTris = true;
-            kpt.render(0);
-
             // create and triangulate outer polygon
             if(outerTri === undefined || outerTri === null){
                 createOuterTriangle();
@@ -62,8 +58,6 @@ function draw(){
             outertris = triangulate(
                         outerTri.points, poly.points);
             kpt.addOuterTris(outertris);
-            kpt.drawOuterTris = true;
-            kpt.render(0);
 
             // find and remove ILDVs
             while(kpt.markILDV()){
@@ -73,9 +67,6 @@ function draw(){
 
             // finally, load triangles into data structures
             loadNodes(kpt.tris, kpt.depth);
-            kpt.render(1);
-            fdg.render(2);
-            return;
 
             stage = DRAW_TRIANGULATION;
             subStage = triangulate_poly;
@@ -110,14 +101,15 @@ function draw(){
                         break;
                 }
                 kpt.render(drawLevel);
-                fdg.render(drawLevel);
+                fdg.render(drawLevel + 1);
                 counter = 0;
             } 
             counter++;
             break;
         case POINT_LOCATION:
-            fdg.render(0);
+            console.log(kpt);
             kpt.render(0);
+            fdg.render(fdg.maxLevel);
             /*
             if(counter >= MAX_COUNT){
                 //this.svg.addEventListener("click", clickCB.bind(this));
@@ -141,8 +133,9 @@ function draw(){
                     stage = FIND_POINT;
                 });
             }
-            */
             counter++;
+            */
+            stage = DONE;
             break;
         case FIND_POINT:
             if(kpt.pointInPoly(

@@ -60,7 +60,8 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.element = document.createElementNS(NS, "polygon");
     this.element.setAttribute("id", "tri-" + id);
     this.element.setAttribute("points", points);
-    this.element.setAttribute("fill-opacity", "0");
+    //this.element.setAttribute("fill-opacity", "0");
+    this.element.setAttribute("fill", "white");
     this.element.setAttribute("stroke", "rgb(0,0,0)");
     svg.appendChild(this.element);
 
@@ -269,6 +270,7 @@ var KPTStruct = function(svg){
                 this.tris[key].hide();
             }
         }
+        /*
         for(var key in this.vertices){
             if(this.vertices[key].startDepth <= depth &&
                     this.vertices[key].endDepth > depth){
@@ -300,6 +302,7 @@ var KPTStruct = function(svg){
                 this.vertices[key].hide();
             }
         }
+        */
     }
 
     this.addPolyTris = function(poly2tris){

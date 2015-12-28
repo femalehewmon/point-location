@@ -325,7 +325,8 @@ var LayeredFDG = function() {
             var fdgTriEl = document.createElementNS(NS, "polygon");
             fdgTriEl.setAttribute("id", tri.id);
             fdgTriEl.setAttribute("points", points);
-            fdgTriEl.setAttribute("fill-opacity", "0");
+            //fdgTriEl.setAttribute("fill-opacity", "0");
+            fdgTriEl.setAttribute("fill", "white");
             fdgTriEl.setAttribute("stroke", "rgb(0,0,0)");
             fdgTriEl.setAttribute("class","draggable");
             svgFDG.appendChild(fdgTriEl);
@@ -354,11 +355,11 @@ var LayeredFDG = function() {
             $(fdgTriEl).on("mouseleave", function(){
                 var friend = "#tri-" + $(this).attr("id");
                 $(this).css({
-                    "fill-opacity": "0"
+                    "fill": "white"
                 });
 
                 $(friend).css({
-                    "fill-opacity": "0"
+                    "fill": "white"
                 })
             });
 
@@ -377,11 +378,11 @@ var LayeredFDG = function() {
             $(kptTriEl).on("mouseleave", function(){
                 var friend = "#" + $(this).attr("id").split("-")[1];
                 $(this).css({
-                    "fill-opacity": "0"
+                    "fill": "white"
                 });
 
                 $(friend).css({
-                    "fill-opacity": "0"
+                    "fill": "white"
                 })
             });
         }
