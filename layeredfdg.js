@@ -241,14 +241,14 @@ var LayeredFDG = function() {
 
 
     this.getBounds = function(level){
-        height = FDG_CANVAS_HEIGHT - MARGIN*2; 
+        height = CANVAS_HEIGHT - MARGIN*2; 
         height_per_level = height/this.maxLevel;
 
         leftB = MARGIN;
-        rightB = CANVAS_WIDTH/2 - MARGIN;
-        bottomB = FDG_CANVAS_HEIGHT - MARGIN 
+        rightB = CANVAS_WIDTH - MARGIN;
+        bottomB = CANVAS_HEIGHT - MARGIN 
             - height_per_level*level;
-        topB = FDG_CANVAS_HEIGHT - MARGIN 
+        topB = CANVAS_HEIGHT - MARGIN 
             - height_per_level*(level+1);
 
         bounds = [leftB, topB, rightB, bottomB, 
@@ -427,14 +427,13 @@ var LayeredFDG = function() {
         }
     }
 
-    FDG_CANVAS_HEIGHT = CANVAS_HEIGHT;//*2;
     this.init = function() {
         console.log("Create force directed graph");
         svgFDG = document.createElementNS(NS, "svg");
         svgFDG.setAttribute("id", "svgFDG");
         //svgFDG.setAttribute("class","draggable");
         svgFDG.setAttribute("width", CANVAS_WIDTH);
-        svgFDG.setAttribute("height", FDG_CANVAS_HEIGHT);
+        svgFDG.setAttribute("height", CANVAS_HEIGHT);
         document.body.appendChild(svgFDG);
     }
 
