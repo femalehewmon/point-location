@@ -93,7 +93,7 @@ function draw(){
                     case draw_outer_tri:
                         outerTri.setAttribute("visibility", "visible");
                         subStage = triangulate_outer_tri;
-                        $("#textbox").html("And now we triangulate it.");
+                        $("#textbox").html("And now we can triangulate it.");
                         break;
                     case triangulate_outer_tri:
                         kpt.drawOuterTris = true;
@@ -104,11 +104,14 @@ function draw(){
                         break;
                     case iteratively_remove_ildv:
                         $("#textbox").html("Now we can begin removing the independent low degree vertices.");
-                        if(drawLevel <= fdg.maxLevel){
+                        if(drawLevel < fdg.maxLevel){
                             drawLevel++;
+                            if(drawLevel == fdg.maxLevel){
+                                $("#textbox").html(
+                                        "And our data structure is complete!");
+                            }
                         } else{
                             stage = POINT_LOCATION;
-                            $("#textbox").html("And our data structure is complelte!");
                         }
                         break;
                 }
