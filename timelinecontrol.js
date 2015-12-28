@@ -29,7 +29,7 @@ function draw(){
                 if(DEMO){
                     repositionPolygon();
                     stage = SETUP_TRIANGULATION;
-                    $("#textbox").html("DEMO, Nice polygon!");
+                    $("#textbox").html("Nice polygon!");
                 } else{
                     if(poly.isFinished){
                         // reposition polygon
