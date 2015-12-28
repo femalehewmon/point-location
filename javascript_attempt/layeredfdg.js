@@ -320,6 +320,7 @@ var LayeredFDG = function() {
         //scalePolygon(triFDG, scaleRatio);
 
         this.addNode(triFDG, level);
+        return triFDG;
     }
 
     this.addNode = function(node, level){
@@ -411,7 +412,26 @@ function loadNodes(kptTris, maxDepth){
             }
             if(kptTris[key].startDepth === currDepth){
                 parentNodes.push(kptTris[key]);
-                fdg.addKPTri(kptTris[key], currDepth);
+                var kptTriEl = fdg.addKPTri(kptTris[key], currDepth);
+
+                $(kptTriEl).on("mouseover", function(){
+                    // console.log($(this).attr("id"));
+                    var friend = "#tri-" + $(this).attr("id");
+
+                    $(this).css({
+                        "fill": "blue",
+                        "fill-opacity": "1"
+                    });
+
+                    $(friend).css({
+                        "fill": "blue",
+                        "fill-opacity": "1"
+                    })
+
+                    console.log("friend", $(friend));
+
+                });
+
             }
         }
         for(var child in childNodes){

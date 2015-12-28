@@ -24,6 +24,14 @@ var KPVertex = function(svg, x, y, depth){
     this.hide();
 }
 
+function hoverAnimation(el){
+
+    $(el).on("hover", function(){
+        // $(el).css("fill, blue");
+          console.log("Hey, I'm hovering...and here's the element", el);
+    })
+}
+
 var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.id = id;
     this.startDepth = depth;
@@ -50,7 +58,7 @@ var KPTriangle = function(svg, id, v1, v2, v3, depth){
         v3.x + "," + v3.y;
 
     this.element = document.createElementNS(NS, "polygon");
-    this.element.setAttribute("id", "tri:" + id);
+    this.element.setAttribute("id", "tri-" + id);
     this.element.setAttribute("points", points);
     this.element.setAttribute("fill-opacity", "0");
     this.element.setAttribute("stroke", "rgb(0,0,0)");
@@ -273,6 +281,7 @@ var KPTStruct = function(svg){
         var v3 = this.addVertex(tri.getPoint(2).x, tri.getPoint(2).y, depth);
         this.triId += 1;
         var tri = new KPTriangle(this.svg, this.triId, v1, v2, v3, depth);
+
         this.tris_by_vert[v1.id].push(tri.id);
         this.tris_by_vert[v2.id].push(tri.id);
         this.tris_by_vert[v3.id].push(tri.id);

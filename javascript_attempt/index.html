@@ -1,35 +1,50 @@
 <html>
     <head>
         <title>My first Three.js app</title>
-        <style>
-            body { margin: 0; }
-            canvas { width: 100%; height: 100% }
-        </style>
-    </head>
-    <body>
         <script src="js/poly2tri.js"></script>
         <script src="js/jquery-2.1.4.min.js"></script>
         <script src="js/draggabilly.pkgd.min.js"></script>
         <script src="polygoncreation.js"></script>
         <script src="kirkpatpointloc.js"></script>
         <script src="layeredfdg.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/main.css"> </link>
+    </head>
+    <body>
+        <div id="canvas-container">
+            <div id="kpt-container">
+                <div id="KPTCanvas"></div>
+            </div>
+            <div id="fdg-container">
+                <div id="FDGCanvas"></div>
+            </div>
+        </div>
         <script>
             kptstruct = null;
             fdg = null;
             pointToFind = null;
             NS ="http://www.w3.org/2000/svg";
-            CANVAS_WIDTH = 1200;
+            CANVAS_WIDTH = 600;
             CANVAS_HEIGHT = 600;
             MARGIN = 20;
-            CENTER_LEFT_X = CANVAS_WIDTH/4;
-            CENTER_LEFT_Y = CANVAS_HEIGHT/2;
-            CENTER = [CENTER_LEFT_X,  CENTER_LEFT_Y];
+            CENTER = [CANVAS_WIDTH/2,  CANVAS_HEIGHT/2];
 
             svg = document.createElementNS(NS, "svg");
             svg.setAttribute("id", "polySVG");
             svg.setAttribute("width", CANVAS_WIDTH);
             svg.setAttribute("height", CANVAS_HEIGHT);
-            document.body.appendChild(svg);
+            $("#KPTCanvas").append(svg);
+            // document.body.appendChild(svg);
+
+
+            FDG_CANVAS_HEIGHT = CANVAS_HEIGHT;//*2;
+            console.log("Create force directed graph");
+            svgFDG = document.createElementNS(NS, "svg");
+            svgFDG.setAttribute("id", "svgFDG");
+            //svgFDG.setAttribute("class","draggable");
+            svgFDG.setAttribute("width", CANVAS_WIDTH);
+            svgFDG.setAttribute("height", FDG_CANVAS_HEIGHT);
+            // document.body.appendChild(svgFDG);
+            $("#FDGCanvas").append(svgFDG);
 
             // create polygon
             testPointsLarge = new Array();
@@ -102,13 +117,13 @@
                 console.log("Draw outer tri");
 
                 halfHeight = (CANVAS_HEIGHT - MARGIN*2)/2;
-                halfWidth = (CANVAS_WIDTH/2 - MARGIN*2)/2;
+                halfWidth = (CANVAS_WIDTH - MARGIN*2)/2;
 
                 topY = MARGIN;
                 bottomY = CANVAS_HEIGHT - MARGIN;
                 rightX = CANVAS_WIDTH/2 - MARGIN;
                 leftX = MARGIN;
-                centerX = CANVAS_WIDTH/4;
+                centerX = halfWidth;
 
                 topY = centroid[1] - halfHeight;
                 bottomY = centroid[1] + halfHeight;
@@ -246,7 +261,6 @@
 
                                 // create graph layout and load triangles
                                 fdg = new LayeredFDG();
-                                fdg.init();
                                 loadNodes(kptstruct.tris, kptstruct.depth);
 
                                 // move to next stage
@@ -279,6 +293,9 @@
                         counter++;
                         break;
                     case POINT_LOCATION:
+                        fdg.render(0);
+                        kptstruct.render(0);
+                        /*
                         if(counter >= MAX_COUNT){
                             //this.svg.addEventListener("click", clickCB.bind(this));
                             $('#outerTri').attr('visibility', 'hidden');
@@ -301,6 +318,7 @@
                                 stage = FIND_POINT;
                             });
                         }
+                        */
                         counter++;
                         break;
                     case FIND_POINT:
@@ -323,5 +341,8 @@
             draw();
 
         </script>
+
+        <div id="textbox">
+        </div>
     </body>
 </html>
