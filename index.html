@@ -31,7 +31,6 @@
             NS ="http://www.w3.org/2000/svg";
             CANVAS_WIDTH = 600;
             CANVAS_HEIGHT = 600;
-            MARGIN = 20;
             CENTER = [CANVAS_WIDTH/2,  CANVAS_HEIGHT/2];
             COLOR_GREY = "rgb(240, 240, 240)";
 
@@ -121,8 +120,8 @@
             createOuterTriangle = function(){
                 console.log("Create outer tri");
 
-                halfHeight = (CANVAS_HEIGHT - MARGIN*2)/2;
-                halfWidth = (CANVAS_WIDTH - MARGIN*2)/2;
+                halfHeight = (CANVAS_HEIGHT)/2;
+                halfWidth = (CANVAS_WIDTH)/2;
                 topY = CENTER[1] - halfHeight;
                 bottomY = CENTER[1] + halfHeight;
                 rightX = CENTER[0] + halfWidth;

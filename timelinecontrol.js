@@ -50,6 +50,7 @@ function draw(){
             // triangulate main polygon 
             polytris = triangulate(poly.points);
             kpt.addPolyTris(polytris);
+            fdg.addPolyTris(kpt.polyTris); // add ids only, workaround
 
             // create and triangulate outer polygon
             if(outerTri === undefined || outerTri === null){
@@ -58,6 +59,7 @@ function draw(){
             outertris = triangulate(
                         outerTri.points, poly.points);
             kpt.addOuterTris(outertris);
+            fdg.addOuterTris(kpt.outerTris);
 
             // find and remove ILDVs
             while(kpt.markILDV()){
@@ -101,13 +103,12 @@ function draw(){
                         break;
                 }
                 kpt.render(drawLevel);
-                fdg.render(drawLevel + 1);
+                fdg.render(drawLevel);
                 counter = 0;
             } 
             counter++;
             break;
         case POINT_LOCATION:
-            console.log(kpt);
             kpt.render(0);
             fdg.render(fdg.maxLevel);
             /*

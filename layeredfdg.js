@@ -175,18 +175,39 @@ var LayeredFDG = function() {
     this.levels = {};    // level:point_id
     this.nodes = {};    // point_id:drawable
 
+    this.drawPolyTris = false;
+    this.drawOuterTris = false;
+    this.outerTris = new Array();
+    this.polyTris = new Array();
+
     this.render = function(renderLevel){
         if(renderLevel === undefined || renderLevel === null){
             renderLevel = this.maxLevel;
         }
 
         for(var key in this.levels){
-            if(key < renderLevel){
-                for(var nodeId in this.levels[key]){
-                    this.nodes[this.levels[key][nodeId]].show();
-                    if(this.levels[key][nodeId] in this.adjList){
-                        for(var edge in this.adjList[key]){
-                            this.adjList[key][edge].show();
+            if(key <= renderLevel){
+                if(parseInt(key, 10) === 0){
+                    for(var nodeId in this.levels[key]){
+                        var id = parseInt(
+                                this.levels[key][nodeId], 10);
+                        this.nodes[id].hide();
+                        if(this.drawPolyTris &&
+                                this.polyTris.indexOf(id) > -1){
+                            this.nodes[id].show();
+                        }
+                        if(this.drawOuterTris &&
+                                this.outerTris.indexOf(id) > -1){
+                            this.nodes[id].show();
+                        }
+                    }
+                } else{
+                    for(var nodeId in this.levels[key]){
+                        this.nodes[this.levels[key][nodeId]].show();
+                        if(this.levels[key][nodeId] in this.adjList){
+                            for(var edge in this.adjList[key]){
+                                this.adjList[key][edge].show();
+                            }
                         }
                     }
                 }
@@ -241,14 +262,14 @@ var LayeredFDG = function() {
 
 
     this.getBounds = function(level){
-        height = CANVAS_HEIGHT - MARGIN*2; 
+        height = CANVAS_HEIGHT; 
         height_per_level = height/this.maxLevel;
 
-        leftB = MARGIN;
-        rightB = CANVAS_WIDTH - MARGIN;
-        bottomB = CANVAS_HEIGHT - MARGIN 
+        leftB = 0;
+        rightB = CANVAS_WIDTH;
+        bottomB = CANVAS_HEIGHT
             - height_per_level*level;
-        topB = CANVAS_HEIGHT - MARGIN 
+        topB = CANVAS_HEIGHT
             - height_per_level*(level+1);
 
         bounds = [leftB, topB, rightB, bottomB, 
@@ -262,20 +283,18 @@ var LayeredFDG = function() {
         return bounds;
     }
 
-    this.addPolyTri = false;
-    this.addPolyTri = function(tri){
-       this.addPolyTri = true; 
-       console.log("Adding polygon triangles", tri);
-       this.addKPTri(tri, 0);
-       this.addPolyTri = false; 
+    this.addPolyTris = function(poly2tris){
+        for(var i in poly2tris){
+            this.polyTris.push(poly2tris[i]);
+        }
+        console.log("POLY FDG TRIS", this.polyTris);
     }
 
-    this.addOuterTri = false;
-    this.addOuterTri = function(tri){
-       this.addOuterTri = true; 
-       console.log("Adding outer triangles", tri);
-       this.addKPTri(tri, 0);
-       this.addOuterTri = false; 
+    this.addOuterTris = function(poly2tris){
+        for(var i in poly2tris){
+            this.outerTris.push(poly2tris[i]);
+        }
+        console.log("OUTER FDG TRIS", this.outerTris);
     }
 
     this.addKPTri = function(tri, level){

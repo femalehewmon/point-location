@@ -240,34 +240,38 @@ var KPTStruct = function(svg){
         }
 
         for(var key in this.tris){
-            if(this.tris[key].startDepth <= depth &&
-                    this.tris[key].endDepth > depth){
-                if(showHoles && depth > 0){
-                   if(this.tris[key].startDepth === depth){
-                       this.tris[key].hide();
-                   } else{
-                       this.tris[key].show();
-                   }
+            if(depth === 0){
+                if(this.tris[key].startDepth === 0){
+                    this.tris[key].hide();
+                    if(this.drawPolyTris && 
+                            this.polyTris.indexOf(
+                                parseInt(key, 10)) > -1){
+                        this.tris[key].show();
+                    } 
+                    if(this.drawOuterTris &&
+                            this.outerTris.indexOf(
+                                parseInt(key, 10)) > -1){
+                        this.tris[key].show();
+                    }
+                } else{
+                    this.tris[key].hide();
                 }
-                else{
-                    if(depth === 0){
-                        this.tris[key].hide();
-                        if(this.drawPolyTris && 
-                                this.polyTris.indexOf(
-                                    parseInt(key, 10)) > -1){
-                            this.tris[key].show();
-                        } 
-                        if(this.drawOuterTris &&
-                                this.outerTris.indexOf(
-                                    parseInt(key, 10)) > -1){
-                                this.tris[key].show();
-                        }
+            } else{
+                if(this.tris[key].startDepth <= depth &&
+                        this.tris[key].endDepth > depth){
+                    if(showHoles && depth >= 0){
+                       if(this.tris[key].startDepth === depth){
+                           this.tris[key].hide();
+                       } else{
+                           this.tris[key].show();
+                       }
                     } else{
                         this.tris[key].show();
                     }
+                } else {
+                    this.tris[key].hide();
                 }
-            } else {
-                this.tris[key].hide();
+
             }
         }
         /*
@@ -317,6 +321,7 @@ var KPTStruct = function(svg){
        console.log("Adding outer triangles", poly2tris);
        this.addTris(poly2tris, 0);
        this.addOuterTri = false; 
+       console.log(this.outerTris);
     }
 
     this.addTris = function(poly2tris, forceLevel){
@@ -329,13 +334,12 @@ var KPTStruct = function(svg){
         }
         // add triangles
         for(var i = 0; i < poly2tris.length; i++){
-            var tri = this.addTri(poly2tris[i], startDepth);
+            var tri = this.addTri(poly2tris[i], 
+                    parseInt(startDepth,10));
             if(this.addPolyTri){
-                console.log("Added poly tri", tri);
                 this.polyTris.push(tri.id);
             }
             if(this.addOuterTri){
-                console.log("Added outer tri", tri);
                 this.outerTris.push(tri.id);
             }
         }
