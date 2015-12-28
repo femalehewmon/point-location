@@ -47,31 +47,36 @@ function draw(){
             }
             break;
         case SETUP_TRIANGULATION:
-            // triangulate main polygon 
-            polytris = triangulate(poly.points);
-            kpt.addPolyTris(polytris);
-            fdg.addPolyTris(kpt.polyTris); // add ids only, workaround
+            if(counter >= MAX_COUNT){
+                $("#textbox").html("Let's triangulate it.");
+                // triangulate main polygon 
+                polytris = triangulate(poly.points);
+                kpt.addPolyTris(polytris);
+                fdg.addPolyTris(kpt.polyTris); // add ids only, workaround
 
-            // create and triangulate outer polygon
-            if(outerTri === undefined || outerTri === null){
-                createOuterTriangle();
+                // create and triangulate outer polygon
+                if(outerTri === undefined || outerTri === null){
+                    createOuterTriangle();
+                }
+                outertris = triangulate(
+                            outerTri.points, poly.points);
+                kpt.addOuterTris(outertris);
+                fdg.addOuterTris(kpt.outerTris);
+
+                // find and remove ILDVs
+                while(kpt.markILDV()){
+                    kpt.markILDV();
+                    removedToNewTris = kpt.removeILDV();
+                }
+
+                // finally, load triangles into data structures
+                loadNodes(kpt.tris, kpt.depth);
+
+                stage = DRAW_TRIANGULATION;
+                subStage = triangulate_poly;
+                counter = 0;
             }
-            outertris = triangulate(
-                        outerTri.points, poly.points);
-            kpt.addOuterTris(outertris);
-            fdg.addOuterTris(kpt.outerTris);
-
-            // find and remove ILDVs
-            while(kpt.markILDV()){
-                kpt.markILDV();
-                removedToNewTris = kpt.removeILDV();
-            }
-
-            // finally, load triangles into data structures
-            loadNodes(kpt.tris, kpt.depth);
-
-            stage = DRAW_TRIANGULATION;
-            subStage = triangulate_poly;
+            counter++;
             break;
         case DRAW_TRIANGULATION:
             if(counter >= MAX_COUNT){
@@ -83,22 +88,27 @@ function draw(){
 
                         poly.setAttribute("visibility", "hidden");
                         subStage = draw_outer_tri;
+                        $("#textbox").html("What about the area surrounding the polygon? Let's draw a triangle around it to see if that helps. ");
                         break;
                     case draw_outer_tri:
                         outerTri.setAttribute("visibility", "visible");
                         subStage = triangulate_outer_tri;
+                        $("#textbox").html("And now we triangulate it.");
                         break;
                     case triangulate_outer_tri:
                         kpt.drawOuterTris = true;
                         fdg.drawOuterTris = true;
                         subStage = iteratively_remove_ildv;
                         drawLevel = 0;
+                        $("#textbox").html("Great, that looks better.");
                         break;
                     case iteratively_remove_ildv:
+                        $("#textbox").html("Now we can begin removing the independent low degree vertices.");
                         if(drawLevel <= fdg.maxLevel){
                             drawLevel++;
                         } else{
                             stage = POINT_LOCATION;
+                            $("#textbox").html("And our data structure is complelte!");
                         }
                         break;
                 }
@@ -111,6 +121,7 @@ function draw(){
         case POINT_LOCATION:
             kpt.render(0);
             fdg.render(fdg.maxLevel);
+            $("#textbox").html("The triangulation on the left represents the leaf level of the triangulation tree. It is a placeholder until point location and level navigation is implemented!");
             /*
             if(counter >= MAX_COUNT){
                 //this.svg.addEventListener("click", clickCB.bind(this));
