@@ -24,14 +24,6 @@ var KPVertex = function(svg, x, y, depth){
     this.hide();
 }
 
-function hoverAnimation(el){
-
-    $(el).on("hover", function(){
-        // $(el).css("fill, blue");
-          console.log("Hey, I'm hovering...and here's the element", el);
-    })
-}
-
 var KPTriangle = function(svg, id, v1, v2, v3, depth){
     this.id = id;
     this.startDepth = depth;
@@ -139,16 +131,13 @@ var KPTStruct = function(svg){
         neighbors = new Array();
         for(var key in this.vertices){
             v = this.vertices[key];
-            console.log(v.id);
             // vertex is still visible, check to see if it is a ILDV
             if(v.endDepth === Number.MAX_VALUE){ 
                 if(neighbors.indexOf(v.id) > -1 ||
                         this.oVertices.indexOf(v.id) > -1){
-                    console.log("is neighbor", v.id);
                     // vertex is a neighbor or an outer vertex, skip it
                     continue;
                 }
-                console.log("Looking to remove");
 
                 hullTris = new Array();
                 for(var i=0; i < this.tris_by_vert[v.id].length; i++){
@@ -157,8 +146,6 @@ var KPTStruct = function(svg){
                         hullTris.push(this.tris_by_vert[v.id][i]);
                     }
                 }
-                console.log(hullTris);
-                console.log(this.tris);
                 degree = hullTris.length;
                 if(degree > 1 && degree <= 8){
                     console.log("FOUND VERTEX!");
@@ -209,15 +196,12 @@ var KPTStruct = function(svg){
             }
             trisInHull = trisInHull.slice(1); // skip first value already added
             numtris = trisInHull.length;
-            console.log(trisInHull);
             // skip final tri to avoid double counting endpoint 
             for(var i=0; i < numtris-1; i++){
                 currVert = hullVerts[hullVerts.length - 1];
-                console.log(currVert);
                 // find next triangle with a shared endpoint
                 var currTri = null;
                 for(var j=0; j < trisInHull.length; j++){
-                console.log(this.tris[trisInHull[j]]);
                     if(this.tris[trisInHull[j]].containsVertex(currVert.id) &&
                       this.tris[trisInHull[j]].containsVertex(centerVert.id) &&
                       this.tris[trisInHull[j]].endDepth === this.depth){
@@ -335,7 +319,6 @@ var KPTStruct = function(svg){
        console.log("Adding outer triangles", poly2tris);
        this.addTris(poly2tris, 0);
        this.addOuterTri = false; 
-       console.log(this.outerTris);
     }
 
     this.addTris = function(poly2tris, forceLevel){
