@@ -1,7 +1,7 @@
 
 class CreatePolygon {
 
-  int STEPS = 12;
+  int STEPS = 100;
 
   int loopCount = 0;
   int loopMax = 0;

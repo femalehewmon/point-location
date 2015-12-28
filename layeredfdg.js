@@ -262,65 +262,130 @@ var LayeredFDG = function() {
         return bounds;
     }
 
+    this.addPolyTri = false;
+    this.addPolyTri = function(tri){
+       this.addPolyTri = true; 
+       console.log("Adding polygon triangles", tri);
+       this.addKPTri(tri, 0);
+       this.addPolyTri = false; 
+    }
+
+    this.addOuterTri = false;
+    this.addOuterTri = function(tri){
+       this.addOuterTri = true; 
+       console.log("Adding outer triangles", tri);
+       this.addKPTri(tri, 0);
+       this.addOuterTri = false; 
+    }
+
     this.addKPTri = function(tri, level){
-        console.log("Adding KPTri");
-        var bounds = this.getBounds(level);
-        /* 
-        var xOffset = bounds[4]/2 - tri.centroid[0]; 
-        var yOffset = bounds[1] + bounds[5]/2 - tri.centroid[1];
-        */ 
-        var v1x = tri.v1.x;
-        var v1y = tri.v1.y;
-        var v2x = tri.v2.x;
-        var v2y = tri.v2.y;
-        var v3x = tri.v3.x;
-        var v3y = tri.v3.y;
-        var boundsMargin = bounds[5]/4;
+        if(!(tri.id in this.nodes)){
+            console.log("Adding KPTri");
+            var bounds = this.getBounds(level);
+            /* 
+            var xOffset = bounds[4]/2 - tri.centroid[0]; 
+            var yOffset = bounds[1] + bounds[5]/2 - tri.centroid[1];
+            */ 
+            var v1x = tri.v1.x;
+            var v1y = tri.v1.y;
+            var v2x = tri.v2.x;
+            var v2y = tri.v2.y;
+            var v3x = tri.v3.x;
+            var v3y = tri.v3.y;
+            var boundsMargin = bounds[5]/4;
 
-        if(tri.height > bounds[5]){
-            scaleRatio = (bounds[5] - boundsMargin)/tri.height;
-            v1x = tri.centroid[0] + 
-                (v1x-tri.centroid[0])*scaleRatio; 
-            v2x = tri.centroid[0] + 
-                (v2x-tri.centroid[0])*scaleRatio; 
-            v3x = tri.centroid[0] + 
-                (v3x-tri.centroid[0])*scaleRatio; 
-            v1y = tri.centroid[1] + 
-                (v1y-tri.centroid[1])*scaleRatio; 
-            v2y = tri.centroid[1] + 
-                (v2y-tri.centroid[1])*scaleRatio; 
-            v3y = tri.centroid[1] + 
-                (v3y-tri.centroid[1])*scaleRatio; 
+            if(tri.height > bounds[5]){
+                scaleRatio = (bounds[5] - boundsMargin)/tri.height;
+                v1x = tri.centroid[0] + 
+                    (v1x-tri.centroid[0])*scaleRatio; 
+                v2x = tri.centroid[0] + 
+                    (v2x-tri.centroid[0])*scaleRatio; 
+                v3x = tri.centroid[0] + 
+                    (v3x-tri.centroid[0])*scaleRatio; 
+                v1y = tri.centroid[1] + 
+                    (v1y-tri.centroid[1])*scaleRatio; 
+                v2y = tri.centroid[1] + 
+                    (v2y-tri.centroid[1])*scaleRatio; 
+                v3y = tri.centroid[1] + 
+                    (v3y-tri.centroid[1])*scaleRatio; 
+                var points = 
+                          (v1x) + "," + (v1y) + " " +
+                          (v2x) + "," + (v2y) + " " +
+                          (v3x) + "," + (v3y);
+            }else{
             var points = 
-                      (v1x) + "," + (v1y) + " " +
-                      (v2x) + "," + (v2y) + " " +
-                      (v3x) + "," + (v3y);
-        }else{
-        var points = 
-             tri.element.points[0].x + "," + 
-             tri.element.points[0].y + " " +
-             tri.element.points[1].x + "," + 
-             tri.element.points[1].y + " " +
-             tri.element.points[2].x + "," + 
-             tri.element.points[2].y + " ";
+                 tri.element.points[0].x + "," + 
+                 tri.element.points[0].y + " " +
+                 tri.element.points[1].x + "," + 
+                 tri.element.points[1].y + " " +
+                 tri.element.points[2].x + "," + 
+                 tri.element.points[2].y + " ";
+            }
+
+            var fdgTriEl = document.createElementNS(NS, "polygon");
+            fdgTriEl.setAttribute("id", tri.id);
+            fdgTriEl.setAttribute("points", points);
+            fdgTriEl.setAttribute("fill-opacity", "0");
+            fdgTriEl.setAttribute("stroke", "rgb(0,0,0)");
+            fdgTriEl.setAttribute("class","draggable");
+            svgFDG.appendChild(fdgTriEl);
+
+            movePolygon(fdgTriEl, [bounds[0] + bounds[4]/2, 
+                    bounds[1] + bounds[5]/2]); 
+            var boundsMargin = bounds[5]/4;
+            var scaleRatio = (bounds[5] - boundsMargin)/tri.height;
+            //scalePolygon(fdgTriEl, scaleRatio);
+
+            this.addNode(fdgTriEl, level);
+
+            var kptTriEl = $("#tri-" + $(fdgTriEl).attr("id"));
+            $(fdgTriEl).on("mouseover", function(){
+                var friend = "#tri-" + $(this).attr("id");
+                $(this).css({
+                    "fill": "blue",
+                    "fill-opacity": "1"
+                });
+
+                $(friend).css({
+                    "fill": "blue",
+                    "fill-opacity": "1"
+                })
+            });
+            $(fdgTriEl).on("mouseleave", function(){
+                var friend = "#tri-" + $(this).attr("id");
+                $(this).css({
+                    "fill-opacity": "0"
+                });
+
+                $(friend).css({
+                    "fill-opacity": "0"
+                })
+            });
+
+            $(kptTriEl).on("mouseover", function(){
+                var friend = "#" + $(this).attr("id").split("-")[1];
+                $(this).css({
+                    "fill": "blue",
+                    "fill-opacity": "1"
+                });
+
+                $(friend).css({
+                    "fill": "blue",
+                    "fill-opacity": "1"
+                })
+            });
+            $(kptTriEl).on("mouseleave", function(){
+                var friend = "#" + $(this).attr("id").split("-")[1];
+                $(this).css({
+                    "fill-opacity": "0"
+                });
+
+                $(friend).css({
+                    "fill-opacity": "0"
+                })
+            });
         }
-
-        var triFDG = document.createElementNS(NS, "polygon");
-        triFDG.setAttribute("id", tri.id);
-        triFDG.setAttribute("points", points);
-        triFDG.setAttribute("fill-opacity", "0");
-        triFDG.setAttribute("stroke", "rgb(0,0,0)");
-        triFDG.setAttribute("class","draggable");
-        svgFDG.appendChild(triFDG);
-
-        movePolygon(triFDG, [bounds[0] + bounds[4]/2, 
-                bounds[1] + bounds[5]/2]); 
-        var boundsMargin = bounds[5]/4;
-        var scaleRatio = (bounds[5] - boundsMargin)/tri.height;
-        //scalePolygon(triFDG, scaleRatio);
-
-        this.addNode(triFDG, level);
-        return triFDG;
+        return this.nodes[tri.id];
     }
 
     this.addNode = function(node, level){
@@ -331,6 +396,8 @@ var LayeredFDG = function() {
             this.nodes[node.id] = new FDGNode(node,level);
             this.levels[level].push(node.id);
             this.adjList[node.id] = new Array();
+            this.nodes[node.id].isPolyTri = this.addPolyTri;
+            this.nodes[node.id].isOuterTri = this.addOuterTri;
         }
         return this.nodes[node.id];
     }
@@ -382,6 +449,7 @@ function randomColor(){
 
 
 function loadNodes(kptTris, maxDepth){
+    console.log("Adding nodes ", kptTris);
     fdg.maxLevel = maxDepth;
 
     // remove all elements from svg
@@ -413,53 +481,6 @@ function loadNodes(kptTris, maxDepth){
             if(kptTris[key].startDepth === currDepth){
                 parentNodes.push(kptTris[key]);
                 var fdgTriEl = fdg.addKPTri(kptTris[key], currDepth);
-                var kptTriEl = $("#tri-" + $(fdgTriEl).attr("id"));
-
-                $(fdgTriEl).on("mouseover", function(){
-                    var friend = "#tri-" + $(this).attr("id");
-                    $(this).css({
-                        "fill": "blue",
-                        "fill-opacity": "1"
-                    });
-
-                    $(friend).css({
-                        "fill": "blue",
-                        "fill-opacity": "1"
-                    })
-                });
-                $(fdgTriEl).on("mouseleave", function(){
-                    var friend = "#tri-" + $(this).attr("id");
-                    $(this).css({
-                        "fill-opacity": "0"
-                    });
-
-                    $(friend).css({
-                        "fill-opacity": "0"
-                    })
-                });
-
-                $(kptTriEl).on("mouseover", function(){
-                    var friend = "#" + $(this).attr("id").split("-")[1];
-                    $(this).css({
-                        "fill": "blue",
-                        "fill-opacity": "1"
-                    });
-
-                    $(friend).css({
-                        "fill": "blue",
-                        "fill-opacity": "1"
-                    })
-                });
-                $(kptTriEl).on("mouseleave", function(){
-                    var friend = "#" + $(this).attr("id").split("-")[1];
-                    $(this).css({
-                        "fill-opacity": "0"
-                    });
-
-                    $(friend).css({
-                        "fill-opacity": "0"
-                    })
-                });
 
             }
         }

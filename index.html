@@ -1,26 +1,159 @@
-<!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>Point Location Visualized</title>
-    <script src="js/processing.min.js"></script>
-</head>
-<body>
-	<header>
-		<h1>Processing Template</h1>
-		<h2>CS150 - Data Visualization</h2>
-		<h2>Your Name Here</h2>
-	</header>
-	
-    <!-- Set the width here to whatever the size that your visualization is. -->	
-	<section style="width:900px">
-        <!-- Linked .pde files from your project should be listed here 
-        	 (in any order, separated by a space) and need to be in the 
-        	 same directory as this index.html file. 
-        -->
-        <canvas id="processing" data-processing-sources="PointLocation/PointLocation.pde PointLocation/Drawable.pde PointLocation/GeometricView.pde PointLocation/GraphView.pde PointLocation/Polygon.pde PointLocation/View.pde"></canvas>
-     
-    	<p id="help">still not working?</p>
-	</section>
-</body>
+    <head>
+        <title>My first Three.js app</title>
+        <script src="js/poly2tri.js"></script>
+        <script src="js/jquery-2.1.4.min.js"></script>
+        <script src="js/draggabilly.pkgd.min.js"></script>
+        <script src="polygoncreation.js"></script>
+        <script src="kirkpatpointloc.js"></script>
+        <script src="layeredfdg.js"></script>
+        <script src="timelinecontrol.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/main.css"> </link>
+    </head>
+    <body>
+        <div id="canvas-container">
+            <div id="kpt-container">
+                <div id="KPTCanvas"></div>
+            </div>
+            <div id="fdg-container">
+                <div id="FDGCanvas"></div>
+            </div>
+        </div>
+        <script>
+            // global variables
+            poly = null;
+            outerTri = null;
+            kpt = null;
+            fdg = null;
+            pointToFind = null;
+
+            // final values
+            NS ="http://www.w3.org/2000/svg";
+            CANVAS_WIDTH = 600;
+            CANVAS_HEIGHT = 600;
+            MARGIN = 20;
+            CENTER = [CANVAS_WIDTH/2,  CANVAS_HEIGHT/2];
+
+            svg = document.createElementNS(NS, "svg");
+            svg.setAttribute("id", "polySVG");
+            svg.setAttribute("width", CANVAS_WIDTH);
+            svg.setAttribute("height", CANVAS_HEIGHT);
+            $("#KPTCanvas").append(svg);
+            // document.body.appendChild(svg);
+
+            console.log("Create force directed graph");
+            svgFDG = document.createElementNS(NS, "svg");
+            svgFDG.setAttribute("id", "svgFDG");
+            //svgFDG.setAttribute("class","draggable");
+            svgFDG.setAttribute("width", CANVAS_WIDTH);
+            svgFDG.setAttribute("height", CANVAS_HEIGHT);
+            // document.body.appendChild(svgFDG);
+            $("#FDGCanvas").append(svgFDG);
+
+            kpt = new KPTStruct(svg);
+            fdg = new LayeredFDG();
+
+            // create polygon
+            testPointsLarge = new Array();
+            testPointsLarge.push(new PolyPoint(413, 185));
+            testPointsLarge.push(new PolyPoint(198, 44));
+            testPointsLarge.push(new PolyPoint(66, 265));
+            testPointsLarge.push(new PolyPoint(96, 433));
+            testPointsLarge.push(new PolyPoint(250, 311));
+            testPointsLarge.push(new PolyPoint(238, 178));
+            testPointsLarge.push(new PolyPoint(434, 351));
+            testPointsLarge.push(new PolyPoint(575, 193));
+            testPointsLarge.push(new PolyPoint(484, 82));
+            testPointsSmall = new Array();
+            testPointsSmall.push(new PolyPoint(106, 60));
+            testPointsSmall.push(new PolyPoint(73, 124));
+            testPointsSmall.push(new PolyPoint(122, 110));
+            testPointsSmall.push(new PolyPoint(91, 179));
+            testPointsSmall.push(new PolyPoint(45, 128));
+            testPointsSmall.push(new PolyPoint(47, 225));
+            testPointsSmall.push(new PolyPoint(185, 199));
+            testPointsSmall.push(new PolyPoint(168, 43));
+            testPointsSmall.push(new PolyPoint(145, 76));
+            testPointsSmall.push(new PolyPoint(101, 13));
+            testPoints = testPointsSmall;
+            DEMO = true;
+
+            function createPolygon() {
+                console.log("Create polygon");
+                if(!DEMO){
+                    poly = new Poly(svg, callbackOnComplete);
+                } else{
+                    var updatedPoints = "";
+                    for(var i=0; i < testPoints.length; i++){
+                        // move point to center
+                        updatedPoints += 
+                            testPoints[i].x + ", " + testPoints[i].y + " ";
+                    }
+
+                    var tpElement = document.createElementNS(NS, "polygon");
+                    tpElement.setAttribute("points", updatedPoints);
+                    tpElement.setAttribute("fill-opacity", "0");
+                    tpElement.setAttribute("stroke", "rgb(0,0,0)");
+                    svg.appendChild(tpElement);
+                    poly = tpElement;
+                }
+            }
+
+            function repositionPolygon(){
+                // reposition polygon to center of screen
+                console.log("Reposition polygon");
+                movePolygon(poly, CENTER);
+
+                maxPoints = getMaxPoints(poly.points);
+                wRatio = CANVAS_WIDTH/maxPoints[4];
+                hRatio = CANVAS_HEIGHT/maxPoints[5];
+                scaleRatio = Math.min(wRatio, hRatio);
+                if(scaleRatio < 1){
+                    console.log("Scaling poly with ratio: " + scaleRatio);
+                    scalePolygon(poly, scaleRatio);
+                }
+                polyPoints = poly.points;
+
+                return poly;
+            }
+
+            createOuterTriangle = function(){
+                console.log("Create outer tri");
+
+                halfHeight = (CANVAS_HEIGHT - MARGIN*2)/2;
+                halfWidth = (CANVAS_WIDTH - MARGIN*2)/2;
+                topY = CENTER[1] - halfHeight;
+                bottomY = CENTER[1] + halfHeight;
+                rightX = CENTER[0] + halfWidth;
+                leftX = CENTER[0] - halfWidth;
+                centerX = CENTER[0];
+
+                var points = "";
+                points += leftX + ", " + bottomY;
+                points += " ";
+                points += centerX + ", " + topY;
+                points += " ";
+                points += rightX + ", " + bottomY;
+
+                outerTri = document.createElementNS(NS, "polygon");
+                outerTri.setAttribute("id", "outerTri");
+                outerTri.setAttribute("points", points);
+                outerTri.setAttribute("fill-opacity", "0");
+                outerTri.setAttribute("stroke", "rgb(0,0,0)");
+                outerTri.setAttribute("visibility", "hidden");
+                svg.appendChild(outerTri);
+            }
+
+            var $draggable = $('.draggable').draggabilly({
+                      // options...
+            })
+
+            // kickoff draw loop
+            draw();
+
+        </script>
+
+        <div id="textbox">
+        </div>
+    </body>
 </html>

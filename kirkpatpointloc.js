@@ -112,6 +112,13 @@ var KPTStruct = function(svg){
     this.depth = 0;
     this.drawDepth = 0;
 
+    this.drawPolyTris = false;
+    this.drawOuterTris = false;
+    this.addPolyTri = false;
+    this.addOuterTri = false;
+    this.polyTris = new Array();
+    this.outerTris = new Array();
+
     this.oVertices = new Array(); // do not delete outer vertices
     this.vertices = {};
     this.tris = {};
@@ -242,7 +249,21 @@ var KPTStruct = function(svg){
                    }
                 }
                 else{
-                    this.tris[key].show();
+                    if(depth === 0){
+                        this.tris[key].hide();
+                        if(this.drawPolyTris && 
+                                this.polyTris.indexOf(
+                                    parseInt(key, 10)) > -1){
+                            this.tris[key].show();
+                        } 
+                        if(this.drawOuterTris &&
+                                this.outerTris.indexOf(
+                                    parseInt(key, 10)) > -1){
+                                this.tris[key].show();
+                        }
+                    } else{
+                        this.tris[key].show();
+                    }
                 }
             } else {
                 this.tris[key].hide();
@@ -258,24 +279,66 @@ var KPTStruct = function(svg){
                        this.vertices[key].show();
                    }
                 }
-                this.vertices[key].show();
+                else{
+                    if(depth === 0){
+                        this.vertices[key].hide();
+                        if(this.drawPolyTris &&
+                                this.polyTris.indexOf(
+                                parseInt(key, 10)) > -1){
+                            this.vertices[key].show();
+                        } 
+                        if(this.drawOuterTris && 
+                                this.outerTris.indexOf(
+                                    parseInt(key, 10)) > -1){
+                            this.vertices[key].show();
+                        }
+                    } else{
+                        this.vertices[key].show();
+                    }
+                }
             } else {
                 this.vertices[key].hide();
             }
         }
     }
 
-    this.addTris = function(poly2tris, dont_increase_level, show){
-        for(var i = 0; i < poly2tris.length; i++){
-            var tri = this.addTri(poly2tris[i], this.depth, show);
-        }
-        if(!dont_increase_level){
+    this.addPolyTris = function(poly2tris){
+       this.addPolyTri = true; 
+       console.log("Adding polygon triangles", poly2tris);
+       this.addTris(poly2tris, 0);
+       this.addPolyTri = false; 
+    }
+
+    this.addOuterTris = function(poly2tris){
+       this.addOuterTri = true; 
+       console.log("Adding outer triangles", poly2tris);
+       this.addTris(poly2tris, 0);
+       this.addOuterTri = false; 
+    }
+
+    this.addTris = function(poly2tris, forceLevel){
+        var startDepth = this.depth;
+        if(forceLevel === undefined || forceLevel === null){
             this.depth += 1;
             console.log("Increased depth to " + this.depth);
+        } else{
+            startDepth = forceLevel;
+        }
+        // add triangles
+        for(var i = 0; i < poly2tris.length; i++){
+            var tri = this.addTri(poly2tris[i], startDepth);
+            if(this.addPolyTri){
+                console.log("Added poly tri", tri);
+                this.polyTris.push(tri.id);
+            }
+            if(this.addOuterTri){
+                console.log("Added outer tri", tri);
+                this.outerTris.push(tri.id);
+            }
         }
     }
 
-    this.addTri = function(tri, depth, show){
+    this.addTri = function(tri, depth){
         var v1 = this.addVertex(tri.getPoint(0).x, tri.getPoint(0).y, depth);
         var v2 = this.addVertex(tri.getPoint(1).x, tri.getPoint(1).y, depth);
         var v3 = this.addVertex(tri.getPoint(2).x, tri.getPoint(2).y, depth);
@@ -286,12 +349,6 @@ var KPTStruct = function(svg){
         this.tris_by_vert[v2.id].push(tri.id);
         this.tris_by_vert[v3.id].push(tri.id);
         this.tris[this.triId] = tri;
-        if(show){
-            v1.show();
-            v2.show();
-            v3.show();
-            tri.show();
-        }
         return tri;
     }
 
