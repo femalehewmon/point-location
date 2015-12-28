@@ -105,8 +105,9 @@ var FDGNode = function(nodeElement, level) {
     }
 
     this.moveNode = function(cxNew, cyNew){
-        var xOffset = cxNew - this.centroid[0]; 
-        var yOffset = cyNew - this.centroid[1];
+        var center = getCentroid(this.nodeElement.points);
+        var xOffset = cxNew - center[0]; 
+        var yOffset = cyNew - center[1];
         var newPoints = 
              (this.points[0].x + xOffset) 
              + "," + (this.points[0].y + yOffset) 
@@ -176,13 +177,18 @@ var LayeredFDG = function() {
 
     this.render = function(renderLevel){
         if(renderLevel === undefined || renderLevel === null){
-            console.log("!!!!!!!NO RENDER LEVEL!!!!!!!!");
             renderLevel = this.maxLevel;
         }
+
         for(var key in this.levels){
             if(key < renderLevel){
                 for(var nodeId in this.levels[key]){
                     this.nodes[this.levels[key][nodeId]].show();
+                    if(this.levels[key][nodeId] in this.adjList){
+                        for(var edge in this.adjList[key]){
+                            this.adjList[key][edge].show();
+                        }
+                    }
                 }
             } else{
                 for(var nodeId in this.levels[key]){
@@ -190,6 +196,7 @@ var LayeredFDG = function() {
                 }
             } 
         }
+        /*
         
         for(var node1 in this.adjList){
             for(var node2 in this.adjList[node1]){
@@ -229,6 +236,7 @@ var LayeredFDG = function() {
                         this.nodes[currEdge.endNode]);
             }
         }
+        */
     }
 
 
@@ -245,15 +253,22 @@ var LayeredFDG = function() {
 
         bounds = [leftB, topB, rightB, bottomB, 
                rightB-leftB, bottomB-topB];
+        if(!(level in levelBounds)){
+            levelBounds[level] = bounds;
+        }
+        if(level > this.maxLevel){
+            this.maxLevel = level;
+        }
         return bounds;
     }
 
     this.addKPTri = function(tri, level){
-        bounds = this.getBounds(level);
-
+        console.log("Adding KPTri");
+        var bounds = this.getBounds(level);
+        /* 
         var xOffset = bounds[4]/2 - tri.centroid[0]; 
         var yOffset = bounds[1] + bounds[5]/2 - tri.centroid[1];
-
+        */ 
         var v1x = tri.v1.x;
         var v1y = tri.v1.y;
         var v2x = tri.v2.x;
@@ -276,12 +291,19 @@ var LayeredFDG = function() {
                 (v2y-tri.centroid[1])*scaleRatio; 
             v3y = tri.centroid[1] + 
                 (v3y-tri.centroid[1])*scaleRatio; 
-        }
-
+            var points = 
+                      (v1x) + "," + (v1y) + " " +
+                      (v2x) + "," + (v2y) + " " +
+                      (v3x) + "," + (v3y);
+        }else{
         var points = 
-             (v1x + xOffset) + "," + (v1y + yOffset) + " " +
-             (v2x + xOffset) + "," + (v2y + yOffset) + " " +
-             (v3x + xOffset) + "," + (v3y + yOffset);
+             tri.element.points[0].x + "," + 
+             tri.element.points[0].y + " " +
+             tri.element.points[1].x + "," + 
+             tri.element.points[1].y + " " +
+             tri.element.points[2].x + "," + 
+             tri.element.points[2].y + " ";
+        }
 
         var triFDG = document.createElementNS(NS, "polygon");
         triFDG.setAttribute("id", tri.id);
@@ -290,6 +312,12 @@ var LayeredFDG = function() {
         triFDG.setAttribute("stroke", "rgb(0,0,0)");
         triFDG.setAttribute("class","draggable");
         svgFDG.appendChild(triFDG);
+
+        movePolygon(triFDG, [bounds[0] + bounds[4]/2, 
+                bounds[1] + bounds[5]/2]); 
+        var boundsMargin = bounds[5]/4;
+        var scaleRatio = (bounds[5] - boundsMargin)/tri.height;
+        //scalePolygon(triFDG, scaleRatio);
 
         this.addNode(triFDG, level);
     }
@@ -363,9 +391,6 @@ function loadNodes(kptTris, maxDepth){
     // create bounding boxes
     for(var i=0; i < maxDepth; i++){
         bounds = fdg.getBounds(i);
-        if(!(i in levelBounds)){
-            levelBounds[i] = bounds;
-        }
         var elem = document.createElementNS(NS, "rect");
         elem.setAttribute("id", "level:"+i);
         elem.setAttribute("x", bounds[0]);
@@ -395,15 +420,16 @@ function loadNodes(kptTris, maxDepth){
             }
         }
     }
+
+    // draw spaced out triangles in graph
+    for(var i in fdg.levels){
+        var numTris = fdg.levels[i].length;
+        var bounds = levelBounds[i];
+        var widthPerTri = bounds[4]/numTris;
+        for(var j=0; j < numTris; j++){
+            var currPoly = fdg.nodes[fdg.levels[i][j]];
+            fdg.nodes[fdg.levels[i][j]].moveNode( 
+                    widthPerTri*(j+1) - widthPerTri/2, currPoly.cy); 
+        }
+    }  
 }
-
-function draw(){
-    window.requestAnimationFrame(draw);
-}
-
-
-function tester(){
-
-
-}
-

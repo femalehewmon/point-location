@@ -1,0 +1,19 @@
+- text
+- moving edges
+- bounded levels
+- add first row of polygons first
+- add point, point location
+    - search through triangles
+    - binary answer, in/out
+- draw edges again
+
+declan:
+- formatting
+- interactive triangles
+
+dreaming:
+- resize triangles on level add
+- animate transitions
+- comment out move polygon when adding to layers to get cool effect
+
+- convex hull triangulation

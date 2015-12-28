@@ -166,10 +166,11 @@ function movePolygon(polygon, newCenter){
     polygon.setAttribute("points", updatedPoints);
 }
 
-function scalePolygon(polygon, center, scale){
+function scalePolygon(polygon, scale){
+    var center = getCentroid(polygon.points);
     updatedPoints = "";
     for(var i=0; i < polygon.points.length; i++){
-        // move point to center
+        // keep point in center when scaling
         updatedPoints += 
                 scalePoint(
                         polygon.points[i].x, 
@@ -192,5 +193,55 @@ function scalePoint(oldPos, centerPos, scaleRatio){
     var newPos = centerPos + 
         (oldPos - centerPos)*scaleRatio; 
     return newPos;
+}
+
+function getConvexHull(points){
+    var hull = new Array();
+    var q = null;
+    for(var i=0; i < points.length; i++){
+        q = _nextHullPoint(points, points[i]);
+        if(q !== hull[0]){
+            hull.push(q);
+        }
+    }
+    return hull;
+}
+
+function _nextHullPoint(points, p){
+    var q = p;
+    var t = null;
+    var pq_dist = null; 
+    var pr_dist = null;
+    for(var r in points){
+        t = _turn(p, q, points[r]);
+        pr_dist = _dist(p, points[r]);
+        pq_dist = _dist(p, q);
+        if(t === TURN_RIGHT || t === TURN_NONE && pr_dist > pq_dist){
+            q = points[r];
+        }
+    }
+    return q;
+}
+
+TURN_LEFT = 1;
+TURN_RIGHT = -1;
+TURN_NONE = 0;
+function _turn(p, q, r){
+    var t = 0;
+    var turn = (q[0] - p[0])*(r[1] - p[1]) - (r[0] - p[0])*(q[1] - p[1]);
+    if(turn !== TURN_NONE){
+        if(turn > 0){
+            t = TURN_LEFT;
+        } else if(turn < 0){
+            t = TURN_RIGHT;
+        }
+    }
+    return t;
+}
+
+function _dist(p, q){
+    var dx = q[0] - p[0];
+    var dy = q[1] - p[1];
+    return dx * dx + dy * dy;
 }
 

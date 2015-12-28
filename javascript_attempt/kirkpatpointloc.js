@@ -104,11 +104,13 @@ var KPTStruct = function(svg){
     this.depth = 0;
     this.drawDepth = 0;
 
+    this.oVertices = new Array(); // do not delete outer vertices
     this.vertices = {};
     this.tris = {};
     this.tris_by_vert = {};
 
-    this.oVertices = new Array(); // do not delete outer vertices
+    this.triAdjList = {};
+    this.rootTri = null; // id of final triangle, to start findInPoly search
 
     // mark indepedent low-degree vertices
     this.markILDV = function(){
@@ -163,6 +165,11 @@ var KPTStruct = function(svg){
         this.drawDepth = this.depth;
     }
 
+    this.replaceILDV = function(){
+        console.log("Filling in holes");
+        this.drawCurrentLevel = true;
+    }
+
     this.getTrisHull = function(trisInHull, centerVert){
         hullVerts = new Array();
         if(trisInHull.length > 0){
@@ -211,25 +218,38 @@ var KPTStruct = function(svg){
         return hullVerts;
     }
 
-    this.render = function(depth){
+    this.render = function(depth, showHoles){
         if(depth === undefined || depth === null){
             depth = this.drawDepth;
         }
-        tcount = 0;
+
         for(var key in this.tris){
-            tcount++;
             if(this.tris[key].startDepth <= depth &&
                     this.tris[key].endDepth > depth){
-                this.tris[key].show();
+                if(showHoles && depth > 0){
+                   if(this.tris[key].startDepth === depth){
+                       this.tris[key].hide();
+                   } else{
+                       this.tris[key].show();
+                   }
+                }
+                else{
+                    this.tris[key].show();
+                }
             } else {
                 this.tris[key].hide();
             }
         }
-        vcount = 0;
         for(var key in this.vertices){
-            vcount++;
             if(this.vertices[key].startDepth <= depth &&
                     this.vertices[key].endDepth > depth){
+                if(showHoles && depth > 0){
+                   if(this.vertices[key].startDepth === depth){
+                       this.vertices[key].hide();
+                   } else{
+                       this.vertices[key].show();
+                   }
+                }
                 this.vertices[key].show();
             } else {
                 this.vertices[key].hide();
@@ -275,10 +295,44 @@ var KPTStruct = function(svg){
         }
         return this.vertices[id];
     }
+
+    this.pointInPoly = function(x, y){
+        console.log("Looking for point in poly!");
+        var pointFound = false;
+        if(this.rootTri === null){
+            for(var key in this.tris){
+                if(this.tris[key].startDepth === this.depth - 1){
+                    this.rootTri = this.key;
+                }
+            }
+            if(this.rootTri === null){
+                console.log("ROOT TRI NOT FOUND.. something's wrong!");
+            } else{
+                console.log("ROOT TRI FOUND!");
+            }
+        }
+
+        stack = new Array();
+        while(this.rootTri !== null){
+            if(this.rootTri.containsPoint(x, y)){
+                pointFound = true;    
+                break;
+            } else{
+                for(var tri in this.adjList[this.rootTri.id]){
+                    stack.push(tri);
+                }
+            }
+            if(stack.length > 0){
+                this.rootTri
+            }
+        }
+
+        return pointFound;
+    }
+
 }
 
 var triangulate = function(polyPoints, polyHolePoints){
-    console.log("Triangulating");
     // add polygon points to triangulation
     var contour = new Array();
     for(var i = 0; i < polyPoints.length; i++){
@@ -296,7 +350,7 @@ var triangulate = function(polyPoints, polyHolePoints){
         console.log("Added hole of size " + hole.length);
         swctx.addHole(hole);
     }
-    // triangulate
+    // triangulate, thanks to poly2tri
     swctx.triangulate();
     triangles = swctx.getTriangles();
     return triangles;
@@ -311,13 +365,10 @@ loadPolygon = function(svg, vertices){
     console.log("Load polygon");
     var points = "";
     for(var i=0; i < vertices.length; i++){
-        // move point to center
-        //points += movePoint(vertices[i].x, oldCenter[0], newCenter[0]) 
-        //        + ", " 
-        //        + movePoint(vertices[i].y, oldCenter[1], newCenter[1]) + " ";
         points += vertices[i].x + ", " + vertices[i].y + " ";
     }
     var element = document.createElementNS(NS, "polygon");
+    element.setAttribute("id", "mainPoly");
     element.setAttribute("points", points);
     element.setAttribute("fill-opacity", "0");
     element.setAttribute("stroke", "rgb(0,0,0)");
@@ -325,37 +376,4 @@ loadPolygon = function(svg, vertices){
     return element;
 }
 
-drawOuterTriangle = function(svg, centroid){
-    console.log("Draw outer tri");
-
-    halfHeight = (CANVAS_HEIGHT - MARGIN*2)/2;
-    halfWidth = (CANVAS_WIDTH/2 - MARGIN*2)/2;
-
-    topY = MARGIN;
-    bottomY = CANVAS_HEIGHT - MARGIN;
-    rightX = CANVAS_WIDTH/2 - MARGIN;
-    leftX = MARGIN;
-    centerX = CANVAS_WIDTH/4;
-
-    topY = centroid[1] - halfHeight;
-    bottomY = centroid[1] + halfHeight;
-    rightX = centroid[0] + halfWidth;
-    leftX = centroid[0] - halfWidth;
-    centerX = centroid[0];
-
-    var points = "";
-    points += leftX + ", " + bottomY;
-    points += " ";
-    points += centerX + ", " + topY;
-    points += " ";
-    points += rightX + ", " + bottomY;
-
-    var element = document.createElementNS(NS, "polygon");
-    element.setAttribute("id", "outerTri");
-    element.setAttribute("points", points);
-    element.setAttribute("fill-opacity", "0");
-    element.setAttribute("stroke", "rgb(0,0,0)");
-    svg.appendChild(element);
-    return element;
-}
 
