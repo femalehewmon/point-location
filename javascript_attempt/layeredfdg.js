@@ -412,12 +412,11 @@ function loadNodes(kptTris, maxDepth){
             }
             if(kptTris[key].startDepth === currDepth){
                 parentNodes.push(kptTris[key]);
-                var kptTriEl = fdg.addKPTri(kptTris[key], currDepth);
+                var fdgTriEl = fdg.addKPTri(kptTris[key], currDepth);
+                var kptTriEl = $("#tri-" + $(fdgTriEl).attr("id"));
 
-                $(kptTriEl).on("mouseover", function(){
-                    // console.log($(this).attr("id"));
+                $(fdgTriEl).on("mouseover", function(){
                     var friend = "#tri-" + $(this).attr("id");
-
                     $(this).css({
                         "fill": "blue",
                         "fill-opacity": "1"
@@ -427,9 +426,39 @@ function loadNodes(kptTris, maxDepth){
                         "fill": "blue",
                         "fill-opacity": "1"
                     })
+                });
+                $(fdgTriEl).on("mouseleave", function(){
+                    var friend = "#tri-" + $(this).attr("id");
+                    $(this).css({
+                        "fill-opacity": "0"
+                    });
 
-                    console.log("friend", $(friend));
+                    $(friend).css({
+                        "fill-opacity": "0"
+                    })
+                });
 
+                $(kptTriEl).on("mouseover", function(){
+                    var friend = "#" + $(this).attr("id").split("-")[1];
+                    $(this).css({
+                        "fill": "blue",
+                        "fill-opacity": "1"
+                    });
+
+                    $(friend).css({
+                        "fill": "blue",
+                        "fill-opacity": "1"
+                    })
+                });
+                $(kptTriEl).on("mouseleave", function(){
+                    var friend = "#" + $(this).attr("id").split("-")[1];
+                    $(this).css({
+                        "fill-opacity": "0"
+                    });
+
+                    $(friend).css({
+                        "fill-opacity": "0"
+                    })
                 });
 
             }

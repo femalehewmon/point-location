@@ -147,20 +147,6 @@
                 return element;
             }
 
-            displayText = function(text){
-                if(textSvg === null){
-                    textSvg =
-                    textSvg = document.createElementNS(NS, "svg");
-                    textSvg.setAttribute("id", "textSvg");
-                    textSvg.setAttribute("width", CANVAS_WIDTH/2);
-                    textSvg.setAttribute("height", CANVAS_HEIGHT/4);
-                    document.body.appendChild(svg);
-                }
-                if($('#text') !== undefined){
-
-                }
-            }
-
             CREATE_POLYGON = "createPoly";
             TEXT_CREATE_POLYGON_START = "Click anywhere within the box to create a simple polygon with no intersecting edges."
             TEXT_CREATE_POLYGON_FINISHED = "Nice polygon!";
@@ -176,7 +162,8 @@
             POINT_LOCATION = "pointLocation";
             FIND_POINT = "findPoint";
 
-            MAX_COUNT = 20;
+
+            MAX_COUNT = 100;
             counter = 0;
             stage = CREATE_POLYGON;
             subStage = 0;
@@ -189,6 +176,7 @@
                         if(DEMO){
                             repositionPolygon();
                             stage = SETUP_TRIANGULATION;
+                            $("#textbox").html(TEXT_CREATE_POLYGON_FINISHED);
                         }else{
                             if(poly.isFinished){
                                 // reposition polygon
@@ -198,12 +186,16 @@
                                 poly = loadPolygon(svg, poly.points);
                                 repositionPolygon();
                                 stage = SETUP_TRIANGULATION;
+
+                                $("#textbox").html(TEXT_CREATE_POLYGON_FINISHED);
                             }
                         }
                         break;
                     case SETUP_TRIANGULATION:
                         switch(subStage){
                             case 0:
+                                $("#textbox").html(
+                                        "Let's triangulate the polygon");
                                 // triangulate main polygon
                                 if(counter >= MAX_COUNT){
                                     console.log("Triangulate main poly");
@@ -213,6 +205,7 @@
                                     kptstruct.addTris(polytris, true, true);
                                     counter = 0;
                                     subStage++;
+
                                 }
                                 counter++;
                                 break;
@@ -234,7 +227,11 @@
                                 break;
                             case 2:
                                 // draw and triangulate outer triangle
+                                $("#textbox").html(
+                                        TEXT_SETUP_TRIANGULATION_START);
                                 if(counter >= MAX_COUNT){
+                                    $("#textbox").html(
+                                            );
                                     outerTri = drawOuterTriangle(CENTER);
                                     counter = 0;
                                     subStage++;
