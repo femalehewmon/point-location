@@ -14,8 +14,10 @@ subStage = 0; // used for finer control in primary stages
 drawLevel = 0;
 
 counter = 0;
+subCounter = 0;
 MAX_COUNT = 100;
 showHoles = false; // flag to show holes after ildv are removed
+showVertices = false; // flag to show holes after ildv are removed
 
 function draw(){
     switch(stage){
@@ -105,7 +107,19 @@ function draw(){
                     case iteratively_remove_ildv:
                         $("#textbox").html("Now we can begin removing the independent low degree vertices.");
                         if(drawLevel < fdg.maxLevel){
-                            drawLevel++;
+                            if(!showHoles){
+                                showVertices = true;
+                                subCounter++;
+                                if(subCounter === 2){
+                                    drawLevel++;
+                                    showHoles = true;
+                                    showVertices = false;
+                                    subCounter = 0;
+                                }
+                            } else{
+                                showHoles = false;
+                                showVertices = false;
+                            }
                             if(drawLevel == fdg.maxLevel){
                                 $("#textbox").html(
                                         "And our data structure is complete!");
@@ -115,8 +129,10 @@ function draw(){
                         }
                         break;
                 }
-                kpt.render(drawLevel);
-                fdg.render(drawLevel);
+                kpt.render(drawLevel,showHoles,showVertices);
+                if(!showHoles){
+                    fdg.render(drawLevel);
+                }
                 counter = 0;
             } 
             counter++;

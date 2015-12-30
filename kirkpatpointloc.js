@@ -232,9 +232,19 @@ var KPTStruct = function(svg){
         return hullVerts;
     }
 
-    this.render = function(depth, showHoles){
+    this.render = function(depth, showHoles, showVertices){
         if(depth === undefined || depth === null){
             depth = this.drawDepth;
+        }
+
+        for(var key in this.vertices){
+            this.vertices[key].hide();
+            if(showVertices && !showHoles &&
+                    this.vertices[key].endDepth === depth + 1){
+                svg.removeChild(this.vertices[key].element);
+                svg.appendChild(this.vertices[key].element);
+                this.vertices[key].show();
+            }
         }
 
         for(var key in this.tris){
@@ -272,39 +282,6 @@ var KPTStruct = function(svg){
 
             }
         }
-        /*
-        for(var key in this.vertices){
-            if(this.vertices[key].startDepth <= depth &&
-                    this.vertices[key].endDepth > depth){
-                if(showHoles && depth > 0){
-                   if(this.vertices[key].startDepth === depth){
-                       this.vertices[key].hide();
-                   } else{
-                       this.vertices[key].show();
-                   }
-                }
-                else{
-                    if(depth === 0){
-                        this.vertices[key].hide();
-                        if(this.drawPolyTris &&
-                                this.polyTris.indexOf(
-                                parseInt(key, 10)) > -1){
-                            this.vertices[key].show();
-                        } 
-                        if(this.drawOuterTris && 
-                                this.outerTris.indexOf(
-                                    parseInt(key, 10)) > -1){
-                            this.vertices[key].show();
-                        }
-                    } else{
-                        this.vertices[key].show();
-                    }
-                }
-            } else {
-                this.vertices[key].hide();
-            }
-        }
-        */
     }
 
     this.addPolyTris = function(poly2tris){
