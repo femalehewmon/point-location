@@ -19,6 +19,15 @@ MAX_COUNT = 100;
 showHoles = false; // flag to show holes after ildv are removed
 showVertices = false; // flag to show holes after ildv are removed
 
+
+AUTO = false;
+if(!AUTO){
+    document.onkeypress = function(){
+        console.log("KEY PRESSED");
+        counter = MAX_COUNT;
+    }
+}
+
 function draw(){
     switch(stage){
         case CREATE_POLYGON:
@@ -79,7 +88,9 @@ function draw(){
                 subStage = triangulate_poly;
                 counter = 0;
             }
-            counter++;
+            if(AUTO){
+                counter++;
+            }
             break;
         case DRAW_TRIANGULATION:
             if(counter >= MAX_COUNT){
@@ -136,7 +147,9 @@ function draw(){
                 }
                 counter = 0;
             } 
-            counter++;
+            if(AUTO){
+                counter++;
+            }
             break;
         case POINT_LOCATION:
             kpt.render(0);
