@@ -131,7 +131,7 @@ var KPTStruct = function(svg){
         neighbors = new Array();
         for(var key in this.vertices){
             v = this.vertices[key];
-            // vertex is still visible, check to see if it is a ILDV
+            // vertex is still visible, check to see if it is an ILDV
             if(v.endDepth === Number.MAX_VALUE){ 
                 if(neighbors.indexOf(v.id) > -1 ||
                         this.oVertices.indexOf(v.id) > -1){
@@ -168,6 +168,9 @@ var KPTStruct = function(svg){
                     this.addTris(holeTris);
                 }
             }
+        }
+        if(ildv_found){
+            this.depth += 1;
         }
         return ildv_found;
     }
@@ -287,25 +290,19 @@ var KPTStruct = function(svg){
     this.addPolyTris = function(poly2tris){
        this.addPolyTri = true; 
        console.log("Adding polygon triangles", poly2tris);
-       this.addTris(poly2tris, 0);
+       this.addTris(poly2tris);
        this.addPolyTri = false; 
     }
 
     this.addOuterTris = function(poly2tris){
        this.addOuterTri = true; 
        console.log("Adding outer triangles", poly2tris);
-       this.addTris(poly2tris, 0);
+       this.addTris(poly2tris);
        this.addOuterTri = false; 
     }
 
-    this.addTris = function(poly2tris, forceLevel){
+    this.addTris = function(poly2tris){
         var startDepth = this.depth;
-        if(forceLevel === undefined || forceLevel === null){
-            this.depth += 1;
-            console.log("Increased depth to " + this.depth);
-        } else{
-            startDepth = forceLevel;
-        }
         // add triangles
         for(var i = 0; i < poly2tris.length; i++){
             var tri = this.addTri(poly2tris[i], 

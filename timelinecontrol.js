@@ -33,7 +33,8 @@ function draw(){
                     stage = SETUP_TRIANGULATION;
                     $("#textbox").html("Nice polygon!");
                 } else{
-                    if(poly.isFinished){
+                    if(poly.isComplete){
+                        console.log("IS FINISHED");
                         // reposition polygon
                         while(svg.firstChild){
                             svg.removeChild(svg.firstChild);

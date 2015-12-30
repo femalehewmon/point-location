@@ -18,7 +18,7 @@ var PolyEdge = function(p1, p2, background, highlight) {
     this.highlight = highlight || "rgb(0, 0, 0)";
 }
 
-Poly = function(svg, callbackOnComplete) {
+Poly = function(svg) {
     this.svg = svg;
     this.points = new Array();
     this.edges = new Array();
@@ -26,8 +26,6 @@ Poly = function(svg, callbackOnComplete) {
 
     this.isComplete = false;
     this.tryPoint = true;
-
-    this.callbackOnComplete = callbackOnComplete;
 
     this.finishPolygon = function(){
         console.log("Finish polygon");

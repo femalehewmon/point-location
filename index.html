@@ -20,6 +20,7 @@
             </div>
         </div>
         <script>
+            DEMO = true;
             // global variables
             poly = null;
             outerTri = null;
@@ -32,7 +33,9 @@
             CANVAS_WIDTH = 600;
             CANVAS_HEIGHT = 600;
             CENTER = [CANVAS_WIDTH/2,  CANVAS_HEIGHT/2];
-            COLOR_GREY = "rgb(240, 240, 240)";
+
+            // colors
+            COLOR_GREY = "rgb(220, 220, 220)";
 
             svg = document.createElementNS(NS, "svg");
             svg.setAttribute("id", "polySVG");
@@ -76,12 +79,11 @@
             testPointsSmall.push(new PolyPoint(145, 76));
             testPointsSmall.push(new PolyPoint(101, 13));
             testPoints = testPointsSmall;
-            DEMO = true;
 
             function createPolygon() {
                 console.log("Create polygon");
                 if(!DEMO){
-                    poly = new Poly(svg, callbackOnComplete);
+                    poly = new Poly(svg);
                 } else{
                     var updatedPoints = "";
                     for(var i=0; i < testPoints.length; i++){
@@ -139,7 +141,7 @@
                 outerTri.setAttribute("id", "outerTri");
                 outerTri.setAttribute("points", points);
                 outerTri.setAttribute("fill-opacity", "1");
-                outerTri.setAttribute("fill", "rgb(240, 240, 240)");
+                outerTri.setAttribute("fill", COLOR_GREY);
                 outerTri.setAttribute("stroke", "rgb(0,0,0)");
                 outerTri.setAttribute("visibility", "hidden");
                 //svg.appendChild(outerTri);
