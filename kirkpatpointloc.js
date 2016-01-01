@@ -299,6 +299,7 @@ var KPTStruct = function(svg){
        console.log("Adding outer triangles", poly2tris);
        this.addTris(poly2tris);
        this.addOuterTri = false; 
+       this.depth += 1;
     }
 
     this.addTris = function(poly2tris){
