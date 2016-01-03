@@ -20,7 +20,7 @@ showHoles = false; // flag to show holes after ildv are removed
 showVertices = false; // flag to show holes after ildv are removed
 
 
-AUTO = false;
+AUTO = true;
 if(!AUTO){
     document.onkeypress = function(){
         console.log("KEY PRESSED");
