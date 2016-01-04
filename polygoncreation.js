@@ -80,10 +80,22 @@ Poly = function(svg) {
     }
 
     var clickCB = function() {
-        this.addPoint(event.clientX, event.clientY);
+        // adjust to bounding svg coordinates
+        /*
+        var e = event.target;
+        var dim = e.getBoundingClientRect();
+        console.log(svgPolyCreate);
+        var x = event.clientX - svgPolyCreate.left;
+        var y = event.clientY - svgPolyCreate.top;
+        */
+        var loc = cursorPoint();
+        this.addPoint(x, y);
     }
-    this.svg.addEventListener("click", clickCB.bind(this));
 
+    this.svg.addEventListener("click", function(evt){
+        var loc = cursorPoint(evt);
+        poly.addPoint(loc.x, loc.y);
+    });
 }
 
 var getMaxPoints = function(vertices){

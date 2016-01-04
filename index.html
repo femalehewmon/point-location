@@ -13,48 +13,68 @@
     <body>
         <div id="titlebox">Kirkpatrick's Point Location Data Structure</div>
         <div id="canvas-container">
+            <div id="poly-create-container"></div>
             <div id="kpt-container">
                 <div id="KPTCanvas"></div>
             </div>
             <div id="fdg-container">
                 <div id="FDGCanvas"></div>
+                <div id="FDGScroll"></div>
             </div>
         </div>
         <script>
-            DEMO = true;
-            // global variables
-            poly = null;
-            outerTri = null;
-            kpt = null;
-            fdg = null;
-            pointToFind = null;
-
             // final values
             NS ="http://www.w3.org/2000/svg";
-            CANVAS_WIDTH = 600;
-            CANVAS_HEIGHT = 600;
+            CANVAS_WIDTH = 500;
+            CANVAS_HEIGHT = 500;
             CENTER = [CANVAS_WIDTH/2,  CANVAS_HEIGHT/2];
 
             // colors
             COLOR_GREY = "rgb(220, 220, 220)";
 
-            svg = document.createElementNS(NS, "svg");
-            svg.setAttribute("id", "polySVG");
-            svg.setAttribute("width", CANVAS_WIDTH);
-            svg.setAttribute("height", CANVAS_HEIGHT);
-            $("#KPTCanvas").append(svg);
+            // global variables
+            pcreate = null;         // polygon creation view
+            svgKPT = null;          // triangulation view
+            kpt = null;
+            svgFDG = null;          // DAG view
+            fdg = null;
+
+            poly = null;            // original polygon
+            outerTri = null;        // outer triangle
+            pointToFind = null;     // point clicked
+
+            svgPolyCreate = document.createElementNS(NS, "svg");
+            svgPolyCreate.setAttribute("id", "polySVG");
+            svgPolyCreate.setAttribute("width", CANVAS_WIDTH*2);
+            svgPolyCreate.setAttribute("height", CANVAS_HEIGHT);
+            svgPolyCreate.setAttribute("fill", "blue");
+            $("#poly-create-container").append(svgPolyCreate);
+
+            pt = svgPolyCreate.createSVGPoint();
+            function cursorPoint(evt){
+                pt.x = evt.clientX;
+                pt.y = evt.clientY;
+                return pt.matrixTransform(
+                        svgPolyCreate.getScreenCTM().inverse());
+            }
+
+            svgKPT = document.createElementNS(NS, "svg");
+            svgKPT.setAttribute("id", "polySVG");
+            svgKPT.setAttribute("width", CANVAS_WIDTH);
+            svgKPT.setAttribute("height", CANVAS_HEIGHT);
+            $("#KPTCanvas").append(svgKPT);
             // document.body.appendChild(svg);
 
             console.log("Create force directed graph");
             svgFDG = document.createElementNS(NS, "svg");
             svgFDG.setAttribute("id", "svgFDG");
-            //svgFDG.setAttribute("class","draggable");
             svgFDG.setAttribute("width", CANVAS_WIDTH);
             svgFDG.setAttribute("height", CANVAS_HEIGHT);
+            //svgFDG.setAttribute("class","draggable");
             // document.body.appendChild(svgFDG);
             $("#FDGCanvas").append(svgFDG);
 
-            kpt = new KPTStruct(svg);
+            kpt = new KPTStruct(svgKPT);
             fdg = new LayeredFDG();
 
             // create polygon
@@ -84,8 +104,9 @@
             function createPolygon() {
                 console.log("Create polygon");
                 if(!DEMO){
-                    poly = new Poly(svg);
+                    poly = new Poly(svgPolyCreate);
                 } else{
+                    svgPolyCreate.setAttribute("display", "none");
                     var updatedPoints = "";
                     for(var i=0; i < testPoints.length; i++){
                         // move point to center
@@ -97,7 +118,7 @@
                     tpElement.setAttribute("points", updatedPoints);
                     tpElement.setAttribute("fill-opacity", "0");
                     tpElement.setAttribute("stroke", "rgb(0,0,0)");
-                    svg.appendChild(tpElement);
+                    svgKPT.appendChild(tpElement);
                     poly = tpElement;
                 }
             }
@@ -119,6 +140,8 @@
 
                 return poly;
             }
+
+
 
             createOuterTriangle = function(){
                 console.log("Create outer tri");
@@ -146,7 +169,7 @@
                 outerTri.setAttribute("stroke", "rgb(0,0,0)");
                 outerTri.setAttribute("visibility", "hidden");
                 //svg.appendChild(outerTri);
-                svg.insertBefore(outerTri, svg.firstChild);
+                svgKPT.insertBefore(outerTri, svgKPT.firstChild);
             }
 
             var $draggable = $('.draggable').draggabilly({

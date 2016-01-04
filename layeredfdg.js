@@ -202,13 +202,17 @@ var LayeredFDG = function() {
                         }
                     }
                 } else{
-                    for(var nodeId in this.levels[key]){
-                        this.nodes[this.levels[key][nodeId]].show();
-                        if(this.levels[key][nodeId] in this.adjList){
-                            for(var edge in this.adjList[key]){
-                                this.adjList[key][edge].show();
+                    for(var nodeIdx in this.levels[key]){
+                        var nodeId = this.levels[key][nodeIdx];
+                        this.nodes[nodeId].show();
+                        /*
+                        if(nodeId in this.adjList){
+                            console.log("Draw edge", this.adjList[key]);
+                            for(var edge in this.adjList[nodeId]){
+                                this.adjList[nodeId][edge].show();
                             }
                         }
+                        */
                     }
                 }
             } else{
@@ -481,12 +485,23 @@ function loadNodes(kptTris, maxDepth){
         bounds = fdg.getBounds(i);
         var elem = document.createElementNS(NS, "rect");
         elem.setAttribute("id", "level:"+i);
+        elem.setAttribute("level", i);
         elem.setAttribute("x", bounds[0]);
         elem.setAttribute("y", bounds[1]);
         elem.setAttribute("width", bounds[4]);
         elem.setAttribute("height", bounds[5]);
         elem.setAttribute("fill-opacity", "0.5");
         elem.setAttribute("fill", randomColor());
+
+        elem.onclick = function(){
+            if(!AUTO){
+                var layerLevel = this.getAttribute("level");
+                drawLevel = parseInt(layerLevel, 10);
+                counter = MAX_COUNT;
+                showHoles = false;
+                subCounter = 0;
+            }
+        }
         svgFDG.appendChild(elem);
     }
 
@@ -521,4 +536,11 @@ function loadNodes(kptTris, maxDepth){
                     widthPerTri*(j+1) - widthPerTri/2, currPoly.cy); 
         }
     }  
+    // update edge positions
+    for(var node in this.adjList){
+        for(var edgeIdx in this.adjList[node]){
+
+        }
+    }
+    console.log("adjList",fdg.adjList);
 }

@@ -1,3 +1,5 @@
+DEMO = true;
+
 // primary stages of program
 CREATE_POLYGON = "createPoly";
 SETUP_TRIANGULATION = "triangulation";
@@ -19,7 +21,6 @@ MAX_COUNT = 100;
 showHoles = false; // flag to show holes after ildv are removed
 showVertices = false; // flag to show holes after ildv are removed
 
-
 AUTO = true;
 if(!AUTO){
     document.onkeypress = function(){
@@ -34,26 +35,40 @@ function draw(){
             // at this point, poly is still custom
             // load into an svg polygon
             if(poly === undefined || poly === null){
+                svgPolyCreate.setAttribute("display", "block");
+                svgKPT.setAttribute("display", "none");
+                svgFDG.setAttribute("display", "none");
                 createPolygon();
-                $("#textbox").html("Click to create a a simple polygon with non-overlapping edges.");
             } else{
                 if(DEMO){
                     repositionPolygon();
                     stage = SETUP_TRIANGULATION;
                     $("#textbox").html("Nice polygon!");
+
+                    svgPolyCreate.setAttribute("display", "none");
+                    svgKPT.setAttribute("display", "block");
+                    svgFDG.setAttribute("display", "block");
                 } else{
+                    $("#textbox").html("Click above to create a simple polygon with non-overlapping edges.");
                     if(poly.isComplete){
                         console.log("IS FINISHED");
+
                         // reposition polygon
-                        while(svg.firstChild){
-                            svg.removeChild(svg.firstChild);
+                        while(svgKPT.firstChild){
+                            svgKPT.removeChild(svgKPT.firstChild);
                         }
-                        poly = loadPolygon(svg, poly.points);
+                        poly = loadPolygon(svgKPT, poly.points);
                         repositionPolygon();
                         stage = SETUP_TRIANGULATION;
                         $("#textbox").html("Nice polygon!");
-                        poly.setAttribute("visibility", "hidden");
 
+                        // hide to prevent showing through triangulation
+                        //poly.setAttribute("visibility", "hidden");
+
+                        // hide polygon create view
+                        svgPolyCreate.setAttribute("display", "none");
+                        svgKPT.setAttribute("display", "block");
+                        svgFDG.setAttribute("display", "block");
                     }
                 }
             }
@@ -137,7 +152,7 @@ function draw(){
                                         "And our data structure is complete!");
                             }
                         } else{
-                            stage = POINT_LOCATION;
+                            //stage = POINT_LOCATION;
                         }
                         break;
                 }
