@@ -1,3 +1,1 @@
-To start server:
-
-python -m SimpleHTTPServer (in same folder as index.html)
+[Kirkpatrick's Point Location](http://meganvanwelie.github.io/point-location)
