@@ -2,11 +2,15 @@
 class Polygon {
 
 	String id;
+	color cFill;
+	color cStroke;
 	ArrayList<PolyPoint> points;
 	
 	public Polygon(String id) {
 		this.id = id;
 		this.points = new ArrayList<PolyPoint>();
+		this.cFill = color(random(255), random(255), random(255));
+		this.cStroke = color(0);
 	}
 
 	public void addPoint(float x, float y) {
@@ -14,8 +18,8 @@ class Polygon {
 	}
 
 	public void render() {
-		fill(0, 0, 0);
-		//noFill();
+		stroke(cStroke);
+		fill(cFill);
 		beginShape();
 		for (int i = 0; i < points.size(); i++) {
 			vertex(points.get(i).x, points.get(i).y);
@@ -30,11 +34,12 @@ class Polygon {
 		float ynew;
 		for (int i = 0; i < points.size(); i++ ) {
 			xnew = newCenter.x + 
-				(currCenter.x - points.get(i).x);
+				(points.get(i).x - currCenter.x);
 			ynew = newCenter.y + 
-				(currCenter.y - points.get(i).y);
+				(points.get(i).y - currCenter.y);
 			points.get(i).move(xnew, ynew);
 		}
+		currCenter = getCenter();	
 	}
 
 	public void scale(float scaleRatio) {
@@ -78,12 +83,12 @@ class Polygon {
 		return yMax - yMin;
 	}
 
-	private PolyPoint getCenter() {
+	public PolyPoint getCenter() {
 		int i, j;
 		float cx;
 		float cy;
 		float area;
-		for (i = 0; i < points.size() - 1; i++) {
+		for (i = 0; i < points.size(); i++) {
 			j = i + 1;
 			if (j >= points.size()) {
 				j = 0; // wraparound for final operation

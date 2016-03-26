@@ -53,7 +53,7 @@ class LayeredGraph extends View {
 			xdiv = w / shapes[i].size();
 			for (j = 0; j < shapes[i].size(); j++) {
 				xpos = (xdiv * j) + (xdiv/2);
-				shapes[i].get(j).move(xpos, ypos);
+				shapes[i].get(j).move(new PolyPoint(xpos, ypos));
 				// calculate scaling ratio for this shape
 				xratio = xdiv / shapes[i].get(j).getWidth(); 
 				yratio = ydiv / shapes[i].get(j).getHeight(); 
@@ -68,7 +68,7 @@ class LayeredGraph extends View {
 		// scale polygons with overall min scale to maintain relative sizes	
 		for (i = 0; i < numLayers; i ++) {
 			for (j = 0; j < shapes[i].size(); j++) {
-				shapes[i].get(j).scale(minRatio);
+				//shapes[i].get(j).scale(minRatio);
 			}
 		}
 
