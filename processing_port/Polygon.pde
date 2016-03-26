@@ -14,12 +14,13 @@ class Polygon {
 	}
 
 	public void render() {
-		//fill(0, 0, 0);
-		noFill();
+		fill(0, 0, 0);
+		//noFill();
 		beginShape();
 		for (int i = 0; i < points.size(); i++) {
 			vertex(points.get(i).x, points.get(i).y);
 		}	
+		vertex(points.get(0).x, points.get(0).y); // draw back to 1st vertex
 		endShape();
 	}
 
@@ -47,6 +48,34 @@ class Polygon {
 			   ((points.get(i).y - center.y) * scaleRatio);	
 			points.get(i).move(xnew, ynew);
 		}
+	}
+
+	public float getWidth() {
+		float xMin = POSITIVE_INFINITY;
+		float xMax = NEGATIVE_INFINITY;
+		for (i = 0; i < points.size() - 1; i++) {
+			if (points.get(i).x < xMin) {
+				xMin = points.get(i).x;
+			}
+			if (points.get(i).x > xMax) {
+				xMax = points.get(i).x;
+			}
+		}
+		return xMax - xMin;
+	}
+
+	public float getHeight() {
+		float yMin = POSITIVE_INFINITY;
+		float yMax = NEGATIVE_INFINITY;
+		for (i = 0; i < points.size() - 1; i++) {
+			if (points.get(i).y < yMin) {
+				yMin = points.get(i).y;
+			}
+			if (points.get(i).y > yMax) {
+				yMax = points.get(i).y;
+			}
+		}
+		return yMax - yMin;
 	}
 
 	private PolyPoint getCenter() {
@@ -93,3 +122,4 @@ class PolyPoint {
 	}
 
 }
+
