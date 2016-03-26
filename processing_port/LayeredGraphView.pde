@@ -1,4 +1,4 @@
-class LayeredGraph extends View {
+class LayeredGraphView extends View {
 
 	int numLayers;
 	float ydiv;
@@ -6,7 +6,8 @@ class LayeredGraph extends View {
 	HashMap<Integer, color> colors;
 	boolean finalized = false;
 
-	public LayeredGraph(int numLayers, float x1, float y1, float x2, float y2) {
+	public LayeredGraphView(
+			int numLayers, float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 		this.numLayers = numLayers;
 		this.ydiv = h / numLayers;
