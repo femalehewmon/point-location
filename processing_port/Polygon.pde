@@ -1,16 +1,20 @@
 
 class Polygon {
 
-	String id;
+	int id;
+	ArrayList<PolyPoint> points;
 	color cFill;
 	color cStroke;
-	ArrayList<PolyPoint> points;
+	color cHighlight;
+	boolean selected;
 	
-	public Polygon(String id) {
+	public Polygon(int id) {
 		this.id = id;
 		this.points = new ArrayList<PolyPoint>();
 		this.cFill = color(random(255), random(255), random(255));
 		this.cStroke = color(0);
+		this.cHighlight = color(0, 0, 255);
+		this.selected = false;
 	}
 
 	public void addPoint(float x, float y) {
@@ -18,14 +22,30 @@ class Polygon {
 	}
 
 	public void render() {
-		stroke(cStroke);
-		fill(cFill);
 		beginShape();
+		stroke(cStroke);
+		if (selected) {
+			fill(cHighlight);
+		} else {
+			fill(cFill);
+		}
+
 		for (int i = 0; i < points.size(); i++) {
 			vertex(points.get(i).x, points.get(i).y);
 		}	
-		vertex(points.get(0).x, points.get(0).y); // draw back to 1st vertex
+		// draw back to 1st vertex
+		vertex(points.get(0).x, points.get(0).y);
 		endShape();
+
+		// draw shape onto pickbuffer
+		pickbuffer.beginShape();
+		pickbuffer.stroke(color(this.id));
+		pickbuffer.fill(color(this.id));
+		for (int i = 0; i < points.size(); i++) {
+			pickbuffer.vertex(points.get(i).x, points.get(i).y);
+		}
+		pickbuffer.vertex(points.get(0).x, points.get(0).y);
+		pickbuffer.endShape();
 	}
 
 	public void move(PolyPoint newCenter) {

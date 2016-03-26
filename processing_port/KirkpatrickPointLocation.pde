@@ -3,20 +3,34 @@
 //polygon = new ArrayList<poly2tri.Point>();
 //polygon.add(new poly2tri.Point(24, 25));
 
+int unique_poly_id;
+ArrayList<Message> messages;
+PGraphics pickbuffer;
 LayeredGraph lgraph;
 
+// Float.X_INFINITY throwing error, so self define
 POSITIVE_INFINITY = 9999999;
 NEGATIVE_INFINITY = -9999999;
 
-void setup() {
-	size($(window).width(), $(window).height());
+MSG_TRIANGLE = "MSG_TRIANGLE";
+class Message {
+	String k;
+	String v;
+}
 
-	Polygon test = new Polygon("test");
+void setup() {
+	size($(window).width(), $(window).height()); // get browser window size
+
+	unique_poly_id = 0;
+	messages = new ArrayList<Message>();
+	pickbuffer = createGraphics(width, height);
+
+	Polygon test = createPoly();
 	test.addPoint(width/4+10, height/4+10);
 	test.addPoint(width/2-10, height/4+10);
 	test.addPoint(width/2-10, height/2-10);
 	test.addPoint(width/4+10, height/2-10);
-	Polygon test2 = new Polygon("test2");
+	Polygon test2 = createPoly();
 	test2.addPoint(width/4+10, height/4+10);
 	test2.addPoint(width/2-10, height/4+10);
 	test2.addPoint(width/2-10, height/2-10);
@@ -24,23 +38,25 @@ void setup() {
 
 	lgraph = new LayeredGraph(2, 0, 0, width/2, height/2);
 	lgraph.addShape(0, test);
-	lgraph.addShape(0, test2);
+	lgraph.addShape(1, test2);
 }
 
 void draw() {
 	background(255, 255, 0);
+	pickbuffer.background(255);
+
 	lgraph.render();
-}
 
-/*
-void onResetClick() {
-	mode = Mode.POLYGON_CREATION;
-	polygon = null;
-}
+	messages.clear();
 
-void loadDemo(){
-	polygon.clear();
+	if (lgraph.visible) {
+		lgraph.mouseUpdate();
+	}
 
 }
 
-*/
+Polygon createPoly() {
+	unique_poly_id++;
+	return new Polygon(unique_poly_id);
+}
+

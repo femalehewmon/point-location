@@ -24,18 +24,29 @@ class LayeredGraph extends View {
 	}
 
 	public void render() {
+		super.render(); // draw view background
 		if (!finalized) {
 			finalizeGraph();
 		}
-		// draw view background 
-		fill(0);
-		rect(x1, y1, w, h);
+		// get list of selected polygons
+		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
+		for (int i = 0; i < messages.size(); i++) {
+			if (messages.get(i).k == MSG_TRIANGLE) {
+				selectedShapes.add(messages.get(i).v);
+			}
+		}
+
 		for (int i = 0; i < numLayers; i++) {
 			// draw layer background
 			fill(colors[i]);
 			rect(x1, h - (ydiv*(i+1)), w, ydiv);
 			// draw layer shapes
 			for (int j = 0; j < shapes[i].size(); j++) {
+				if (selectedShapes.contains(shapes[i].get(j).id)) {
+					shapes[i].get(j).selected = true;
+				} else {
+					shapes[i].get(j).selected = false;
+				}
 				shapes[i].get(j).render();
 			}
 		}
@@ -66,13 +77,32 @@ class LayeredGraph extends View {
 			}
 		}
 		// scale polygons with overall min scale to maintain relative sizes	
+		println("Min scale ratio is " + minRatio);
 		for (i = 0; i < numLayers; i ++) {
 			for (j = 0; j < shapes[i].size(); j++) {
-				//shapes[i].get(j).scale(minRatio);
+				shapes[i].get(j).scale(minRatio);
 			}
 		}
 
 		finalized = true;
+	}
+
+	public void mouseUpdate() {
+		color c = pickbuffer.get(mouseX, mouseY);
+		int i, j;
+		for (i = 0; i < numLayers; i++) {
+			for (j = 0; j < shapes[i].size(); j++) {
+				if (color(shapes[i].get(j).id) == c) {
+					Message msg = new Message();
+					msg.k = MSG_TRIANGLE;
+					msg.v = shapes[i].get(j).id;
+					messages.add(msg);
+				}
+			}
+		}
+		if (keyPressed) {
+			image(pickbuffer, 0, 0);
+		}
 	}
 
 }
