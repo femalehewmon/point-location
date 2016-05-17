@@ -7,6 +7,8 @@ class Polygon {
 	color cStroke;
 	color cHighlight;
 	boolean selected;
+
+	ArrayList<Polygon> holes;
 	
 	public Polygon(int id) {
 		this.id = id;
@@ -15,10 +17,56 @@ class Polygon {
 		this.cStroke = color(0);
 		this.cHighlight = color(0, 0, 255);
 		this.selected = false;
+
+		this.holes = new ArrayList<Polygon>();
 	}
 
 	public void addPoint(float x, float y) {
 		points.add(new PolyPoint(x, y));
+	}
+
+	public void addHole(Polygon hole) {
+		this.holes.add(hole);
+	}
+
+	ArrayList<Polygon> triangulate() {
+		ArrayList<Polygon> triangles = new ArrayList<Polygon>();
+
+		// use swctx to triangulate
+		var contour = new Array();
+		for(var i = 0; i < this.points.size(); i++){
+			contour.push(new poly2tri.Point(points.get(i).x, points.get(i).y));
+		}
+
+		var swctx = new poly2tri.SweepContext(contour);
+
+		// add holes if necessary
+		if(holes.size() > 0){
+			for (var i = 0; i < holes.size(); i++) {
+				Polygon hole = holes.get(i);
+				var hole_contour = new Array();
+				for(var j = 0; j < polyHolePoints.length; j++){
+					hole_contour.push(
+						new poly2tri.Point(hole.points[j].x, hole.points[j].y));
+				}
+				console.log("Added hole of size " + hole_contour.length);
+				swctx.addHole(hole_contour);
+			}
+		}
+		// triangulate, thanks to poly2tri
+		swctx.triangulate();
+		var p2t_tris = swctx.getTriangles();
+		console.log(p2t_tris);
+		for ( var i = 0; i < p2t_tris.length; i++) {
+			console.log(p2t_tris[i]);
+			Polygon tri = createPoly();
+			tri.addPoint(p2t_tris[i].getPoint(0).x, p2t_tris[i].getPoint(0).y);
+			tri.addPoint(p2t_tris[i].getPoint(1).x, p2t_tris[i].getPoint(1).y);
+			tri.addPoint(p2t_tris[i].getPoint(2).x, p2t_tris[i].getPoint(2).y);
+			triangles.add(tri);
+		}
+
+		return triangles;
 	}
 
 	public void render() {
