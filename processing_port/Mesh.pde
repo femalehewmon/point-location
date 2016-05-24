@@ -4,14 +4,13 @@ class Mesh {
 	ArrayList<Edge> edges;
 	ArrayList<Face> faces;
 
-	public Mesh(ArrayList<Polygon> tris ) {
+	public Mesh( ) {
 		this.vertices = new ArrayList<Vertex>();
 		this.edges = new ArrayList<Edge>();
 		this.faces = new ArrayList<Face>();
-		addTrianglesToMesh(tris);
 	}
 
-	void addTrianglesToMesh(ArrayList<Polygon> tris ) {
+	void addTrianglesToMesh( ArrayList<Polygon> tris ) {
 		Polygon curr_tri;
 		for ( int i = 0; i < tris.size(); i++ ) {
 			curr_tri = tris.get(i);
@@ -32,6 +31,11 @@ class Mesh {
 			int idx_e1 = addEdgeToMesh(e1);
 			int idx_e2 = addEdgeToMesh(e2);
 			int idx_e3 = addEdgeToMesh(e3);
+
+			// Set vertex edge indices
+			this.vertices.get(idx_v1).setEdge(idx_e1);
+			this.vertices.get(idx_v2).setEdge(idx_e1);
+			this.vertices.get(idx_v3).setEdge(idx_e1);
 
 			// Create new face and add to mesh structure
 			// assumes this is definitely a new face, so code carefully
@@ -77,6 +81,71 @@ class Mesh {
 		}
 	}
 
+	void removeFacesFromMesh( ArrayList<Polygon> tris ) {
+		Face curr_face;
+		for ( int i = 0; i < tris.size(); i++ ) {
+			if ( this.faces.contains( tris.get(i)) ) {
+				curr_face = this.faces.get( 
+						this.faces.indexOf(tris.get(i)) );
+				removeFaceFromMesh( curr_face );
+			} else {
+				console.log(
+						"Mesh does not contain face.. doing something wrong?");
+			}
+		}
+	}
+
+	boolean removeFaceFromMesh( Face f ) {
+		if ( this.faces.contains(f) ) {
+			int face_idx = this.faces.indexOf( f );
+
+			Edge curr_edge;
+			ArrayList<Edge> eof = edgesOfFace( curr_face );
+			for ( int i = 0; i < eof.size(); i++ ) {
+				curr_edge = eof.get(i);
+				// remove face reference from edges
+				curr_edge.removeFace( curr_edge );
+				if ( curr_edge.left == null && curr_edge.right == null ) {
+					this.edges.removeEdgeFromMesh( curr_edge );
+				}
+			}
+
+			this.faces.remove( face_idx );
+			return true;
+		} 
+		return false;
+	}
+
+	boolean removeEdgeFromMesh( Edge e ) {
+		if ( this.edges.contains( e ) ) {
+			int edge_idx = this.edges.indexOf(e);
+			// Remove vertex that only belongs to this edge
+			// Update edge reference for vertex that should still exist
+			if ( e.start.e == edge_idx ) {
+				ArrayList<Edge> eov = edgesOfVertex( e.start );
+				if ( eov.size() > 1 ) {
+					// set vertex edge to next reference
+					e.start.setEdge( this.edges.indexOf(eov.get(1)) );
+				} else {
+					this.vertices.remove(
+							this.vertices.indexOf( e.start ));	
+				}
+			} else if ( e.end.e == edge_idx ) {
+				ArrayList<Edge> eov = edgesOfVertex( e.end );
+				if ( eov.size() > 1 ) {
+					// set vertex edge to next reference
+					e.end.setEdge( this.edges.indexOf(eov.get(1)) );
+				} else {
+					this.vertices.remove(
+							this.vertices.indexOf( e.end ));	
+				}
+			}
+			this.edges.remove( edge_idx );
+			return true;
+		}
+		return false;
+	}
+
 	int addFaceToMesh( Face f ) {
 		if ( !this.faces.contains(f) ) {
 			this.faces.add(f);
@@ -91,7 +160,6 @@ class Mesh {
 		return this.vertices.indexOf( v );
 	}
 
-
 	int addEdgeToMesh( Edge e ) {
 		if ( !this.edges.contains(e) ) {
 			this.edges.add(e);
@@ -102,7 +170,7 @@ class Mesh {
 	ArrayList<Edge> edgesOfVertex( Vertex v ) {
 		ArrayList<Edge> eov = new ArrayList<Edge>();
 
-		Edge e = v.e;
+		Edge e = this.edges.get( v.e );
 		do {
 			eov.add(e);
 			if ( e.end == v ) {
@@ -110,7 +178,7 @@ class Mesh {
 			} else {
 				e = e.rprev;
 			}
-		} while ( e != v.e );
+		} while ( e != this.edges.get( v.e ) );
 
 		return eov;
 	}
@@ -118,7 +186,7 @@ class Mesh {
 	ArrayList<Edge> edgesOfFace( Face f ) {
 		ArrayList<Edge> eof = new ArrayList<Edge>();
 
-		Edge e = f.e;
+		Edge e = this.edges.get( f.e );
 		do {
 			eof.add(e);
 			if ( e.left == f ) {
@@ -126,7 +194,7 @@ class Mesh {
 			} else {
 				e = e.rnext;
 			}
-		} while ( e != f.e );
+		} while ( e != this.edges.get( f.e ) );
 
 		return eof;
 	}
@@ -184,6 +252,33 @@ class Edge {
 		this.right = null;
 	}
 
+	public boolean containsVertex( Vertex v ) {
+		return ( start == v || end == v );
+	}
+
+	public boolean containsFace( Face f ) {
+		return ( left == f || right == f );
+	}
+
+	public boolean removeFace( Face f ) {
+		if ( f == left ) {
+			// TODO: is this right?
+			this.left = null;
+			this.lprev = null;
+			this.lnext = null;
+			return true;
+		} else if ( f == right ) {
+			// TODO: is this right?
+			this.right = null;
+			this.rprev = null;
+			this.rprev = null;
+			return true;
+		} else {
+			console.log("face not in edge");
+			return false;
+		}
+	}
+
     public int hashCode() {
         int hash = 17;
         hash = ((hash + start.x) << 5) - (hash + start.x);
@@ -195,37 +290,48 @@ class Edge {
 
     public boolean equals(Object obj) {    
         Edge other = (Edge) obj;    
-        return ((start == obj.start && end == obj.end) ||
-					(end == obj.start && start == obj.end));    
+        return ((start == other.start && end == other.end) ||
+					(end == other.start && start == other.end));    
     }
 }
 
 class Face {
 	int id;
-	Edge e;				// any adjacent edge
+	int e;					// any adjacent edge index
 
-	public Face( int id, Edge e ) {
+	public Face( int id, int e ) {
 		this.id = id;
 		this.e = e;
 	}
 
 	public boolean equals(Object obj) {
-        Face other = (Face) obj;
-        return (id == obj.id);
+		if ( obj instanceof Face) {
+			Face other = (Face) obj;
+			return (id == other.id);
+
+		} else if ( obj instanceof Polygon ) {
+			Polygon other = (Polygon) obj;
+			return (other.points.size() == 3 && id == other.id);
+		}
+		return false;
 	}
 }
 
 class Vertex {
 	float x, y;
-	Edge e;				// any incident edge
+	int e;					// any incident edge index
 
 	public Vertex( float x, float y) {
 		this.x = x;
 		this.y = y;
 	}
 	
-	void setEdge( Edge e ) {
+	void setEdge( int e ) {
 		this.e = e;
+	}
+
+	boolean containsEdge( int e ) {
+		this.e == e;
 	}
 
     public int hashCode() {
@@ -237,6 +343,6 @@ class Vertex {
 
     public boolean equals(Object obj) {
         Vertex other = (Vertex) obj;
-        return (x == obj.x && y == obj.y);
+        return (x == other.x && y == other.y);
     }
 }
