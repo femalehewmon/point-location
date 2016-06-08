@@ -25,53 +25,53 @@ class Mesh {
 
 			// Create and add edges to mesh
 			Edge e1, e2, e3;
-			e1 = new Edge( idx_v1, idx_v2 );
-			e2 = new Edge( idx_v2, idx_v3 );
-			e3 = new Edge( idx_v3, idx_v1 );
+			e1 = new Edge( v1, v2 );
+			e2 = new Edge( v2, v3 );
+			e3 = new Edge( v3, v1 );
 			int idx_e1 = addEdgeToMesh(e1);
 			int idx_e2 = addEdgeToMesh(e2);
 			int idx_e3 = addEdgeToMesh(e3);
 
 			// Set vertex edge indices
-			this.vertices.get(idx_v1).setEdge(idx_e1);
-			this.vertices.get(idx_v2).setEdge(idx_e1);
-			this.vertices.get(idx_v3).setEdge(idx_e1);
+			this.vertices.get(idx_v1).setEdge(e1);
+			this.vertices.get(idx_v2).setEdge(e1);
+			this.vertices.get(idx_v3).setEdge(e1);
 
 			// Create new face and add to mesh structure
 			// assumes this is definitely a new face, so code carefully
 			Face f;
-			face = new Face( curr_tri.id, idx_e1 );
+			face = new Face( curr_tri.id, e1 );
 			int idx_f = addFaceToMesh(face);
 
 			// Fill in edge details
 			if ( this.edges.get(idx_e1).start == e1.start ) {
 				console.log("same orientation");
 				// same orientation, edge had not yet been added (hopefully)
-				this.edges.get(idx_e1).right = idx_f
-				this.edges.get(idx_e1).rprev = idx_e3;
-				this.edges.get(idx_e1).rnext = idx_e2;
+				this.edges.get(idx_e1).right = f
+				this.edges.get(idx_e1).rprev = e3;
+				this.edges.get(idx_e1).rnext = e2;
 
-				this.edges.get(idx_e2).right = idx_f;
-				this.edges.get(idx_e2).rprev = idx_e1;
-				this.edges.get(idx_e2).rnext = idx_e3;
+				this.edges.get(idx_e2).right = f;
+				this.edges.get(idx_e2).rprev = e1;
+				this.edges.get(idx_e2).rnext = e3;
 
-				this.edges.get(idx_e3).right = idx_f;
-				this.edges.get(idx_e3).rprev = idx_e2;
-				this.edges.get(idx_e3).rnext = idx_e1;
+				this.edges.get(idx_e3).right = f;
+				this.edges.get(idx_e3).rprev = e2;
+				this.edges.get(idx_e3).rnext = e1;
 			} else if ( this.edges.get(idx_e1).start == e1.end ) {
 				console.log("different orientation");
 				// opposite orientation, edge had been added
-				this.edges.get(idx_e1).left = idx_f;
-				this.edges.get(idx_e1).lprev = idx_e3;
-				this.edges.get(idx_e1).lnext = idx_e2;
+				this.edges.get(idx_e1).left = f;
+				this.edges.get(idx_e1).lprev = e3;
+				this.edges.get(idx_e1).lnext = e2;
 
-				this.edges.get(idx_e2).left = idx_f;
-				this.edges.get(idx_e2).lprev = idx_e1;
-				this.edges.get(idx_e2).lnext = idx_e3;
+				this.edges.get(idx_e2).left = f;
+				this.edges.get(idx_e2).lprev = e1;
+				this.edges.get(idx_e2).lnext = e3;
 
-				this.edges.get(idx_e3).left = idx_f;
-				this.edges.get(idx_e3).lprev = idx_e2;
-				this.edges.get(idx_e3).lnext = idx_e1;
+				this.edges.get(idx_e3).left = f;
+				this.edges.get(idx_e3).lprev = e2;
+				this.edges.get(idx_e3).lnext = e1;
 			} else {
 				console.log("WARNING: edge does not match.. weird!");
 			}
@@ -97,8 +97,6 @@ class Mesh {
 
 	boolean removeFaceFromMesh( Face f ) {
 		if ( this.faces.contains(f) ) {
-			int face_idx = this.faces.indexOf( f );
-
 			Edge curr_edge;
 			ArrayList<Edge> eof = edgesOfFace( curr_face );
 			for ( int i = 0; i < eof.size(); i++ ) {
@@ -110,18 +108,16 @@ class Mesh {
 				}
 			}
 
-			this.faces.remove( face_idx );
-			return true;
+			return this.faces.remove( f );
 		} 
 		return false;
 	}
 
 	boolean removeEdgeFromMesh( Edge e ) {
 		if ( this.edges.contains( e ) ) {
-			int edge_idx = this.edges.indexOf(e);
 			// Remove vertex that only belongs to this edge
 			// Update edge reference for vertex that should still exist
-			if ( e.start.e == edge_idx ) {
+			if ( e.start.e == e ) {
 				ArrayList<Edge> eov = edgesOfVertex( e.start );
 				if ( eov.size() > 1 ) {
 					// set vertex edge to next reference
@@ -130,7 +126,7 @@ class Mesh {
 					this.vertices.remove(
 							this.vertices.indexOf( e.start ));	
 				}
-			} else if ( e.end.e == edge_idx ) {
+			} else if ( e.end.e == e ) {
 				ArrayList<Edge> eov = edgesOfVertex( e.end );
 				if ( eov.size() > 1 ) {
 					// set vertex edge to next reference
@@ -140,8 +136,7 @@ class Mesh {
 							this.vertices.indexOf( e.end ));	
 				}
 			}
-			this.edges.remove( edge_idx );
-			return true;
+			return this.edges.remove( e );
 		}
 		return false;
 	}
@@ -170,7 +165,7 @@ class Mesh {
 	ArrayList<Edge> edgesOfVertex( Vertex v ) {
 		ArrayList<Edge> eov = new ArrayList<Edge>();
 
-		Edge e = this.edges.get( v.e );
+		Edge e = this.edges.get( this.edges.indexOf(v.e) );
 		do {
 			eov.add(e);
 			if ( e.end == v ) {
@@ -178,15 +173,29 @@ class Mesh {
 			} else {
 				e = e.rprev;
 			}
-		} while ( e != this.edges.get( v.e ) );
+		} while ( e != this.edges.get( this.edges.indexOf(v.e) ) );
 
 		return eov;
+	}
+
+	ArrayList<Vertex> verticesOfFace( Face f ) {
+		ArrayList<Vertex> vertices_of_face = new ArrayList<Vertex>();
+		ArrayList<Edge> eof = edgesOfFace( f );
+		for ( int i = 0; i < eof.size(); i++ ){
+			if ( !vertices_of_face.contains(eof.get(i).start) ) {
+				vertices_of_face.add( eof.get(i).start );
+			}
+			if ( !vertices_of_face.contains(eof.get(i).end) ) {
+				vertices_of_face.add( eof.get(i).end );
+			}
+		}
+		return vertices_of_face;
 	}
 
 	ArrayList<Edge> edgesOfFace( Face f ) {
 		ArrayList<Edge> eof = new ArrayList<Edge>();
 
-		Edge e = this.edges.get( f.e );
+		Edge e = this.edges.get( this.edges.indexOf(f.e) );
 		do {
 			eof.add(e);
 			if ( e.left == f ) {
@@ -194,31 +203,9 @@ class Mesh {
 			} else {
 				e = e.rnext;
 			}
-		} while ( e != this.edges.get( f.e ) );
+		} while ( e != this.edges.get( this.edges.indexOf(f.e) ) );
 
 		return eof;
-	}
-
-	ArrayList<Face> facesOfVertex( Vertex v ) {
-		ArrayList<Face> fov = new ArrayList<Face>();
-
-		// todo: determine if there is an optimization
-		// can I just add all left faces directly?
-		ArrayList<Edge> eov = edgesOfVertex( v );
-		Edge curr_left;
-		Edge curr_right;
-		for (int i = 0; i < eov.size(); i++ ) {
-			curr_left = eov.get(i).left;
-			curr_right = eov.get(i).right;
-			if ( curr_left != null && !fov.contains(curr_left) ) {
-				fov.add( left );
-			}
-			if ( curr_right != null && !fov.contains(curr_right) ) {
-				fov.add( right );
-			}
-		}
-
-		return fov;
 	}
 
 	ArrayList<Face> facesOfEdge( Edge e ) {
@@ -233,6 +220,48 @@ class Mesh {
 
 		return foe;
 	}
+
+	ArrayList<Face> facesOfVertex( Vertex v ) {
+		ArrayList<Face> faces_of_vertex = new ArrayList<Face>();
+
+		// todo: determine if there is an optimization
+		// can I just add all left faces directly?
+		ArrayList<Edge> eov = edgesOfVertex( v );
+		ArrayList<Face> foe;
+		for (int i = 0; i < eov.size(); i++ ) {
+			foe = facesOfEdge( eov.get(i) );
+			for ( int j = 0; j < foe.size(); j++ ) {
+				if ( !faces_of_vertex.contains( foe.get(j) ) ) {
+					faces_of_vertex.add( foe.get(j) );
+				}
+			}
+		}
+
+		return faces_of_vertex;
+	}
+
+	ArrayList<Edge> edgesSurroundingVertex( Vertex v ) {
+		ArrayList<Edge> esv = new ArrayList<Edge>();
+
+		ArrayList<Face> fov = facesOfVertex( v );
+		Face curr_face;
+		Edge curr_edge;
+		ArrayList<Edge> curr_eof;
+		for ( int i = 0; i < fov.size(); i++ ) {
+			curr_face = fov.get(i);
+			curr_eof = edgesOfFace( curr_face );
+			// assume face has only 3 edges (TODO: validate)
+			for ( int j = 0; j < 3; j++ ) {
+				curr_edge = curr_eof.get(j);
+				if ( !curr_edge.containsVertex(v) && 
+						!esv.contains(curr_edge) ) {
+					esv.add( curr_edge );
+				}
+			}
+		}
+		return esv;
+	}
+
 }	
 
 class Edge {
@@ -297,9 +326,9 @@ class Edge {
 
 class Face {
 	int id;
-	int e;					// any adjacent edge index
+	int Edge;					// any adjacent edge index
 
-	public Face( int id, int e ) {
+	public Face( int id, Edge e ) {
 		this.id = id;
 		this.e = e;
 	}
@@ -319,18 +348,23 @@ class Face {
 
 class Vertex {
 	float x, y;
-	int e;					// any incident edge index
+	Edge e;					// any incident edge index
 
 	public Vertex( float x, float y) {
 		this.x = x;
 		this.y = y;
 	}
+
+	public float getLength() { 
+		float l = Math.sqrt(x*x + y*y);
+		return l;
+	}
 	
-	void setEdge( int e ) {
+	void setEdge( Edge e ) {
 		this.e = e;
 	}
 
-	boolean containsEdge( int e ) {
+	boolean containsEdge( Edge e ) {
 		this.e == e;
 	}
 
