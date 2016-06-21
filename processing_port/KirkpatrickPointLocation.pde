@@ -8,6 +8,9 @@ int MODE_CREATE_DATA_STRUCTURE = 1;
 
 int unique_poly_id = 0;
 
+// Helper global classes
+CompGeoHelper compGeoHelper;
+
 // variables for interaction with polygons (hover effect)
 ArrayList<Message> messages;
 PGraphics pickbuffer;
@@ -16,7 +19,7 @@ PGraphics pickbuffer;
 LayeredMeshView lmesh;
 LayeredGraphView lgraph;
 
-// modes for which view to enabl
+// modes for which view to enable
 
 // Float.X_INFINITY throwing error, so self define
 POSITIVE_INFINITY = 9999999;
@@ -31,9 +34,16 @@ class Message {
 void setup() {
 	size($(window).width(), $(window).height()); // get browser window size
 
+	compGeoHelper = new CompGeoHelper();
+
 	messages = new ArrayList<Message>();
 	pickbuffer = createGraphics(width, height);
 
+	// create views
+	lgraph = new LayeredGraphView(2, 0, 0, width/2, height);
+	lmesh = new LayeredMeshView(width/2, 0, width, height/2);
+
+	// triangulation test
 	Polygon test = createPoly();
 	console.log(test);
 	test.addPoint(width/4+10, height/4+10);
@@ -46,28 +56,25 @@ void setup() {
 	test2.addPoint(width/2-10, height/2-10);
 	test2.addPoint(width/4+10, height/2-10);
 	ArrayList<Polygon> tris = test2.triangulate();
-
 	Mesh m = new Mesh();
 	m.addTrianglesToMesh(tris);
 
-	lgraph = new LayeredGraphView(2, 0, 0, width/2, height);
-	lgraph.addShape(0, test);
-	lgraph.addShape(1, test2);
-	lgraph.addShape(1, tris.get(0));
-	lgraph.addShape(1, tris.get(1));
-
 	// graham scan test
-	lmesh = new LayeredMeshView(width/2, 0, width, height/2);
 	ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 	vertices.add(new Vertex(1, 1));
 	vertices.add(new Vertex(1, 5));
 	vertices.add(new Vertex(5, 5));
 	vertices.add(new Vertex(0, 3));
-
 	vertices.add(new Vertex(2, 2));
 	vertices.add(new Vertex(3, 3));
 	vertices.add(new Vertex(4, 4));
-	Polygon chull = lmesh.getConvexHull( vertices );
+	Polygon chull = compGeoHelper.getConvexHull( vertices );
+
+	// add shapes to views as test
+	lgraph.addShape(0, test);
+	lgraph.addShape(1, test2);
+	lgraph.addShape(1, tris.get(0));
+	lgraph.addShape(1, tris.get(1));
 	lgraph.addShape(0, chull);
 }
 
