@@ -22,7 +22,7 @@ class Polygon {
 	}
 
 	public void addPoint(float x, float y) {
-		points.add(new PolyPoint(x, y));
+		this.points.add(new PolyPoint(x, y));
 	}
 
 	public void addHole(Polygon hole) {

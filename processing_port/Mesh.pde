@@ -359,6 +359,11 @@ class Vertex {
 		float l = Math.sqrt(x*x + y*y);
 		return l;
 	}
+
+	public float getDistance( Vertex other ) {
+		return Math.sqrt(
+				Math.pow((other.x - x), 2) + Math.pow((other.y - y), 2));
+	}
 	
 	void setEdge( Edge e ) {
 		this.e = e;

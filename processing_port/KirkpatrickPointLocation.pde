@@ -56,6 +56,7 @@ void setup() {
 	lgraph.addShape(1, tris.get(0));
 	lgraph.addShape(1, tris.get(1));
 
+	// graham scan test
 	lmesh = new LayeredMeshView(width/2, 0, width, height/2);
 	ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 	vertices.add(new Vertex(1, 1));
@@ -66,7 +67,8 @@ void setup() {
 	vertices.add(new Vertex(2, 2));
 	vertices.add(new Vertex(3, 3));
 	vertices.add(new Vertex(4, 4));
-	lmesh.getConvexHull( vertices );
+	Polygon chull = lmesh.getConvexHull( vertices );
+	lgraph.addShape(0, chull);
 }
 
 void setupKirkpatrickDataStructure() {
@@ -90,6 +92,7 @@ void draw() {
 }
 
 Polygon createPoly() {
+	console.log("creating poly");
 	unique_poly_id++;
 	return new Polygon(unique_poly_id);
 }
