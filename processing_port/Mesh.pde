@@ -10,7 +10,7 @@ class Mesh {
 		this.faces = new ArrayList<Face>();
 	}
 
-	void addTrianglesToMesh( ArrayList<Polygon> tris ) {
+	public void addTrianglesToMesh( ArrayList<Polygon> tris ) {
 		Polygon curr_tri;
 		for ( int i = 0; i < tris.size(); i++ ) {
 			curr_tri = tris.get(i);
@@ -190,6 +190,20 @@ class Mesh {
 			}
 		}
 		return vertices_of_face;
+	}
+
+	ArrayList<Vertex> verticesOfFaces( ArrayList<Face> faces ) {
+		ArrayList<Vertex> vertices_of_faces = new ArrayList<Vertex>();
+		ArrayList<Vertex> vof;
+		for ( int i = 0; i < faces.size(); i++ ) {
+			vof = verticesOfFace( faces.get(i) );
+			for ( int j = 0; j < vof.size(); j++ ) {
+				if ( !vertices_of_faces.contains( vof.get(j) ) ) {
+					vertices_of_faces.add( vof.get(i) );
+				}
+			}
+		}
+		return vertices_of_faces;
 	}
 
 	ArrayList<Edge> edgesOfFace( Face f ) {
