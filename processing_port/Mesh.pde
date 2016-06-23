@@ -10,6 +10,12 @@ class Mesh {
 		this.faces = new ArrayList<Face>();
 	}
 
+	public void clear() {
+		this.vertices.clear();
+		this.edges.clear();
+		this.faces.clar();
+	}
+
 	public void addTrianglesToMesh( ArrayList<Polygon> tris ) {
 		Polygon curr_tri;
 		for ( int i = 0; i < tris.size(); i++ ) {

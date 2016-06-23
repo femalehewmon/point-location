@@ -2,6 +2,63 @@ class CompGeoHelper {
 
 	public CompGeoHelper() {}
 
+	public LayeredMesh createKirkpatrickDataStructure(
+			Polygon poly, Polygon outerTri ){
+
+		// A LayeredMesh will serve as Kirkpatrick's Data Structure
+		LayeredMesh mesh = new LayeredMesh( );
+
+		ArrayList<Polygon> base_triangles = poly.triangulate();
+		mesh.addBaseTriangles( base_triangles );
+
+		outerTri.addHole( poly );
+		ArrayList<Polygon> outer_triangles = outerTri.triangulate();
+		mesh.addTrianglesToLayer( 0, outer_triangles );
+
+		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh );
+		do {
+			for ( int i = 0; i < ildv.size(); i++ ) {
+				// Get faces (triangles) surrounding ildv
+				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
+
+				// Get the convex hull of the triangles surrounding the ildv
+				Polygon convex_hull = 
+					compGeoHelper.getConvexHull( mesh.verticesOfFaces(faces) ); 
+
+				// Add convex hull triangulation to mesh
+				mesh.addTrianglesToNextLayer( convex_hull.triangulate() );
+
+				// Remove triangles surrounding ildv from mesh
+				mesh.removeFacesFromMesh( faces );
+			}	
+
+			// Get new ildv for next layer
+			ildv = independentLowDegreeVertices();
+
+		} while ( ildv.size() > 3 );
+
+		// Mesh should now consist of only one triangle with 3 vertices
+		if ( mesh.vertices.size() != 3 ) {
+			console.log("WARNING: mesh is greater than 3 vertices"); 
+		}
+
+		// TODO: add final triangle to mesh
+
+		return mesh;
+	}
+
+	private ArrayList<Vertex> independentLowDegreeVertices() {
+		ArrayList<Vertex> ildv = new ArrayList<Vertex>();
+		ArrayList<Face> fov;
+		for ( int i = 0; i < mesh.vertices.size; i++ ) {
+			fov = mesh.facesOfVertex( mesh.vertices.get(i) );
+			if ( fov.size() < 7 ) {
+				ildv.add( mesh.vertices.get(i) ); // add ildv to list
+			}
+		}
+		return ildv;
+	}
+
 	// Graham Scan!
 	public Polygon getConvexHull( ArrayList<Vertex> vs ) {
 		// *** ----------------------------------------------------- ***
