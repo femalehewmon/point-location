@@ -2,6 +2,8 @@
 class Polygon {
 
 	int id;
+	int parentId;
+
 	ArrayList<PolyPoint> points;
 	color cFill;
 	color cStroke;
@@ -12,6 +14,8 @@ class Polygon {
 	
 	public Polygon(int id) {
 		this.id = id;
+		this.parentId = -1;
+
 		this.points = new ArrayList<PolyPoint>();
 		this.cFill = color(random(255), random(255), random(255));
 		this.cStroke = color(0);
@@ -57,13 +61,18 @@ class Polygon {
 		swctx.triangulate();
 		var p2t_tris = swctx.getTriangles();
 		console.log(p2t_tris);
-		for ( var i = 0; i < p2t_tris.length; i++) {
+		for ( var i = 0; i < p2t_tris.length; i++ ) {
 			console.log(p2t_tris[i]);
 			Polygon tri = createPoly();
 			tri.addPoint(p2t_tris[i].getPoint(0).x, p2t_tris[i].getPoint(0).y);
 			tri.addPoint(p2t_tris[i].getPoint(1).x, p2t_tris[i].getPoint(1).y);
 			tri.addPoint(p2t_tris[i].getPoint(2).x, p2t_tris[i].getPoint(2).y);
 			triangles.add(tri);
+		}
+
+		// set parentId of all triangulated triangles
+		for ( int i = 0; i < triangles.size(); i++ ) {
+			triangles[i].parentId = this.id;
 		}
 
 		return triangles;
