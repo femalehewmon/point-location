@@ -1,14 +1,12 @@
 
 Polygon poly = null;
-boolean DEMO = false;
+final boolean DEMO = false;
 
 // Global variables
-int mode = -1;
-int MODE_CREATE_POLYGON = 0;
-int MODE_CREATE_DATA_STRUCTURE_ANIMATION = 1;
 int unique_poly_id = 0;
 
 // Helper global classes
+SceneController sceneControl;
 CompGeoHelper compGeoHelper;
 
 // Variables for interaction with polygons (hover effect)
@@ -30,8 +28,10 @@ POSITIVE_INFINITY = 9999999;
 NEGATIVE_INFINITY = -9999999;
 
 void setup() {
-	size($(window).width(), $(window).height()); // get browser window size
+	//size($(window).width(), $(window).height()); // get browser window size
+	size( 1024, 768 ); // get browser window size
 
+	sceneControl = new SceneController();
 	compGeoHelper = new CompGeoHelper();
 
 	messages = new ArrayList<Message>();
@@ -44,34 +44,32 @@ void setup() {
 	pcreate.visible = true;
 	lgraph.visible = false;
 	lmesh.visible = false;
-
-	// set mode
-	mode = MODE_CREATE_POLYGON;
 }
 
 void draw() {
 	background(255, 255, 0);
 	pickbuffer.background(255);
 
-	switch( mode ) {
-		case MODE_CREATE_POLYGON:
+	switch( sceneControl.currScene ) {
+		case sceneControl.CREATE_POLYGON:
 			if ( DEMO && !pcreate.finalized ) {
 				pcreate.demo();
-				//mode = MODE_CREATE_DATA_STRUCTURE_ANIMATION;
+				sceneControl.nextScene();
 			}
 			break;
-		case MODE_CENTER_AND_RESIZE_POLYGON:
+		case sceneControl.CENTER_AND_RESIZE_POLYGON:
+			sceneControl.update();
 			break;
-		case MODE_CREATE_DATA_STRUCTURE:
+		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
 			// create outer triangle
 
 			LayeredMesh kpDataStruct =
 				createKirkpatrickDataStructure( poly, outerTri);
 			lmesh.setLayeredMesh( kpDataStruct );
 
-			mode = MODE_ANIMATE_DATA_STRUCTURE_CREATION;
+			sceneControl.update();
 			break;
-		case MODE_ANIMATION_DATA_STRUCTURE_CREATION:
+		case sceneControl.ANIMATE_DATA_STRUCT_CREATION:
 
 			break;
 	}
@@ -103,10 +101,9 @@ Polygon createPoly() {
 }
 
 void mousePressed( ) {
-	console.log(mouseButton);
 	if (mouseButton == LEFT) {
-		switch( mode ) {
-			case MODE_CREATE_POLYGON:
+		switch( sceneControl.currScene ) {
+			case sceneControl.CREATE_POLYGON:
 			if ( !DEMO && !pcreate.finalized ) {
 				pcreate.addPoint( mouseX, mouseY );
 			}
