@@ -78,8 +78,10 @@ class Polygon {
 		return triangles;
 	}
 
-	public void render() {
+	public void render( boolean renderVertices ) {
 		if ( points.size() > 0 ) {
+
+			// First, draw polygon
 			beginShape();
 			stroke(cStroke);
 			if (selected) {
@@ -104,7 +106,20 @@ class Polygon {
 			}
 			pickbuffer.vertex(points.get(0).x, points.get(0).y);
 			pickbuffer.endShape();
+
+			// Now, draw vertices on top
+			if ( renderVertices ) {
+				PolyPoint currPoint;
+				for ( int i = 0; i < points.size(); i++ ) {
+					currPoint = points.get(i).render();
+				}
+			}
 		}
+	}
+
+	public void render() {
+		// by default, do not render vertices
+		render( false );
 	}
 
 	public void move(PolyPoint newCenter) {
@@ -194,15 +209,37 @@ class PolyPoint {
 
 	float x;
 	float y;
+	boolean selected;
+
+	float size;
+	color cFill;
+	color cStroke;
+	color cHighlight;
 
 	public PolyPoint(float x, float y) {
 		this.x = x;
 		this.y = y;
+		this.size = 10;
+		this.cStroke = color(0);
+		this.cVertexFill = color(0);
+		this.cVertexHighlight = color(0, 0, 255);
+
+		this.selected = false;
 	}
 
 	public void move(float xnew, float ynew) {
 		this.x = xnew;
 		this.y = ynew;
+	}
+
+	public void render() {
+		stroke(cStroke);
+		if ( selected ) {
+			fill(cHighlight);
+		} else {
+			fill(cFill);
+		}
+		ellipse( this.x, this.y, this.size, this.size );
 	}
 
 }
