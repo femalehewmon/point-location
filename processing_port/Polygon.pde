@@ -10,6 +10,8 @@ class Polygon {
 	color cHighlight;
 	boolean selected;
 
+	PolyPoint centerPoint;
+
 	ArrayList<Polygon> holes;
 
 	public Polygon(int id) {
@@ -21,12 +23,14 @@ class Polygon {
 		this.cStroke = color(0);
 		this.cHighlight = color(0, 0, 255);
 		this.selected = false;
+		this.centerPoint = null;
 
 		this.holes = new ArrayList<Polygon>();
 	}
 
 	public void addPoint(float x, float y) {
 		this.points.add(new PolyPoint(x, y));
+		this.centerPoint = null;
 	}
 
 	public void addHole(Polygon hole) {
@@ -122,8 +126,12 @@ class Polygon {
 		render( false );
 	}
 
-	public void move(PolyPoint newCenter) {
+	public void move( float x, float y, float percentToMove ) {
+		// percentToMove can be used for controlled animation
 		PolyPoint currCenter = getCenter();
+		PolyPoint newCenter = new PolyPoint(
+				currCenter.x + ((x - currCenter.x) * percentToMove),
+				currCenter.y + ((y - currCenter.y) * percentToMove));
 		float xnew;
 		float ynew;
 		for (int i = 0; i < points.size(); i++ ) {
@@ -133,10 +141,15 @@ class Polygon {
 				(points.get(i).y - currCenter.y);
 			points.get(i).move(xnew, ynew);
 		}
-		currCenter = getCenter();
+		this.centerPoint = null;
 	}
 
-	public void scale(float scaleRatio) {
+	public void move( float x, float y ) {
+		move( x, y, 1.0 ); // move instantly
+	}
+
+	public void scale( float scaleRatio, float percentToScale ) {
+		scaleRatio = 1.0 - ((1.0 - scaleRatio) * percentToScale);
 		PolyPoint center = getCenter();
 		float xnew;
 		float ynew;
@@ -147,6 +160,11 @@ class Polygon {
 			   ((points.get(i).y - center.y) * scaleRatio);
 			points.get(i).move(xnew, ynew);
 		}
+		this.centerPoint = null;
+	}
+
+	public void scale( float scaleRatio ) {
+		scale( scaleRatio, 1.0 ); // scale instantly
 	}
 
 	public float getWidth() {
@@ -178,29 +196,32 @@ class Polygon {
 	}
 
 	public PolyPoint getCenter() {
-		int i, j;
-		float cx;
-		float cy;
-		float area;
-		for (i = 0; i < points.size(); i++) {
-			j = i + 1;
-			if (j >= points.size()) {
-				j = 0; // wraparound for final operation
-			}
-			x0 = points.get(i).x;
-			y0 = points.get(i).y;
-			x1 = points.get(j).x;
-			y1 = points.get(j).y;
+		if ( this.centerPoint == null ) {
+			int i, j;
+			float cx;
+			float cy;
+			float area;
+			for (i = 0; i < points.size(); i++) {
+				j = i + 1;
+				if (j >= points.size()) {
+					j = 0; // wraparound for final operation
+				}
+				x0 = points.get(i).x;
+				y0 = points.get(i).y;
+				x1 = points.get(j).x;
+				y1 = points.get(j).y;
 
-			a = (x0*y1) - (x1*y0);
-			cx += (x0 + x1)*a;
-			cy += (y0 + y1)*a;
-			area += a;
+				a = (x0*y1) - (x1*y0);
+				cx += (x0 + x1)*a;
+				cy += (y0 + y1)*a;
+				area += a;
+			}
+			area *= 0.5;
+			cx = cx / (6*area);
+			cy = cy / (6*area);
+			this.centerPoint = new PolyPoint(cx, cy);
 		}
-		area *= 0.5;
-		cx = cx / (6*area);
-		cy = cy / (6*area);
-		return new PolyPoint(cx, cy);
+		return this.centerPoint;
 	}
 
 }
