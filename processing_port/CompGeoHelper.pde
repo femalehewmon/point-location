@@ -8,9 +8,12 @@ class CompGeoHelper {
 		// A LayeredMesh will serve as Kirkpatrick's Data Structure
 		LayeredMesh mesh = new LayeredMesh( );
 
+		// triangulate the main polygon
 		ArrayList<Polygon> base_triangles = poly.triangulate();
 		mesh.addBaseTriangles( base_triangles );
 
+		// triangulate the outer triangle with a hole in the middle for
+		// the original polygon
 		outerTri.addHole( poly );
 		ArrayList<Polygon> outer_triangles = outerTri.triangulate();
 		mesh.addTrianglesToLayer( 0, outer_triangles );
