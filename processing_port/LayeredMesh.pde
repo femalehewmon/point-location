@@ -16,7 +16,7 @@ class LayeredMesh extends Mesh {
 	public void addTrianglesToNextLayer( ArrayList<Polygon> tris ) {
 		// copy all triangle ids from last layer to new layer
 		layers.add( new ArrayList<Integer>( layers.get(layers.size() - 1)) );
-		addTrianglesToLayer( layers.size(), tris );
+		addTrianglesToLayer( layers.size() - 1, tris );
 	}
 
 	public void addTrianglesTolayer( int layer, ArrayList<Polygon> tris ) {
