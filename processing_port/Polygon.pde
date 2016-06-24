@@ -11,7 +11,7 @@ class Polygon {
 	boolean selected;
 
 	ArrayList<Polygon> holes;
-	
+
 	public Polygon(int id) {
 		this.id = id;
 		this.parentId = -1;
@@ -79,44 +79,46 @@ class Polygon {
 	}
 
 	public void render() {
-		beginShape();
-		stroke(cStroke);
-		if (selected) {
-			fill(cHighlight);
-		} else {
-			fill(cFill);
-		}
+		if ( points.size() > 0 ) {
+			beginShape();
+			stroke(cStroke);
+			if (selected) {
+				fill(cHighlight);
+			} else {
+				fill(cFill);
+			}
 
-		for (int i = 0; i < points.size(); i++) {
-			vertex(points.get(i).x, points.get(i).y);
-		}	
-		// draw back to 1st vertex
-		vertex(points.get(0).x, points.get(0).y);
-		endShape();
+			for (int i = 0; i < points.size(); i++) {
+				vertex(points.get(i).x, points.get(i).y);
+			}
+			// draw back to 1st vertex
+			vertex(points.get(0).x, points.get(0).y);
+			endShape();
 
-		// draw shape onto pickbuffer
-		pickbuffer.beginShape();
-		pickbuffer.stroke(color(this.id));
-		pickbuffer.fill(color(this.id));
-		for (int i = 0; i < points.size(); i++) {
-			pickbuffer.vertex(points.get(i).x, points.get(i).y);
+			// draw shape onto pickbuffer
+			pickbuffer.beginShape();
+			pickbuffer.stroke(color(this.id));
+			pickbuffer.fill(color(this.id));
+			for (int i = 0; i < points.size(); i++) {
+				pickbuffer.vertex(points.get(i).x, points.get(i).y);
+			}
+			pickbuffer.vertex(points.get(0).x, points.get(0).y);
+			pickbuffer.endShape();
 		}
-		pickbuffer.vertex(points.get(0).x, points.get(0).y);
-		pickbuffer.endShape();
 	}
 
 	public void move(PolyPoint newCenter) {
-		PolyPoint currCenter = getCenter();	
+		PolyPoint currCenter = getCenter();
 		float xnew;
 		float ynew;
 		for (int i = 0; i < points.size(); i++ ) {
-			xnew = newCenter.x + 
+			xnew = newCenter.x +
 				(points.get(i).x - currCenter.x);
-			ynew = newCenter.y + 
+			ynew = newCenter.y +
 				(points.get(i).y - currCenter.y);
 			points.get(i).move(xnew, ynew);
 		}
-		currCenter = getCenter();	
+		currCenter = getCenter();
 	}
 
 	public void scale(float scaleRatio) {
@@ -125,9 +127,9 @@ class Polygon {
 		float ynew;
 		for (int i = 0; i < points.size(); i++ ) {
 			xnew = center.x +
-			   ((points.get(i).x - center.x) * scaleRatio);	
+			   ((points.get(i).x - center.x) * scaleRatio);
 			ynew = center.y +
-			   ((points.get(i).y - center.y) * scaleRatio);	
+			   ((points.get(i).y - center.y) * scaleRatio);
 			points.get(i).move(xnew, ynew);
 		}
 	}
@@ -192,7 +194,7 @@ class PolyPoint {
 
 	float x;
 	float y;
-	
+
 	public PolyPoint(float x, float y) {
 		this.x = x;
 		this.y = y;

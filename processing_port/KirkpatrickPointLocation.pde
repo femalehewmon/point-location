@@ -1,35 +1,33 @@
-//ArrayList<poly2tri.Point> polygon;
-//polygon = new ArrayList<poly2tri.Point>();
-//polygon.add(new poly2tri.Point(24, 25));
 
-int mode = 0;
+Polygon poly = null;
+boolean DEMO = false;
+
+// Global variables
+int mode = -1;
 int MODE_CREATE_POLYGON = 0;
-int MODE_CREATE_DATA_STRUCTURE = 1;
-
+int MODE_CREATE_DATA_STRUCTURE_ANIMATION = 1;
 int unique_poly_id = 0;
 
 // Helper global classes
 CompGeoHelper compGeoHelper;
 
-// variables for interaction with polygons (hover effect)
-ArrayList<Message> messages;
+// Variables for interaction with polygons (hover effect)
 PGraphics pickbuffer;
-
-// views
-LayeredMeshView lmesh;
-LayeredGraphView lgraph;
-
-// modes for which view to enable
-
-// Float.X_INFINITY throwing error, so self define
-POSITIVE_INFINITY = 9999999;
-NEGATIVE_INFINITY = -9999999;
-
+ArrayList<Message> messages;
 MSG_TRIANGLE = "MSG_TRIANGLE";
 class Message {
 	String k;
 	String v;
 }
+
+// Views
+PolygonCreationView pcreate;
+LayeredMeshView lmesh;
+LayeredGraphView lgraph;
+
+// Float.X_INFINITY throwing error, so self define
+POSITIVE_INFINITY = 9999999;
+NEGATIVE_INFINITY = -9999999;
 
 void setup() {
 	size($(window).width(), $(window).height()); // get browser window size
@@ -40,67 +38,80 @@ void setup() {
 	pickbuffer = createGraphics(width, height);
 
 	// create views
-	lgraph = new LayeredGraphView(2, 0, 0, width/2, height);
+	pcreate = new PolygonCreationView(0, 0, width, height);
+	lgraph = new LayeredGraphView(0, 0, width/2, height);
 	lmesh = new LayeredMeshView(width/2, 0, width, height/2);
+	pcreate.visible = true;
+	lgraph.visible = false;
+	lmesh.visible = false;
 
-	// triangulation test
-	Polygon test = createPoly();
-	console.log(test);
-	test.addPoint(width/4+10, height/4+10);
-	test.addPoint(width/2-10, height/4+10);
-	test.addPoint(width/2-10, height/2-10);
-	test.addPoint(width/4+10, height/2-10);
-	Polygon test2 = createPoly();
-	test2.addPoint(width/4+10, height/4+10);
-	test2.addPoint(width/2-10, height/4+10);
-	test2.addPoint(width/2-10, height/2-10);
-	test2.addPoint(width/4+10, height/2-10);
-	ArrayList<Polygon> tris = test2.triangulate();
-	Mesh m = new Mesh();
-	m.addTrianglesToMesh(tris);
-
-	// graham scan test
-	ArrayList<Vertex> vertices = new ArrayList<Vertex>();
-	vertices.add(new Vertex(1, 1));
-	vertices.add(new Vertex(1, 5));
-	vertices.add(new Vertex(5, 5));
-	vertices.add(new Vertex(0, 3));
-	vertices.add(new Vertex(2, 2));
-	vertices.add(new Vertex(3, 3));
-	vertices.add(new Vertex(4, 4));
-	Polygon chull = compGeoHelper.getConvexHull( vertices );
-
-	// add shapes to views as test
-	lgraph.addShape(0, test);
-	lgraph.addShape(1, test2);
-	lgraph.addShape(1, tris.get(0));
-	lgraph.addShape(1, tris.get(1));
-	lgraph.addShape(0, chull);
-}
-
-void setupKirkpatrickDataStructure() {
-
-
+	// set mode
+	mode = MODE_CREATE_POLYGON;
 }
 
 void draw() {
 	background(255, 255, 0);
 	pickbuffer.background(255);
 
-	lgraph.render();
-	lmesh.render();
+	switch( mode ) {
+		case MODE_CREATE_POLYGON:
+			if ( DEMO && !pcreate.finalized ) {
+				pcreate.demo();
+				//mode = MODE_CREATE_DATA_STRUCTURE_ANIMATION;
+			}
+			break;
+		case MODE_CENTER_AND_RESIZE_POLYGON:
+			break;
+		case MODE_CREATE_DATA_STRUCTURE:
+			// create outer triangle
+
+			LayeredMesh kpDataStruct =
+				createKirkpatrickDataStructure( poly, outerTri);
+			lmesh.setLayeredMesh( kpDataStruct );
+
+			mode = MODE_ANIMATE_DATA_STRUCTURE_CREATION;
+			break;
+		case MODE_ANIMATION_DATA_STRUCTURE_CREATION:
+
+			break;
+	}
+
+	if (pcreate.visible) {
+		pcreate.render();
+	}
+	if (lgraph.visible) {
+		lgraph.render();
+	}
+	if (lmesh.visible) {
+		lmesh.render();
+	}
 
 	messages.clear();
 
 	if (lgraph.visible) {
 		lgraph.mouseUpdate();
 	}
-
+	if (lmesh.visible) {
+		lmesh.mouseUpdate();
+	}
 }
 
 Polygon createPoly() {
 	console.log("creating poly");
 	unique_poly_id++;
 	return new Polygon(unique_poly_id);
+}
+
+void mousePressed( ) {
+	console.log(mouseButton);
+	if (mouseButton == LEFT) {
+		switch( mode ) {
+			case MODE_CREATE_POLYGON:
+			if ( !DEMO && !pcreate.finalized ) {
+				pcreate.addPoint( mouseX, mouseY );
+			}
+			break;
+		}
+	}
 }
 
