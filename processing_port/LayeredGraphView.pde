@@ -6,17 +6,23 @@ class LayeredGraphView extends View {
 	HashMap<Integer, color> colorsByLayer;
 	boolean finalized = false;
 
-	public LayeredGraphView(
-			int numLayers, float x1, float y1, float x2, float y2) {
+	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
-		this.numLayers = numLayers;
-		this.ydiv = h / numLayers;
 		this.shapesByLayer = new HashMap<Integer, ArrayList<Polygon>>();
 		this.colorsByLayer = new HashMap<Integer, color>();
+		setLayerCount( 1 );
+	}
+
+	public void setLayerCount( int numLayers ) {
+		this.numLayers = numLayers;
+		this.ydiv = h / numLayers;
 		for (int i = 0; i < numLayers; i++) {
-			shapesByLayer[i] = new ArrayList<Polygon>();
-			colorsByLayer[i] = color(random(255), random(255), random(255));
+			if ( !shapesByLayer.containsKey(i) ) {
+				shapesByLayer[i] = new ArrayList<Polygon>();
+				colorsByLayer[i] = color(random(255), random(255), random(255));
+			}
 		}
+		this.finalized = false;
 	}
 
 	public void addShape(int layer, Polygon shape) {
@@ -27,7 +33,7 @@ class LayeredGraphView extends View {
 	public void render() {
 		super.render(); // draw view background
 		if (!finalized) {
-			finalizeGraph();
+			finalizeView();
 		}
 		// get list of selected polygons
 		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
@@ -53,7 +59,7 @@ class LayeredGraphView extends View {
 		}
 	}
 
-	private void finalizeGraph() {
+	private void finalizeView() {
 		int i, j;
 		float xdiv;
 		float xpos, ypos;
