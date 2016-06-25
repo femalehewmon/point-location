@@ -3,7 +3,7 @@ class LayeredMesh extends Mesh {
 	ArrayList<ArrayList<Integer>> layers;
 	int numLayers;
 
-	// Organizes faces into layers by id, but underneath the mesh is 
+	// Organizes faces into layers by id, but underneath the mesh is
 	// one cohesive layer.
 	public LayeredMesh( ) {
 		super();
@@ -28,7 +28,7 @@ class LayeredMesh extends Mesh {
 		addTrianglesToLayer( layers.size() - 1, tris );
 	}
 
-	public void addTrianglesTolayer( int layer, ArrayList<Polygon> tris ) {
+	public void addTrianglesToLayer( int layer, ArrayList<Polygon> tris ) {
 		// TODO: validate that triangle ID has not already been added?
 		if ( layer >= layers.size() ) {
 			console.log( "ERROR: layer does not exist, cannot add tris");
@@ -36,9 +36,9 @@ class LayeredMesh extends Mesh {
 		}
 
 		for ( int i = 0; i < tris.size(); i++ ) {
-			layers[i].add( tris.id );
+			layers.get(layer).add( tris.get(i).id );
 		}
-		addTrianglesToMesh( baseTris );
+		addTrianglesToMesh( tris );
 	}
 
 	public void removeFacesFromMesh( ArrayList<Face> faces ) {

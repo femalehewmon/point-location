@@ -34,7 +34,7 @@ class CompGeoHelper {
 			}	
 
 			// Get new ildv for next layer
-			ildv = independentLowDegreeVertices();
+			ildv = independentLowDegreeVertices( mesh );
 
 		} while ( ildv.size() > 3 );
 
@@ -48,7 +48,7 @@ class CompGeoHelper {
 		return mesh;
 	}
 
-	private ArrayList<Vertex> independentLowDegreeVertices() {
+	private ArrayList<Vertex> independentLowDegreeVertices( Mesh mesh ) {
 		ArrayList<Vertex> ildv = new ArrayList<Vertex>();
 		ArrayList<Face> fov;
 		for ( int i = 0; i < mesh.vertices.size; i++ ) {

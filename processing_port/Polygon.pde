@@ -53,7 +53,7 @@ class Polygon {
 			for (var i = 0; i < holes.size(); i++) {
 				Polygon hole = holes.get(i);
 				var hole_contour = new Array();
-				for(var j = 0; j < polyHolePoints.length; j++){
+				for(var j = 0; j < hole.points.length; j++){
 					hole_contour.push(
 						new poly2tri.Point(hole.points[j].x, hole.points[j].y));
 				}
@@ -76,7 +76,7 @@ class Polygon {
 
 		// set parentId of all triangulated triangles
 		for ( int i = 0; i < triangles.size(); i++ ) {
-			triangles[i].parentId = this.id;
+			triangles.get(i).parentId = this.id;
 		}
 
 		return triangles;

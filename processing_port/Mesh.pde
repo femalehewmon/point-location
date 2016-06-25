@@ -273,7 +273,7 @@ class Mesh {
 			// assume face has only 3 edges (TODO: validate)
 			for ( int j = 0; j < 3; j++ ) {
 				curr_edge = curr_eof.get(j);
-				if ( !curr_edge.containsVertex(v) && 
+				if ( !curr_edge.containsVertex(v) &&
 						!esv.contains(curr_edge) ) {
 					esv.add( curr_edge );
 				}
@@ -282,7 +282,7 @@ class Mesh {
 		return esv;
 	}
 
-}	
+}
 
 class Edge {
 	Edge lprev, lnext;			// left traverse

@@ -13,7 +13,7 @@ class LayeredMeshView extends View {
 	HashMap<Integer, color> colorsByLayer;
 	boolean finalized = false;
 
-	boolean drawPolygn = true;
+	boolean drawPolygon = true;
 	boolean drawOuterTri = false;
 
 	public LayeredMeshView( float x1, float y1, float x2, float y2) {
@@ -21,6 +21,9 @@ class LayeredMeshView extends View {
 		this.cFill = color(255);
 		this.finalized = false;
 		this.mesh = null;
+
+		this.shapesByLayer = new HashMap<Integer, ArrayList<Polygon>>();
+		this.colorsByLayer = new HashMap<Integer, color>();
 
 		this.polygon = null;
 		// ratio and position that the polygon will need to adjust to in order
@@ -88,8 +91,8 @@ class LayeredMeshView extends View {
 				this.polygon, this.outerTri);
 
 		for( int i = 0; i < mesh.layers.size(); i++ ) {
-			for ( int j = 0; j < mesh.layers[i].size(); j++ ) {
-				addShapes( i, mesh.layers[i] );
+			for ( int j = 0; j < mesh.layers.get(i).size(); j++ ) {
+				addShapes( i, mesh.layers.get(i) );
 			}
 		}
 		finalized = true;
