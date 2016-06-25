@@ -1,6 +1,6 @@
 
 Polygon poly = null;
-final boolean DEMO = false;
+final boolean DEMO = true;
 
 // Global variables
 int unique_poly_id = 0;
@@ -20,7 +20,7 @@ class Message {
 
 // Views
 PolygonCreationView pcreate;
-LayeredMeshView lmesh;
+LayeredMeshView kpView;
 LayeredGraphView lgraph;
 
 // Float.X_INFINITY throwing error, so self define
@@ -39,35 +39,47 @@ void setup() {
 
 	// create views
 	pcreate = new PolygonCreationView(0, 0, width, height);
-	lgraph = new LayeredGraphView(0, 0, width/2, height);
-	lmesh = new LayeredMeshView(width/2, 0, width, height/2);
+	kpView = new LayeredMeshView(0, 0, width/2.0, height);
+	lgraph = new LayeredGraphView(width/2.0, 0, width, height);
 	pcreate.visible = true;
 	lgraph.visible = false;
-	lmesh.visible = false;
+	kpView.visible = false;
 }
 
 void draw() {
-	background(255, 255, 0);
+	background(245, 245, 245);
 	pickbuffer.background(255);
 
 	switch( sceneControl.currScene ) {
 		case sceneControl.CREATE_POLYGON:
-			if ( DEMO && !pcreate.finalized ) {
+			if ( DEMO ) {
 				pcreate.demo();
+			}
+			if ( pcreate.finalized ) {
+				console.log(pcreate.polygon);
+				kpView.setPolygon( pcreate.polygon );
 				sceneControl.nextScene();
 			}
 			break;
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
+			pcreate.polygon.move(
+					kpView.xPosToMovePoly, kpView.yPosToMovePoly,
+					sceneControl.scenePercentageStep );
+			pcreate.polygon.scale( kpView.ratioToScalePoly,
+					sceneControl.scenePercentageStep );
 			sceneControl.update();
 			break;
 		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
 			// create outer triangle
 
-			LayeredMesh kpDataStruct =
-				createKirkpatrickDataStructure( poly, outerTri);
-			lmesh.setLayeredMesh( kpDataStruct );
+			//LayeredMesh kpDataStruct =
+			//	createKirkpatrickDataStructure( poly, outerTri);
+		//	lmesh.setLayeredMesh( kpDataStruct );
 
-			sceneControl.update();
+		//	sceneControl.update();
+			pcreate.visible = false;
+			kpView.visible = true;
+			//nextScene();
 			break;
 		case sceneControl.ANIMATE_DATA_STRUCT_CREATION:
 
@@ -80,8 +92,8 @@ void draw() {
 	if (lgraph.visible) {
 		lgraph.render();
 	}
-	if (lmesh.visible) {
-		lmesh.render();
+	if (kpView.visible) {
+		kpView.render();
 	}
 
 	messages.clear();
@@ -89,9 +101,10 @@ void draw() {
 	if (lgraph.visible) {
 		lgraph.mouseUpdate();
 	}
-	if (lmesh.visible) {
-		lmesh.mouseUpdate();
+	if (kpView.visible) {
+		kpView.mouseUpdate();
 	}
+
 }
 
 Polygon createPoly() {
