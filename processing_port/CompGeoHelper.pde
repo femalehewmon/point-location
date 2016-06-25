@@ -9,14 +9,12 @@ class CompGeoHelper {
 		LayeredMesh mesh = new LayeredMesh( );
 
 		// triangulate the main polygon
-		ArrayList<Polygon> base_triangles = poly.triangulate();
-		mesh.addBaseTriangles( base_triangles );
+		mesh.addTrianglesToLayer( 0, poly.triangulate() );
 
 		// triangulate the outer triangle with a hole in the middle for
 		// the original polygon
 		outerTri.addHole( poly );
-		ArrayList<Polygon> outer_triangles = outerTri.triangulate();
-		mesh.addTrianglesToLayer( 0, outer_triangles );
+		mesh.addTrianglesToLayer( 0, outerTri.triangulate() );
 
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh );
 		do {

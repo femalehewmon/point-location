@@ -1,21 +1,30 @@
 class LayeredMesh extends Mesh {
 
 	ArrayList<ArrayList<Integer>> layers;
+	int numLayers;
 
 	// Organizes faces into layers by id, but underneath the mesh is 
 	// one cohesive layer.
 	public LayeredMesh( ) {
 		super();
+		this.layers = new ArrayList<ArrayList<Integer>>();
+		this.numLayers = 0;
+		createNewLayer(); // create initial layer
 	}
 
-	public void addBaseTriangles( ArrayList<Polygon> baseTris ) {
-		layers.add( new ArrayList<Integer>() );
-		addTrianglesToLayer( 0 , baseTris );
+	private void createNewLayer() {
+		if ( this.layers.size() > 0 ) {
+			// copy all triangle ids from last layer to new layer
+			this.layers.add(
+					new ArrayList<Integer>(layers.get(layers.size() - 1)));
+		} else {
+			this.layers.add( new ArrayList<Integer>() );
+		}
+		this.numLayers += 1;
 	}
 
 	public void addTrianglesToNextLayer( ArrayList<Polygon> tris ) {
-		// copy all triangle ids from last layer to new layer
-		layers.add( new ArrayList<Integer>( layers.get(layers.size() - 1)) );
+		createNewLayer();
 		addTrianglesToLayer( layers.size() - 1, tris );
 	}
 
