@@ -1,6 +1,6 @@
-class LayeredMeshView extends View {
+class KirkpatrickMeshView extends View {
 
-	LayeredMesh mesh;
+	KirkpatrickMesh mesh;
 
 	Polygon polygon;
 	Polygon outerTri;
@@ -16,23 +16,14 @@ class LayeredMeshView extends View {
 	boolean drawPolygon = true;
 	boolean drawOuterTri = false;
 
-	public LayeredMeshView( float x1, float y1, float x2, float y2) {
+	public KirkpatrickMeshView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
-		this.cFill = color(255);
-		this.finalized = false;
-		this.mesh = null;
 
 		this.shapesByLayer = new HashMap<Integer, ArrayList<Polygon>>();
 		this.colorsByLayer = new HashMap<Integer, color>();
 
+		this.mesh = null;
 		this.polygon = null;
-		// ratio and position that the polygon will need to adjust to in order
-	    // to fit in this view
-		// values saved here and not directly applied for the sake of animation
-		this.ratioToScalePoly = 1.0; // set when polygon is added to view
-		this.xPosToMovePoly = this.xCenter;
-		this.yPosToMovePoly = this.yCenter + (this.h / 4.0);
-
 		// create outer triangle
 		this.outerTri = createPoly();
 		this.outerTri.cFill = color(255);
@@ -40,6 +31,15 @@ class LayeredMeshView extends View {
 		this.outerTri.addPoint( xCenter, y1 + 10 );
 		this.outerTri.addPoint( x2 - 10, y2 - 10 );
 		this.outerTri.addPoint( x1 + 10, y2 - 10 );
+
+		// ratio and position that the polygon will need to adjust to in order
+	    // to fit in this view
+		// values saved here and not directly applied for the sake of animation
+		this.ratioToScalePoly = 1.0; // set when polygon is added to view
+		this.xPosToMovePoly = this.xCenter;
+		this.yPosToMovePoly = this.yCenter + (this.h / 4.0);
+
+		this.finalized = false;
 	}
 
 	public void setPolygon( Polygon polygon ) {
@@ -47,7 +47,6 @@ class LayeredMeshView extends View {
 		float wScale = (outerTri.getWidth() * 0.75 ) / polygon.getWidth();
 		float hScale = (outerTri.getHeight() * 0.75 ) / polygon.getHeight();
 		this.ratioToScalePoly = min(wScale, hScale);
-		finalizeView();
 	}
 
 	public void render( int layerToDraw, boolean drawHoles ) {
@@ -64,7 +63,13 @@ class LayeredMeshView extends View {
 				this.polygon.render();
 			}
 		} else {
-
+			int i;
+			ArrayList<Polygon> polysToDraw =
+				this.mesh.getPolygonsByLayer( layerToDraw );
+			// draw requested layer
+			for( i; i < polysToDraw.size(); i++ ) {
+				polysToDraw.get(i).render();
+			}
 		}
 	}
 
@@ -83,18 +88,9 @@ class LayeredMeshView extends View {
 		}
 	}
 
-	private void finalizeView() {
-		this.shapesByLayer.clear();
-		this.colorsByLayer.clear();
-
+	public void finalizeView() {
 		this.mesh = compGeoHelper.createKirkpatrickDataStructure(
 				this.polygon, this.outerTri);
-
-		for( int i = 0; i < mesh.layers.size(); i++ ) {
-			for ( int j = 0; j < mesh.layers.get(i).size(); j++ ) {
-				addShapes( i, mesh.layers.get(i) );
-			}
-		}
 		finalized = true;
 	}
 

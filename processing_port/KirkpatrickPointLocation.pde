@@ -20,7 +20,7 @@ class Message {
 
 // Views
 PolygonCreationView pcreate;
-LayeredMeshView kpView;
+KirkpatrickMeshView kpView;
 LayeredGraphView lgraph;
 
 // Float.X_INFINITY throwing error, so self define
@@ -39,7 +39,7 @@ void setup() {
 
 	// create views
 	pcreate = new PolygonCreationView(0, 0, width, height);
-	kpView = new LayeredMeshView(0, 0, width/2.0, height);
+	kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
 	lgraph = new LayeredGraphView(width/2.0, 0, width, height);
 	pcreate.visible = true;
 	lgraph.visible = false;
@@ -80,9 +80,6 @@ void draw() {
 			pcreate.visible = false;
 			kpView.visible = true;
 			//nextScene();
-			break;
-		case sceneControl.ANIMATE_DATA_STRUCT_CREATION:
-
 			break;
 	}
 
