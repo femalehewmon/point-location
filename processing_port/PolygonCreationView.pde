@@ -20,7 +20,6 @@ class PolygonCreationView extends View {
 		this.polygon.addPoint( 63,  281 );
 		this.polygon.addPoint( 224, 343 );
 		this.polygon.addPoint( 128, 104 );
-		this.polygon.addPoint( 253, 209 );
 		this.finalized = true;
 	}
 
