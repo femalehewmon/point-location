@@ -53,9 +53,11 @@ class Polygon {
 			for (var i = 0; i < holes.size(); i++) {
 				Polygon hole = holes.get(i);
 				var hole_contour = new Array();
-				for(var j = 0; j < hole.points.length; j++){
+				for(var j = 0; j < hole.points.size(); j++){
 					hole_contour.push(
-						new poly2tri.Point(hole.points[j].x, hole.points[j].y));
+						new poly2tri.Point(
+							hole.points.get(j).x,
+							hole.points.get(j).y));
 				}
 				console.log("Added hole of size " + hole_contour.length);
 				swctx.addHole(hole_contour);
@@ -64,9 +66,7 @@ class Polygon {
 		// triangulate, thanks to poly2tri
 		swctx.triangulate();
 		var p2t_tris = swctx.getTriangles();
-		console.log(p2t_tris);
 		for ( var i = 0; i < p2t_tris.length; i++ ) {
-			console.log(p2t_tris[i]);
 			Polygon tri = createPoly();
 			tri.addPoint(p2t_tris[i].getPoint(0).x, p2t_tris[i].getPoint(0).y);
 			tri.addPoint(p2t_tris[i].getPoint(1).x, p2t_tris[i].getPoint(1).y);
