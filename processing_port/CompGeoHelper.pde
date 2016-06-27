@@ -2,11 +2,11 @@ class CompGeoHelper {
 
 	public CompGeoHelper() {}
 
-	public LayeredMesh createKirkpatrickDataStructure(
+	public KirkpatrickMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
 
-		// A LayeredMesh will serve as Kirkpatrick's Data Structure
-		LayeredMesh mesh = new LayeredMesh( );
+		// A KirkpatrickMesh will serve as Kirkpatrick's Data Structure
+		KirkpatrickMesh mesh = new KirkpatrickMesh( );
 
 		// triangulate the main polygon
 		mesh.addTrianglesToLayer( 0, poly.triangulate() );
@@ -23,15 +23,15 @@ class CompGeoHelper {
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
 
 				// Get the convex hull of the triangles surrounding the ildv
-				Polygon convex_hull = 
+				Polygon convex_hull =
 					compGeoHelper.getConvexHull( mesh.verticesOfFaces(faces) ); 
 
 				// Add convex hull triangulation to mesh
 				mesh.addTrianglesToNextLayer( convex_hull.triangulate() );
 
 				// Remove triangles surrounding ildv from mesh
-				mesh.removeFacesFromMesh( faces );
-			}	
+				mesh.removeLowDegreeVertexFromMesh( ildv.get(i), faces );
+			}
 
 			// Get new ildv for next layer
 			ildv = independentLowDegreeVertices( mesh );
