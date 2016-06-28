@@ -108,7 +108,7 @@ class IndependentLowDegreeVertex {
 	ArrayList<Integer> surroundingPolygonIds;
 
 	public IndependentLowDegreeVertex( Vertex vertex ) {
-		this.vertexId = vertexId;
+		this.vertex = vertex;
 		this.surroundingPolygonIds = new ArrayList<Integer>();
 	}
 
