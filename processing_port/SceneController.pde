@@ -9,7 +9,7 @@ class SceneController {
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
 	final String CREATE_KIRKPATRICK_DATA_STRUCT = "CREATE KP DATA STRUCT";
-	final String ANIMATE_DATA_STRUCT_CREATION = "ANIMATE KP DATA STRUCT";
+	final DONE = "DONE";
 
 	public SceneController() {
 		this.currScene = CREATE_POLYGON;
@@ -23,14 +23,16 @@ class SceneController {
 		this.sceneRelativePercentComplete = 0.0;
 	}
 
-	public void update() {
+	public boolean update() {
+		boolean next_scene = false;
 		sceneTimer += 1;
 		if ( sceneTimer >= SCENE_DURATION ) {
-			nextScene();
+			next_scene = true;
 		}
 		scenePercentComplete = (float)sceneTimer / (float)SCENE_DURATION;
 		sceneRelativePercentComplete =
 			1.0 / (sceneControl.SCENE_DURATION - sceneControl.sceneTimer);
+		return next_scene;
 	}
 
 	public void nextScene() {
@@ -43,6 +45,9 @@ class SceneController {
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCT;
 				break;
 			case CREATE_KIRKPATRICK_DATA_STRUCT:
+				this.currScene = DONE;
+				break;
+			case DONE:
 				break;
 		}
 		reset();
