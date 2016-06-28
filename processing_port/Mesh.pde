@@ -1,4 +1,8 @@
 class Mesh {
+	// Winged-edge mesh structure
+	// See the following for reference:
+	//		Fundamentals of computer graphics. CRC Press, 2015.
+	//		Shirley, Peter, Michael Ashikhmin, and Steve Marschner.
 
 	ArrayList<Vertex> vertices;
 	ArrayList<Edge> edges;
@@ -40,8 +44,8 @@ class Mesh {
 
 			// Set vertex edge indices
 			this.vertices.get(idx_v1).setEdge(e1);
-			this.vertices.get(idx_v2).setEdge(e1);
-			this.vertices.get(idx_v3).setEdge(e1);
+			this.vertices.get(idx_v2).setEdge(e2);
+			this.vertices.get(idx_v3).setEdge(e3);
 
 			// Create new face and add to mesh structure
 			// assumes this is definitely a new face, so code carefully
@@ -52,14 +56,14 @@ class Mesh {
 			// First edge
 			if ( this.edges.get(idx_e1).start.equals(e1.start) ) {
 				// same orientation, edge had not yet been added (hopefully)
-				this.edges.get(idx_e1).right = f
-				this.edges.get(idx_e1).rprev = e3;
-				this.edges.get(idx_e1).rnext = e2;
+				this.edges.get(idx_e1).right = this.faces.get(idx_f);
+				this.edges.get(idx_e1).rprev = this.edges.get(idx_e3);
+				this.edges.get(idx_e1).rnext = this.edges.get(idx_e2);
 			} else if ( this.edges.get(idx_e1).start.equals(e1.end) ) {
 				// opposite orientation, edge had been added
-				this.edges.get(idx_e1).left = f;
-				this.edges.get(idx_e1).lprev = e3;
-				this.edges.get(idx_e1).lnext = e2;
+				this.edges.get(idx_e1).left = this.faces.get(idx_f);
+				this.edges.get(idx_e1).lprev = this.edges.get(idx_e3);
+				this.edges.get(idx_e1).lnext = this.edges.get(idx_e2);
 			} else {
 				console.log("WARNING: edge does not match.. weird!");
 			}
@@ -67,14 +71,14 @@ class Mesh {
 			// Second edge
 			if ( this.edges.get(idx_e2).start.equals(e2.start) ) {
 				// same orientation, edge had not yet been added (hopefully)
-				this.edges.get(idx_e2).right = f
-				this.edges.get(idx_e2).rprev = e1;
-				this.edges.get(idx_e2).rnext = e3;
+				this.edges.get(idx_e2).right = this.faces.get(idx_f);
+				this.edges.get(idx_e2).rprev = this.edges.get(idx_e1);
+				this.edges.get(idx_e2).rnext = this.edges.get(idx_e3);
 			} else if ( this.edges.get(idx_e2).start.equals(e2.end) ) {
 				// opposite orientation, edge had been added
-				this.edges.get(idx_e2).left = f;
-				this.edges.get(idx_e2).lprev = e1;
-				this.edges.get(idx_e2).lnext = e3;
+				this.edges.get(idx_e2).left = this.faces.get(idx_f);
+				this.edges.get(idx_e2).lprev = this.edges.get(idx_e1);
+				this.edges.get(idx_e2).lnext = this.edges.get(idx_e3);
 			} else {
 				console.log("WARNING: edge does not match.. weird!");
 			}
@@ -82,14 +86,14 @@ class Mesh {
 			// Third edge
 			if ( this.edges.get(idx_e3).start.equals(e3.start) ) {
 				// same orientation, edge had not yet been added (hopefully)
-				this.edges.get(idx_e3).right = f
-				this.edges.get(idx_e3).rprev = e2;
-				this.edges.get(idx_e3).rnext = e1;
+				this.edges.get(idx_e3).right = this.faces.get(idx_f);
+				this.edges.get(idx_e3).rprev = this.edges.get(idx_e2);
+				this.edges.get(idx_e3).rnext = this.edges.get(idx_e1);
 			} else if ( this.edges.get(idx_e3).start.equals(e3.end) ) {
 				// opposite orientation, edge had been added
-				this.edges.get(idx_e3).left = f;
-				this.edges.get(idx_e3).lprev = e2;
-				this.edges.get(idx_e3).lnext = e1;
+				this.edges.get(idx_e3).left = this.faces.get(idx_f);
+				this.edges.get(idx_e3).lprev = this.edges.get(idx_e2);
+				this.edges.get(idx_e3).lnext = this.edges.get(idx_e1);
 			} else {
 				console.log("WARNING: edge does not match.. weird!");
 			}
