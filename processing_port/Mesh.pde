@@ -109,10 +109,10 @@ class Mesh {
 	void removeFacesFromMesh( ArrayList<Polygon> tris ) {
 		Face curr_face;
 		for ( int i = 0; i < tris.size(); i++ ) {
+			console.log("looking at face " + tris.get(i).id);
 			if ( this.faces.contains( tris.get(i)) ) {
-				curr_face = this.faces.get(
-						this.faces.indexOf(tris.get(i)) );
-				removeFaceFromMesh( curr_face );
+				removeFaceFromMesh(
+						this.faces.get(this.faces.indexOf(tris.get(i))));
 			} else {
 				console.log(
 						"Mesh does not contain face.. doing something wrong?");
@@ -121,23 +121,28 @@ class Mesh {
 	}
 
 	boolean removeFaceFromMesh( Face f ) {
+		console.log(f);
 		if ( this.faces.contains(f) ) {
+			console.log(" face is in mesh, trying to remove " );
 			Edge curr_edge;
-			ArrayList<Edge> eof = edgesOfFace( curr_face );
+			ArrayList<Edge> eof = edgesOfFace( f );
+			console.log(" face has " + eof.size() + " edges " );
 			for ( int i = 0; i < eof.size(); i++ ) {
 				curr_edge = eof.get(i);
 				// remove face reference from edges
-				curr_edge.removeFace( curr_edge );
-				if ( curr_edge.left == null && curr_edge.right == null ) {
-					this.edges.removeEdgeFromMesh( curr_edge );
+				if( eof.get(i).removeFace( f ) ) {
+					// if edge is now faceless, remove from mesh
+					//removeEdgeFromMesh( curr_edge );
 				}
 			}
-
+			console.log("removed face from mesh " + f.id);
 			return this.faces.remove( f );
 		}
+		console.log("failed to remove face from mesh " + f.id);
 		return false;
 	}
 
+	/*
 	boolean removeEdgeFromMesh( Edge e ) {
 		if ( this.edges.contains( e ) ) {
 			// Remove vertex that only belongs to this edge
@@ -161,10 +166,13 @@ class Mesh {
 							this.vertices.indexOf( e.end ));
 				}
 			}
+			console.log("removed edge from mesh " + e.start.x + ", " + e.start.y + ", " + e.end.x + ", " + e.end.y);
 			return this.edges.remove( e );
 		}
+		console.log("failed to remove edge from mesh " + e.start.x + ", " + e.start.y + ", " + e.end.x + ", " + e.end.y);
 		return false;
 	}
+	*/
 
 	int addFaceToMesh( Face f ) {
 		if ( !this.faces.contains(f) ) {
@@ -175,6 +183,7 @@ class Mesh {
 
 	int addVertexToMesh( Vertex v ) {
 		if ( !this.vertices.contains(v) ) {
+			console.log("New vertex " + v.x + ", " + v.y);
 			this.vertices.add(v);
 		}
 		return this.vertices.indexOf( v );
@@ -182,6 +191,7 @@ class Mesh {
 
 	int addEdgeToMesh( Edge e ) {
 		if ( !this.edges.contains(e) ) {
+			console.log("New edge " + e.start.x + ", " + e.start.y + "  to  " + e.end.x + ", " + e.end.y);
 			this.edges.add(e);
 		}
 		return this.edges.indexOf( e );
@@ -221,11 +231,12 @@ class Mesh {
 	ArrayList<Vertex> verticesOfFaces( ArrayList<Face> faces ) {
 		ArrayList<Vertex> vertices_of_faces = new ArrayList<Vertex>();
 		ArrayList<Vertex> vof;
+		console.log("faces size " + faces.size());
 		for ( int i = 0; i < faces.size(); i++ ) {
 			vof = verticesOfFace( faces.get(i) );
 			for ( int j = 0; j < vof.size(); j++ ) {
 				if ( !vertices_of_faces.contains( vof.get(j) ) ) {
-					vertices_of_faces.add( vof.get(i) );
+					vertices_of_faces.add( vof.get(j) );
 				}
 			}
 		}
@@ -235,6 +246,7 @@ class Mesh {
 	ArrayList<Edge> edgesOfFace( Face f ) {
 		ArrayList<Edge> eof = new ArrayList<Edge>();
 
+		int count_to_exit = 0;
 		Edge e = this.edges.get( this.edges.indexOf(f.e) );
 		do {
 			eof.add(e);
@@ -243,7 +255,7 @@ class Mesh {
 			} else {
 				e = e.rnext;
 			}
-		} while ( e != this.edges.get( this.edges.indexOf(f.e) ) );
+		} while ( e != null && e != this.edges.get( this.edges.indexOf(f.e) ));
 
 		return eof;
 	}
@@ -263,10 +275,12 @@ class Mesh {
 
 	ArrayList<Face> facesOfVertex( Vertex v ) {
 		ArrayList<Face> faces_of_vertex = new ArrayList<Face>();
+		console.log("total faces " + faces.size());
 
 		// todo: determine if there is an optimization
 		// can I just add all left faces directly?
 		ArrayList<Edge> eov = edgesOfVertex( v );
+		console.log("edges of vertex " + eov.size());
 		ArrayList<Face> foe;
 		for (int i = 0; i < eov.size(); i++ ) {
 			foe = facesOfEdge( eov.get(i) );
@@ -279,6 +293,24 @@ class Mesh {
 
 		return faces_of_vertex;
 	}
+
+	ArrayList<Vertex> verticesSurroundingVertex( Vertex v ) {
+		ArrayList<Vertex> vov = new ArrayList<Vertex>();
+
+		ArrayList<Edge> eov = edgesOfVertex( v );
+		for ( int i = 0; i < eov.size(); i++ ) {
+			if ( eov.get(i).start.equals(v) ) {
+				vov.add( eov.get(i).end );
+			} else if( eov.get(i).end.equals(v) ) {
+				vov.add( eov.get(i).start );
+			} else {
+				console.log("WARNING: vertex not part of edge... not right!");
+			}
+		}
+
+		return vov;
+	}
+
 
 	ArrayList<Edge> edgesSurroundingVertex( Vertex v ) {
 		ArrayList<Edge> esv = new ArrayList<Edge>();
@@ -330,22 +362,26 @@ class Edge {
 	}
 
 	public boolean removeFace( Face f ) {
-		if ( f == left ) {
+		if ( f.equals( this.left ) ) {
 			// TODO: is this right?
 			this.left = null;
 			this.lprev = null;
 			this.lnext = null;
-			return true;
-		} else if ( f == right ) {
+		} else if ( f.equals( this.right ) ) {
 			// TODO: is this right?
 			this.right = null;
 			this.rprev = null;
 			this.rprev = null;
-			return true;
 		} else {
 			console.log("face not in edge");
-			return false;
 		}
+
+		if ( this.right == null && this.left == null ) {
+			console.log(" edge no longer has an attached face ");
+			return true;
+		}
+		console.log(" edge still has an attached face ");
+		return false;
 	}
 
     public int hashCode() {
@@ -357,10 +393,10 @@ class Edge {
         return (int)hash;
     }
 
-    public boolean equals(Object obj) {    
-        Edge other = (Edge) obj;    
-        return ((start == other.start && end == other.end) ||
-					(end == other.start && start == other.end));    
+    public boolean equals(Object obj) {
+        Edge other = (Edge) obj;
+        return ((start.equals(other.start) && end.equals(other.end)) ||
+					(end.equals(other.start) && start.equals(other.end)));
     }
 }
 
@@ -395,7 +431,7 @@ class Vertex {
 		this.y = y;
 	}
 
-	public float getLength() { 
+	public float getLength() {
 		float l = Math.sqrt(x*x + y*y);
 		return l;
 	}
@@ -404,7 +440,7 @@ class Vertex {
 		return Math.sqrt(
 				Math.pow((other.x - x), 2) + Math.pow((other.y - y), 2));
 	}
-	
+
 	void setEdge( Edge e ) {
 		this.e = e;
 	}

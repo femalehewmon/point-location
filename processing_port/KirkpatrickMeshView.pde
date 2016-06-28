@@ -1,6 +1,7 @@
 class KirkpatrickMeshView extends View {
 
 	KirkpatrickMesh mesh;
+	int numLayers;
 
 	Polygon polygon;
 	Polygon outerTri;
@@ -8,19 +9,14 @@ class KirkpatrickMeshView extends View {
 	float xPosToMovePoly;
 	float yPosToMovePoly;
 
-	int numLayers = 0;
-	HashMap<Integer, ArrayList<Polygon>> shapesByLayer;
-	HashMap<Integer, color> colorsByLayer;
-	boolean finalized = false;
-
-	boolean drawPolygon = true;
-	boolean drawOuterTri = false;
+	boolean drawPolygon;
+	boolean drawOuterTri;
+	int layerToDraw;
 
 	public KirkpatrickMeshView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
-		this.shapesByLayer = new HashMap<Integer, ArrayList<Polygon>>();
-		this.colorsByLayer = new HashMap<Integer, color>();
+		this.numLayers = 0;
 
 		this.mesh = null;
 		this.polygon = null;
@@ -39,6 +35,9 @@ class KirkpatrickMeshView extends View {
 		this.xPosToMovePoly = this.xCenter;
 		this.yPosToMovePoly = this.yCenter + (this.h / 4.0);
 
+		this.layerToDraw = -1;
+		this.drawPolygon = true;
+		this.drawOuterTri = false;
 		this.finalized = false;
 	}
 
@@ -49,11 +48,17 @@ class KirkpatrickMeshView extends View {
 		this.ratioToScalePoly = min(wScale, hScale);
 	}
 
-	public void render( int layerToDraw, boolean drawHoles ) {
-		//super.render(); // draw view background
-		//if ( !this.finalized ) {
-		//		finalizeView();
-		//	}
+	public boolean nextLevel() {
+		if ( this.layerToDraw < this.mesh.layers.size() - 1 ) {
+			// there are still layers to draw
+			this.layerToDraw++;
+			return true;
+		}
+		return false;
+	}
+
+	public void render( boolean drawHoles ) {
+		super.render(); // draw view background
 
 		if ( layerToDraw < 0 ) {
 			if ( drawOuterTri ) {
@@ -75,17 +80,7 @@ class KirkpatrickMeshView extends View {
 
 	public void render() {
 		// draw polygon only by default
-		render( -1, false );
-	}
-
-	private void addShape(int layer, Polygon shape) {
-		shapesByLayer[layer].add(shape);
-	}
-
-	private void addShapes(int layer, ArrayList<Polygon> shapes) {
-		for ( int = 0; i < shapes.size(); i++ ) {
-			addShape( layer, shapes.get(i) );
-		}
+		render( false );
 	}
 
 	public void finalizeView() {
@@ -99,16 +94,6 @@ class KirkpatrickMeshView extends View {
 		return;
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i, j;
-		for (i = 0; i < numLayers; i++) {
-			for (j = 0; j < shapesByLayer[i].size(); j++) {
-				if (color(shapesByLayer[i].get(j).id) == c) {
-					Message msg = new Message();
-					msg.k = MSG_TRIANGLE;
-					msg.v = shapesByLayer[i].get(j).id;
-					messages.add(msg);
-				}
-			}
-		}
 		if (keyPressed) {
 			image(pickbuffer, 0, 0);
 		}

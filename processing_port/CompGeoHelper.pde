@@ -4,20 +4,27 @@ class CompGeoHelper {
 
 	public KirkpatrickMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
+		console.log("Creating KP Data Structure");
 
 		// A KirkpatrickMesh will serve as Kirkpatrick's Data Structure
 		KirkpatrickMesh mesh = new KirkpatrickMesh( );
 
 		// triangulate the main polygon
+		console.log("triangulate and add poly to kp");
 		mesh.addTrianglesToLayer( 0, poly.triangulate() );
 
 		// triangulate the outer triangle with a hole in the middle for
 		// the original polygon
 		outerTri.addHole( poly );
+		console.log("triangulate and add outer tri to kp");
 		mesh.addTrianglesToLayer( 0, outerTri.triangulate() );
 
-		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh );
+		console.log(mesh.edges.size());
+		console.log(mesh.faces.size());
+
+		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
 		do {
+			console.log("%%%% Found set of ILDV $$$$ " + ildv.size());
 			for ( int i = 0; i < ildv.size(); i++ ) {
 				// Get faces (triangles) surrounding ildv
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
@@ -26,21 +33,27 @@ class CompGeoHelper {
 				Polygon convex_hull =
 					compGeoHelper.getConvexHull( mesh.verticesOfFaces(faces) ); 
 
-				// Add convex hull triangulation to mesh
-				mesh.addTrianglesToNextLayer( convex_hull.triangulate() );
-
 				// Remove triangles surrounding ildv from mesh
 				mesh.removeLowDegreeVertexFromMesh( ildv.get(i), faces );
+
+				if ( convex_hull != null ) {
+					// Add convex hull triangulation to mesh
+					mesh.addTrianglesToNextLayer( convex_hull.triangulate() );
+				}
+
 			}
 
 			// Get new ildv for next layer
-			ildv = independentLowDegreeVertices( mesh );
+			ildv = independentLowDegreeVertices( mesh, outerTri );
 
-		} while ( ildv.size() > 3 );
+		} while ( ildv > 3 );
 
 		// Mesh should now consist of only one triangle with 3 vertices
 		if ( mesh.vertices.size() != 3 ) {
-			console.log("WARNING: mesh is greater than 3 vertices"); 
+			console.log("WARNING: mesh is greater than 3 vertices");
+			for(int i = 0; i < mesh.vertices.size(); i++) {
+				console.log(mesh.vertices.get(i));
+			}
 		}
 
 		// TODO: add final triangle to mesh
@@ -48,13 +61,27 @@ class CompGeoHelper {
 		return mesh;
 	}
 
-	private ArrayList<Vertex> independentLowDegreeVertices( Mesh mesh ) {
+	private ArrayList<Vertex> independentLowDegreeVertices(
+			Mesh mesh, Polygon outerTri) {
+		int i, j;
 		ArrayList<Vertex> ildv = new ArrayList<Vertex>();
+		ArrayList<Vertex> neighboringVertices = new ArrayList<Vertex>();
 		ArrayList<Face> fov;
-		for ( int i = 0; i < mesh.vertices.size; i++ ) {
-			fov = mesh.facesOfVertex( mesh.vertices.get(i) );
-			if ( fov.size() < 7 ) {
-				ildv.add( mesh.vertices.get(i) ); // add ildv to list
+		ArrayList<Vertex> neighbors;
+		for ( i = 0; i < mesh.vertices.size(); i++ ) {
+			if ( !neighboringVertices.contains( mesh.vertices.get(i)) &&
+					!outerTri.points.contains( mesh.vertices.get(i)) ) {
+				fov = mesh.facesOfVertex( mesh.vertices.get(i) );
+				if ( fov.size() < 7 ) {
+					console.log("found ildv");
+					console.log(mesh.vertices.get(i));
+					ildv.add( mesh.vertices.get(i) ); // add ildv to list
+					neighbors =
+						mesh.verticesSurroundingVertex(mesh.vertices.get(i));
+					for ( j = 0; j < neighbors.size(); j++ ) {
+						neighboringVertices.add( neighbors.get(j) );
+					}
+				}
 			}
 		}
 		return ildv;
@@ -62,6 +89,14 @@ class CompGeoHelper {
 
 	// Graham Scan!
 	public Polygon getConvexHull( ArrayList<Vertex> vs ) {
+		console.log(vs.size());
+		for ( int i = 0; i < vs.size(); i++ ) {
+			console.log(vs.get(i));
+		}
+		if ( vs.size() <= 2 ) {
+			console.log("ERROR: Cannot create convex hull of < 3 vertices!");
+			return null;
+		}
 		// *** ----------------------------------------------------- ***
 		// NOTE: Mixing javascript into java... use caution if changing!
 		// *** ----------------------------------------------------- ***
@@ -72,6 +107,8 @@ class CompGeoHelper {
 		for ( i = 0; i < vs.size(); i++ ) {
 			vertices.push(vs.get(i));
 		}
+		console.log(vs);
+		console.log(vertices);
 
 		Vertex p = getLowestPoint( vertices );
 		vertices = sortByRadialAngle( p, vertices );
@@ -96,8 +133,8 @@ class CompGeoHelper {
 			// while current 3 points don't make left turn, pop the last point
 			//console.log("orientation of " + (m - 1) + " " + m + " " + i);
 			while (orientation(
-						hullStack[ m - 1 ], 
-						hullStack[ m ], 
+						hullStack[ m - 1 ],
+						hullStack[ m ],
 						vertices[ i ]) <= 0) {
 				//console.log("inner orientation of " + (m - 1) + " " + m + " " + i);
 				if ( m > 1 ) {
@@ -112,15 +149,15 @@ class CompGeoHelper {
 					}
 					//console.log("go to next point");
 					i += 1;
-				}	
+				}
 			}
 
 			// left turn found, push points of last turn onto stack
 			//console.log("push vertex " + i);
-			hullStack.push(vertices[ i ]);
+			hullStack.push(vertices[i]);
 			m += 1;
 		}
-		//console.log(hullStack);
+		console.log(hullStack);
 
 		Polygon chull = createPoly();
 		for ( i = 0; i <= m; i++ ) {
