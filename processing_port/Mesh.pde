@@ -45,45 +45,60 @@ class Mesh {
 
 			// Create new face and add to mesh structure
 			// assumes this is definitely a new face, so code carefully
-			Face f;
-			face = new Face( curr_tri.id, e1 );
-			int idx_f = addFaceToMesh(face);
+			Face f = new Face( curr_tri.id, e1 );
+			int idx_f = addFaceToMesh(f);
 
 			// Fill in edge details
-			if ( this.edges.get(idx_e1).start == e1.start ) {
-				console.log("same orientation");
+			// First edge
+			if ( this.edges.get(idx_e1).start.equals(e1.start) ) {
 				// same orientation, edge had not yet been added (hopefully)
 				this.edges.get(idx_e1).right = f
 				this.edges.get(idx_e1).rprev = e3;
 				this.edges.get(idx_e1).rnext = e2;
-
-				this.edges.get(idx_e2).right = f;
-				this.edges.get(idx_e2).rprev = e1;
-				this.edges.get(idx_e2).rnext = e3;
-
-				this.edges.get(idx_e3).right = f;
-				this.edges.get(idx_e3).rprev = e2;
-				this.edges.get(idx_e3).rnext = e1;
-			} else if ( this.edges.get(idx_e1).start == e1.end ) {
-				console.log("different orientation");
+			} else if ( this.edges.get(idx_e1).start.equals(e1.end) ) {
 				// opposite orientation, edge had been added
 				this.edges.get(idx_e1).left = f;
 				this.edges.get(idx_e1).lprev = e3;
 				this.edges.get(idx_e1).lnext = e2;
+			} else {
+				console.log("WARNING: edge does not match.. weird!");
+			}
 
+			// Second edge
+			if ( this.edges.get(idx_e2).start.equals(e2.start) ) {
+				// same orientation, edge had not yet been added (hopefully)
+				this.edges.get(idx_e2).right = f
+				this.edges.get(idx_e2).rprev = e1;
+				this.edges.get(idx_e2).rnext = e3;
+			} else if ( this.edges.get(idx_e2).start.equals(e2.end) ) {
+				// opposite orientation, edge had been added
 				this.edges.get(idx_e2).left = f;
 				this.edges.get(idx_e2).lprev = e1;
 				this.edges.get(idx_e2).lnext = e3;
+			} else {
+				console.log("WARNING: edge does not match.. weird!");
+			}
 
+			// Third edge
+			if ( this.edges.get(idx_e3).start.equals(e3.start) ) {
+				// same orientation, edge had not yet been added (hopefully)
+				this.edges.get(idx_e3).right = f
+				this.edges.get(idx_e3).rprev = e2;
+				this.edges.get(idx_e3).rnext = e1;
+			} else if ( this.edges.get(idx_e3).start.equals(e3.end) ) {
+				// opposite orientation, edge had been added
 				this.edges.get(idx_e3).left = f;
 				this.edges.get(idx_e3).lprev = e2;
 				this.edges.get(idx_e3).lnext = e1;
 			} else {
 				console.log("WARNING: edge does not match.. weird!");
 			}
-			console.log(this.edges.get(idx_e1));
-			console.log(this.edges.get(idx_e2));
-			console.log(this.edges.get(idx_e3));
+
+			//console.log("Edges created for tri: " + tris.get(i).id);
+			//console.log(e1);
+			//console.log(e2);
+			//console.log(e3);
+			//console.log(f);
 		}
 	}
 
@@ -91,7 +106,7 @@ class Mesh {
 		Face curr_face;
 		for ( int i = 0; i < tris.size(); i++ ) {
 			if ( this.faces.contains( tris.get(i)) ) {
-				curr_face = this.faces.get( 
+				curr_face = this.faces.get(
 						this.faces.indexOf(tris.get(i)) );
 				removeFaceFromMesh( curr_face );
 			} else {
@@ -115,7 +130,7 @@ class Mesh {
 			}
 
 			return this.faces.remove( f );
-		} 
+		}
 		return false;
 	}
 
@@ -130,7 +145,7 @@ class Mesh {
 					e.start.setEdge( this.edges.indexOf(eov.get(1)) );
 				} else {
 					this.vertices.remove(
-							this.vertices.indexOf( e.start ));	
+							this.vertices.indexOf( e.start ));
 				}
 			} else if ( e.end.e == e ) {
 				ArrayList<Edge> eov = edgesOfVertex( e.end );
@@ -139,7 +154,7 @@ class Mesh {
 					e.end.setEdge( this.edges.indexOf(eov.get(1)) );
 				} else {
 					this.vertices.remove(
-							this.vertices.indexOf( e.end ));	
+							this.vertices.indexOf( e.end ));
 				}
 			}
 			return this.edges.remove( e );
@@ -174,12 +189,13 @@ class Mesh {
 		Edge e = this.edges.get( this.edges.indexOf(v.e) );
 		do {
 			eov.add(e);
-			if ( e.end == v ) {
+			if ( e.end.equals(v) ) {
 				e = e.lprev;
 			} else {
 				e = e.rprev;
 			}
-		} while ( e != this.edges.get( this.edges.indexOf(v.e) ) );
+		} while ( e != null &&
+				!e.equals( this.edges.get(this.edges.indexOf(v.e) ) ) );
 
 		return eov;
 	}
