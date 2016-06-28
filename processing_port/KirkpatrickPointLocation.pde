@@ -64,7 +64,7 @@ void draw() {
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
 			pcreate.polygon.move(
 					kpView.xPosToMovePoly, kpView.yPosToMovePoly,
-					sceneControl.scenePercentageStep );
+					sceneControl.sceneRelativePercentComplete);
 			pcreate.polygon.scale( kpView.ratioToScalePoly,
 					sceneControl.scenePercentageStep );
 			sceneControl.update();
