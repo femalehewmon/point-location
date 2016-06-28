@@ -23,6 +23,14 @@ class PolygonCreationView extends View {
 		this.finalized = true;
 	}
 
+	public void demoRect() {
+		this.polygon.addPoint(250, 200);
+		this.polygon.addPoint(500, 200);
+		this.polygon.addPoint(500, 400);
+		this.polygon.addPoint(250, 400);
+		this.finalized = true;
+	}
+
 	public void addPoint( float x, float y ) {
 		// TODO: validate that new point does not create non crossing polygon
 

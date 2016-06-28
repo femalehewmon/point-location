@@ -263,5 +263,16 @@ class PolyPoint {
 		ellipse( this.x, this.y, this.size, this.size );
 	}
 
+	public boolean equals(Object obj) {
+		if ( obj instanceof PolyPoint) {
+			PolyPoint other = (PolyPoint) obj;
+			return (other.x == x && other.y == y);
+		} else if ( obj instanceof Vertex ) {
+			Polygon other = (Vertex) obj;
+			return (other.x == x && other.y == y);
+		}
+		return false;
+	}
+
 }
 
