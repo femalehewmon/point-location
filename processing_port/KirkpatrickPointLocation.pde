@@ -1,5 +1,3 @@
-
-Polygon poly = null;
 final boolean DEMO = true;
 
 // Global variables
@@ -53,10 +51,10 @@ void draw() {
 	switch( sceneControl.currScene ) {
 		case sceneControl.CREATE_POLYGON:
 			if ( DEMO ) {
-				pcreate.demo();
+				pcreate.demoRect();
 			}
 			if ( pcreate.finalized ) {
-				console.log(pcreate.polygon);
+				// set polygon to calculate movement required to center in view 
 				kpView.setPolygon( pcreate.polygon );
 				sceneControl.nextScene();
 			}
@@ -67,19 +65,22 @@ void draw() {
 					sceneControl.sceneRelativePercentComplete);
 			pcreate.polygon.scale( kpView.ratioToScalePoly,
 					sceneControl.scenePercentageStep );
-			sceneControl.update();
+			if ( sceneControl.update() ) {
+				sceneControl.nextScene();
+			}
 			break;
 		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
-			// create outer triangle
-
-			//LayeredMesh kpDataStruct =
-			//	createKirkpatrickDataStructure( poly, outerTri);
-		//	lmesh.setLayeredMesh( kpDataStruct );
-
-		//	sceneControl.update();
-			pcreate.visible = false;
-			kpView.visible = true;
-			//nextScene();
+			if ( !kpView.finalized ) {
+				// create kp data structure based on newly positioned polygon
+				kpView.finalizeView();
+			}
+			if ( sceneControl.update() ) {
+				if ( !kpView.nextLevel() ) {
+					sceneControl.nextScene();
+				}
+			}
+			break;
+		case sceneControl.DONE:
 			break;
 	}
 
