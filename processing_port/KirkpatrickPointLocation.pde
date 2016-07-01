@@ -54,7 +54,7 @@ void draw() {
 				pcreate.demoRect();
 			}
 			if ( pcreate.finalized ) {
-				// set polygon to calculate movement required to center in view 
+				// set polygon to calculate movement required to center in view
 				kpView.setPolygon( pcreate.polygon );
 				sceneControl.nextScene();
 			}
@@ -73,10 +73,14 @@ void draw() {
 			if ( !kpView.finalized ) {
 				// create kp data structure based on newly positioned polygon
 				kpView.finalizeView();
+				kpView.visible = true;
 			}
 			if ( sceneControl.update() ) {
 				if ( !kpView.nextLevel() ) {
 					sceneControl.nextScene();
+				} else {
+					// reset scene for next level
+					sceneControl.reset();
 				}
 			}
 			break;

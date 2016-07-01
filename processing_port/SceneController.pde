@@ -1,5 +1,4 @@
 class SceneController {
-
 	int sceneTimer;
 	float scenePercentageStep;
 	float scenePercentComplete;
@@ -9,7 +8,7 @@ class SceneController {
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
 	final String CREATE_KIRKPATRICK_DATA_STRUCT = "CREATE KP DATA STRUCT";
-	final DONE = "DONE";
+	final String DONE = "DONE";
 
 	public SceneController() {
 		this.currScene = CREATE_POLYGON;
@@ -35,8 +34,26 @@ class SceneController {
 		return next_scene;
 	}
 
+	public void previousScene() {
+		switch ( this.currScene ) {
+			case CREATE_POLYGON:
+				break;
+			case CENTER_AND_RESIZE_POLYGON:
+				this.currScene = CREATE_POLYGON;
+				break;
+			case CREATE_KIRKPATRICK_DATA_STRUCT:
+				this.currScene = CENTER_AND_RESIZE_POLYGON;
+				break;
+			case DONE:
+				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCT;
+				break;
+		}
+		console.log("Next scene " + this.currScene);
+		reset();
+
+	}
+
 	public void nextScene() {
-		console.log("Next scene");
 		switch ( this.currScene ) {
 			case CREATE_POLYGON:
 				this.currScene = CENTER_AND_RESIZE_POLYGON;
@@ -50,6 +67,7 @@ class SceneController {
 			case DONE:
 				break;
 		}
+		console.log("Next scene " + this.currScene);
 		reset();
 	}
 

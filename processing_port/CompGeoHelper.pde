@@ -51,9 +51,6 @@ class CompGeoHelper {
 		// Mesh should now consist of only one triangle with 3 vertices
 		if ( mesh.vertices.size() != 3 ) {
 			console.log("WARNING: mesh is greater than 3 vertices");
-			for(int i = 0; i < mesh.vertices.size(); i++) {
-				console.log(mesh.vertices.get(i));
-			}
 		}
 
 		// TODO: add final triangle to mesh
@@ -170,12 +167,12 @@ class CompGeoHelper {
 	private var sortByRadialAngle( Vertex p, var vertices ) {
 		// Calculate angle between all points and p
 		for ( i = 0; i < vertices.length; i++ ) {
-			// use dot product to get cos(THETA), which can be 
+			// use dot product to get cos(THETA), which can be
 			// subbed for the angle for this purpose
-			//vertices[i].angle = 
+			//vertices[i].angle =
 			//		(vertices[i].x * p.x) + (vertices[i].y * p.y);
 			//vertices[i].angle /= (vertices[i].getLength() * p.getLength());
-			vertices[i].angle = 
+			vertices[i].angle =
 				Math.atan2(vertices[i].y - p.y, vertices[i].x - p.x);
 		}
 
@@ -195,7 +192,7 @@ class CompGeoHelper {
 	}
 
 	private Vertex getLowestPoint( var vertices ) {
-		// Find point with lowest coordinate, O(n) 
+		// Find point with lowest coordinate, O(n)
 		Vertex p = vertices[0];
 		for ( i = 0; i < vertices.length; i++ ) {
 			if (vertices[i].y > p.y ) {
@@ -214,7 +211,7 @@ class CompGeoHelper {
 		// -1 = right turn
 		//  0 = co-linear
 		//  1 = left turn
-		float value = ((v2.x - v1.x)*(v3.y - v1.y)) - 
+		float value = ((v2.x - v1.x)*(v3.y - v1.y)) -
 				      ((v2.y - v1.y)*(v3.x - v1.x));
 		if ( value == 0 ) {
 			return 0;

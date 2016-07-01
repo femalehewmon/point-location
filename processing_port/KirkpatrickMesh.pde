@@ -51,13 +51,13 @@ class KirkpatrickMesh extends Mesh {
 
 	public ArrayList<Polygon> getPolygonsByLayer( int layer ) {
 		ArrayList<Polygon> polys = new ArrayList<Polygon>();
-		if ( layer >= layers.size() ) {
+		if ( 0 > layer || layer >= layers.size() ) {
 			console.log("ERROR: layer does not exist, cannot get polygons");
-			return;
-		}
-		KirkpatrickLayer curr_layer = this.layers.get(layer);
-		for( int i = 0; i < curr_layer.visiblePolygons.size(); i++ ) {
-			polys.add( this.polygons.get(curr_layer.visiblePolygons.get(i)) );
+		} else {
+			KirkpatrickLayer curr_layer = this.layers.get(layer);
+			for( int i = 0; i < curr_layer.visiblePolygons.size(); i++ ) {
+				polys.add( this.polygons.get(curr_layer.visiblePolygons.get(i)) );
+			}
 		}
 		return polys;
 	}
