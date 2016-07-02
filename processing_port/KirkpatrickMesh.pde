@@ -64,7 +64,7 @@ class KirkpatrickMesh extends Mesh {
 
 	public void removeLowDegreeVertexFromMesh(
 			Vertex vertex, ArrayList<Face> faces ) {
-		console.log("Remove low degree vertex !!!!!!!!!!" );
+		console.log("Remove low degree vertex !!!!!!!!!! with " + faces.size() + " faces");
 		super.removeFacesFromMesh( faces );
 		IndependentLowDegreeVertex ildv =
 			new IndependentLowDegreeVertex(vertex);

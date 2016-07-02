@@ -19,9 +19,25 @@ class CompGeoHelper {
 		console.log("triangulate and add outer tri to kp");
 		mesh.addTrianglesToLayer( 0, outerTri.triangulate() );
 
-		console.log(mesh.edges.size());
-		console.log(mesh.faces.size());
+		console.log("!!!!!!!!STARTING STATE OF MESH!!!!!!!!!!");
+		console.log(mesh.vertices.size() + " vertices");
+		for( int i = 0; i < mesh.vertices.size(); i++ ){
+			console.log(mesh.vertices.get(i));
+		}
+		console.log(mesh.edges.size() + " edges");
+		for( int i = 0; i < mesh.edges.size(); i++ ){
+			console.log(mesh.edges.get(i));
+		}
+		console.log(mesh.faces.size() + " faces");
+		for( int i = 0; i < mesh.faces.size(); i++ ){
+			console.log(mesh.faces.get(i));
+		}
 
+		console.log("OUTER EDGES");
+		for( int i = 0; i < mesh.outerEdges.size(); i++ ) {
+			console.log(mesh.outerEdges.get(i));
+		}
+		int layerCount = 0;
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
 		do {
 			console.log("%%%% Found set of ILDV $$$$ " + ildv.size());
@@ -30,8 +46,15 @@ class CompGeoHelper {
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
 
 				// Get the convex hull of the triangles surrounding the ildv
-				Polygon convex_hull =
-					compGeoHelper.getConvexHull( mesh.verticesOfFaces(faces) ); 
+				//Polygon convex_hull =
+				//	compGeoHelper.getConvexHull( mesh.verticesOfFaces(faces) ); 
+				ArrayList<Vertex> surrounding_vertices =
+					mesh.verticesSurroundingVertex( ildv.get(i) );
+				Polygon convex_hull = createPoly();
+				for( int j = 0; j < surrounding_vertices.size(); j++ ) {
+					convex_hull.addPoint( surrounding_vertices.get(j).x,
+							surrounding_vertices.get(j).y );
+				}
 
 				// Remove triangles surrounding ildv from mesh
 				mesh.removeLowDegreeVertexFromMesh( ildv.get(i), faces );
@@ -39,14 +62,20 @@ class CompGeoHelper {
 				if ( convex_hull != null ) {
 					// Add convex hull triangulation to mesh
 					mesh.addTrianglesToNextLayer( convex_hull.triangulate() );
+				} else {
+					console.log("Convex Hull was null");
 				}
 
 			}
 
 			// Get new ildv for next layer
 			ildv = independentLowDegreeVertices( mesh, outerTri );
+			layerCount++;
 
-		} while ( ildv > 3 );
+		} while ( layerCount > 3 );
+		//for( int i = 0; i < mesh.vertices.size(); i++ ) {
+	//		mesh.edgesOfVertex( mesh.vertices.get(i));
+	//	}
 
 		// Mesh should now consist of only one triangle with 3 vertices
 		if ( mesh.vertices.size() != 3 ) {

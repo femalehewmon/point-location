@@ -74,6 +74,7 @@ void draw() {
 				// create kp data structure based on newly positioned polygon
 				kpView.finalizeView();
 				kpView.visible = true;
+				sceneControl.currScene = sceneControl.DONE;
 			}
 			if ( sceneControl.update() ) {
 				if ( !kpView.nextLevel() ) {

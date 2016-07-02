@@ -3,7 +3,7 @@ class SceneController {
 	float scenePercentageStep;
 	float scenePercentComplete;
 	float sceneRelativePercentComplete;
-	int SCENE_DURATION = 200;
+	int SCENE_DURATION = 20;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
