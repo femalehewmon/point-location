@@ -132,7 +132,9 @@ class Mesh {
 
 	int addEdgeToMesh( Edge e ) {
 		if ( !this.edges.contains(e) ) {
-			console.log("New edge " + e.start.x + ", " + e.start.y + "  to  " + e.end.x + ", " + e.end.y);
+			console.log("New edge "
+					+ e.start.x + ", " + e.start.y + "  to  "
+					+ e.end.x + ", " + e.end.y);
 			this.edges.add(e);
 		}
 		return this.edges.indexOf( e );
@@ -168,32 +170,44 @@ class Mesh {
 				if (( f.equals(curr_edge.left) && curr_edge.right == null) ||
 					( f.equals(curr_edge.right) && curr_edge.left == null) ){
 					// edge will be detached from all faces, so remove from mesh
-					edges_to_remove.add( curr_edge );
+					edges_to_remove.add( this.edges.get(
+							   this.edges.indexOf(curr_edge)) );
 				} else {
 					// edge will still be attached to a face, so just remove face
-					edges_to_update.add( curr_edge );
+					edges_to_update.add( this.edges.get(
+							   this.edges.indexOf(curr_edge)) );
 				}
 			}
+
+			console.log(" =============== " );
+			console.log(" EDGES TO REMOVE " );
+			for ( int i = 0; i < edges_to_remove.size(); i++ ){
+				console.log(edges_to_remove.get(i));
+			}
+			console.log(" EDGES TO UPDATE " );
+			for ( int i = 0; i < edges_to_update.size(); i++ ){
+				console.log(edges_to_update.get(i));
+			}
+			console.log(" =============== " );
 
 			// Go through list of connected vertices and update any references
 			// within the vertices to the edges that will be removed
 			// This must be done before starting to remove edges to prevent
 			// edge references getting messed up before correcting for them
 			ArrayList<Vertex> vof = verticesOfFace( f );
-			console.log("found vertices of face ");
 			for ( int i = 0; i < vof.size(); i++ ) {
-				console.log(vof.get(i));
+				console.log("verifying vertex of edge: " + vof.get(i).description);
 				// current edge referenced is going to be removed
 				if ( edges_to_remove.contains( vof.get(i).e ) ) {
 					// attempt to update vertex edge with an edge that is
 					// not going to be removed
 					ArrayList<Edge> eov = edgesOfVertex( vof.get(i) );
-					console.log(eov.size() + " edges of vertex to consider");
 					vof.get(i).setEdge(null);
 					for ( int j = 0; j < eov.size(); j++ ) {
 						if ( !edges_to_remove.contains(eov.get(j)) ) {
 							vof.get(i).setEdge( eov.get(j) );
-							console.log("updated edge of vertex " + vof.get(i).description);
+							console.log("updated edge of vertex "
+									+ vof.get(i).description);
 							console.log(vof.get(i).e);
 							break;
 						}
@@ -203,7 +217,7 @@ class Mesh {
 					// edges that will remain in the mesh
 					if ( vof.get(i).e == null ) {
 						if ( this.vertices.remove( vof.get(i) ) ) {
-							console.log("      *&%*$(%&$(*%& removed vertex from mesh, " +
+							console.log("      removed vertex from mesh, " +
 									vof.get(i).description);
 						} else {
 							console.log("ERROR: failed to remove vertex from mesh");
@@ -222,7 +236,9 @@ class Mesh {
 					if ( this.outerEdges.contains( edges_to_remove.get(i) ) ) {
 						this.outerEdges.remove( edges_to_remove.get(i) );
 					}
-					console.log("      removed edge from mesh " + edges_to_remove.get(i).start.description + ", " + edges_to_remove.get(i).end.description);
+					console.log("      removed edge from mesh "
+							+ edges_to_remove.get(i).start.description + ", "
+							+ edges_to_remove.get(i).end.description);
 				} else {
 					console.log("ERROR: failed to remove edge from mesh");
 				}
@@ -236,38 +252,48 @@ class Mesh {
 			}
 			return true;
 		}
-		console.log("!!!failed to remove face from mesh " + f.id);
+		console.log("WARNING: attempted to remove face not in mesh " + f.id);
 		return false;
 	}
 
 	ArrayList<Edge> edgesOfVertex( Vertex v ) {
 		ArrayList<Edge> eov = new ArrayList<Edge>();
+		ArrayList<Edge> localOuterEdges = new ArrayList<Edge>(outerEdges);
 
 		Edge e = this.edges.get( this.edges.indexOf(v.e) );
-		if ( e != null ) {
-			do {
-				eov.add(e);
+		do {
+			if ( !eov.contains( e ) ) {
+				eov.add( this.edges.get(this.edges.indexOf(e)) );
 				if ( v.equals(e.end) ) {
 					e = e.lprev;
 				} else if ( v.equals(e.start) ) {
 					e = e.rprev;
 				}
-				// if edge is null, it means that an outer edge has been hit
-				// in this case, look for another outer edge that connects to
-				// the current vertex, and search backwards
-				if ( e == null ) {
-					for ( int i = 0; i < outerEdges.size(); i++ ) {
-						if ( outerEdges.get(i) != eov.get(eov.size() - 1) &&
-								outerEdges.get(i).containsVertex( v ) ) {
-							e = outerEdges.get(i);
-						}
+			} else {
+				// this is done to correctly handle traversal of mesh with
+				// inner holes/inner edges in the outerEdge list caused by
+				// face removal
+				console.log("switching direction to find different outer edge");
+				if ( v.equals(e.end) ) {
+					e = e.rnext;
+				} else if ( v.equals(e.start) ) {
+					e = e.lnext;
+				}
+			}
+			// if edge is null, it means that an outer edge has been hit
+			// in this case, look for another outer edge that connects to
+			// the current vertex, and search backwards
+			if ( e == null ) {
+				for ( int i = 0; i < localOuterEdges.size(); i++ ) {
+					if ( localOuterEdges.get(i) != eov.get(eov.size() - 1) &&
+							localOuterEdges.get(i).containsVertex( v ) ) {
+						e = localOuterEdges.get(i);
+						localOuterEdges.remove(e);
 					}
 				}
-			} while ( !e.equals( this.edges.get(this.edges.indexOf(v.e) ) ) );
-		} else {
-			console.log("AAAAAAAAAAAAAAAH edge was null?");
-		}
-		console.log(eov.size() + " Edges of vertex " + v.description);
+			}
+			e = this.edges.get( this.edges.indexOf( e ) );
+		} while ( !e.equals( v.e ) );
 
 		return eov;
 	}
@@ -310,13 +336,14 @@ class Mesh {
 		int count_to_exit = 0;
 		Edge e = this.edges.get( this.edges.indexOf(f.e) );
 		do {
-			eof.add(e);
+			eof.add( this.edges.get( this.edges.indexOf(e)) );
 			if ( e.left == f ) {
 				e = e.lnext;
 			} else {
 				e = e.rnext;
 			}
-		} while ( e != null && e != this.edges.get( this.edges.indexOf(f.e) ));
+			e = this.edges.get( this.edges.indexOf( e ) );
+		} while ( !e.equals( f.e ) );
 
 		return eof;
 	}
@@ -386,7 +413,7 @@ class Mesh {
 				curr_edge = curr_eof.get(j);
 				if ( !curr_edge.containsVertex(v) &&
 						!esv.contains(curr_edge) ) {
-					esv.add( curr_edge );
+					esv.add( this.edges.get(this.edges.indexOf(curr_edge)) );
 				}
 			}
 		}
