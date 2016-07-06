@@ -72,17 +72,16 @@ class CompGeoHelper {
 			ildv = independentLowDegreeVertices( mesh, outerTri );
 			layerCount++;
 
-		} while ( layerCount > 3 );
-		//for( int i = 0; i < mesh.vertices.size(); i++ ) {
-	//		mesh.edgesOfVertex( mesh.vertices.get(i));
-	//	}
+		} while ( mesh.vertices.size() > 3 );
 
 		// Mesh should now consist of only one triangle with 3 vertices
 		if ( mesh.vertices.size() != 3 ) {
 			console.log("WARNING: mesh is greater than 3 vertices");
 		}
-
-		// TODO: add final triangle to mesh
+		else {
+			console.log("CONGRATULATIONS: mesh is only 3 vertices");
+			console.log("mesh has " + mesh.faces.size() + " faces" );
+		}
 
 		return mesh;
 	}
