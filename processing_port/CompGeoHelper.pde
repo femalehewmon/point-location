@@ -33,15 +33,17 @@ class CompGeoHelper {
 			console.log(mesh.faces.get(i));
 		}
 
-		console.log("OUTER EDGES");
+		console.log(mesh.outerEdges.size() + " outer edges");
 		for( int i = 0; i < mesh.outerEdges.size(); i++ ) {
 			console.log(mesh.outerEdges.get(i));
 		}
+
 		int layerCount = 0;
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
 		do {
-			console.log("%%%% Found set of ILDV $$$$ " + ildv.size());
+			console.log("Found set of " + ildv.size() + " ILDV");
 			for ( int i = 0; i < ildv.size(); i++ ) {
+				console.log("Processing ILDV: " + ildv.get(i).description);
 				// Get faces (triangles) surrounding ildv
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
 
@@ -67,7 +69,6 @@ class CompGeoHelper {
 				}
 
 			}
-
 			// Get new ildv for next layer
 			ildv = independentLowDegreeVertices( mesh, outerTri );
 			layerCount++;
@@ -77,10 +78,12 @@ class CompGeoHelper {
 		// Mesh should now consist of only one triangle with 3 vertices
 		if ( mesh.vertices.size() != 3 ) {
 			console.log("WARNING: mesh is greater than 3 vertices");
+		} else if ( mesh.faces.size() != 1 ) {
+			console.log("WARNING: mesh has more than 1 face");
 		}
 		else {
-			console.log("CONGRATULATIONS: mesh is only 3 vertices");
-			console.log("mesh has " + mesh.faces.size() + " faces" );
+			console.log("CONGRATULATIONS: mesh has only 3 vertices " +
+					"and 1 face!");
 		}
 
 		return mesh;
@@ -98,8 +101,6 @@ class CompGeoHelper {
 					!outerTri.points.contains( mesh.vertices.get(i)) ) {
 				fov = mesh.facesOfVertex( mesh.vertices.get(i) );
 				if ( fov.size() < 7 ) {
-					console.log("found ildv");
-					console.log(mesh.vertices.get(i));
 					ildv.add( mesh.vertices.get(i) ); // add ildv to list
 					neighbors =
 						mesh.verticesSurroundingVertex(mesh.vertices.get(i));

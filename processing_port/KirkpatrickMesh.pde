@@ -33,7 +33,9 @@ class KirkpatrickMesh extends Mesh {
 	}
 
 	public void addTrianglesToLayer( int layer, ArrayList<Polygon> tris ) {
-		console.log("**************Adding to layer " + layer);
+		console.log("*************************");
+		console.log("Adding triangles to layer " + layer);
+		console.log("*************************");
 		// TODO: validate that triangle ID has not already been added?
 		if ( layer >= layers.size() ) {
 			console.log( "ERROR: layer does not exist, cannot add tris");
@@ -64,7 +66,9 @@ class KirkpatrickMesh extends Mesh {
 
 	public void removeLowDegreeVertexFromMesh(
 			Vertex vertex, ArrayList<Face> faces ) {
-		console.log("Remove low degree vertex !!!!!!!!!! with " + faces.size() + " faces");
+		console.log("about to remove low degree vertex " +
+				vertex.description + " with " + faces.size() + " faces " +
+				"from the mesh");
 		super.removeFacesFromMesh( faces );
 		IndependentLowDegreeVertex ildv =
 			new IndependentLowDegreeVertex(vertex);
