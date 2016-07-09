@@ -25,9 +25,19 @@ class LayeredGraphView extends View {
 		this.finalized = false;
 	}
 
+	public void setMesh( LayeredMesh mesh ) {
+
+	}
+
 	public void addShape(int layer, Polygon shape) {
-		shapesByLayer[layer].add(shape);
+		shapesByLayer[layer].add( shape.copy() );
 		finalized = false;
+	}
+
+	public void addShapes(int layer, ArrayList<Polygon> shapes) {
+		for ( int i = 0; i < shapes.size(); i++ ) {
+			addShape( layer, shapes.get(i) );
+		}
 	}
 
 	public void render() {
@@ -45,7 +55,8 @@ class LayeredGraphView extends View {
 
 		for (int i = 0; i < numLayers; i++) {
 			// draw layer background
-			fill(colorsByLayer[i]);
+			//fill(colorsByLayer[i]);
+			fill(color(255));
 			rect(x1, h - (ydiv*(i+1)), w, ydiv);
 			// draw layer shapes
 			for (int j = 0; j < shapesByLayer[i].size(); j++) {
@@ -59,7 +70,7 @@ class LayeredGraphView extends View {
 		}
 	}
 
-	private void finalizeView() {
+	public void finalizeView() {
 		int i, j;
 		float xdiv;
 		float xpos, ypos;
@@ -69,12 +80,13 @@ class LayeredGraphView extends View {
 		for (i = 0; i < numLayers; i ++) {
 			ypos = h - (ydiv * (i+1)) + (ydiv/2);
 			xdiv = w / shapesByLayer[i].size();
+			console.log(shapesByLayer[i].size() + " tris on layers " + i);
 			for (j = 0; j < shapesByLayer[i].size(); j++) {
 				xpos = (xdiv * j) + (xdiv/2);
-				shapesByLayer[i].get(j).move(new PolyPoint(xpos, ypos));
+				shapesByLayer[i].get(j).move(xpos, ypos);
 				// calculate scaling ratio for this shape
-				xratio = xdiv / shapesByLayer[i].get(j).getWidth(); 
-				yratio = ydiv / shapesByLayer[i].get(j).getHeight(); 
+				xratio = xdiv / shapesByLayer[i].get(j).getWidth();
+				yratio = ydiv / shapesByLayer[i].get(j).getHeight();
 				if (xratio < minRatio) {
 					minRatio = xratio;
 				}
@@ -83,8 +95,8 @@ class LayeredGraphView extends View {
 				}
 			}
 		}
-		// scale polygons with overall min scale to maintain relative sizes	
-		println("Min scale ratio is " + minRatio);
+		// scale polygons with overall min scale to maintain relative sizes
+		console.log("Min scale ratio is " + minRatio);
 		for (i = 0; i < numLayers; i ++) {
 			for (j = 0; j < shapesByLayer[i].size(); j++) {
 				shapesByLayer[i].get(j).scale(minRatio);

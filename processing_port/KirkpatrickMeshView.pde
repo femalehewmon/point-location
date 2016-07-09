@@ -1,7 +1,6 @@
 class KirkpatrickMeshView extends View {
 
 	KirkpatrickMesh mesh;
-	int numLayers;
 
 	Polygon polygon;
 	Polygon outerTri;
@@ -9,16 +8,17 @@ class KirkpatrickMeshView extends View {
 	float xPosToMovePoly;
 	float yPosToMovePoly;
 
-	boolean drawPolygon;
-	boolean drawPolygonTris;
-	boolean drawOuterTri;
-	boolean drawLayers;
 	int layerToDraw;
+	boolean drawPoly;
+	boolean drawPolyTris;
+	boolean drawOuterTri;
+	boolean drawOuterTris;
+	boolean drawLayers;
 
 	public KirkpatrickMeshView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
-		this.numLayers = 0;
+		this.layerToDraw = 0;
 
 		this.mesh = null;
 		this.polygon = null;
@@ -37,9 +37,12 @@ class KirkpatrickMeshView extends View {
 		this.xPosToMovePoly = this.xCenter;
 		this.yPosToMovePoly = this.yCenter + (this.h / 4.0);
 
-		this.layerToDraw = -3;
 		this.finalized = false;
-		setupLevel();
+		this.drawPoly = false;
+		this.drawPolyTris = false;
+		this.drawOuterTri = false;
+		this.drawOuterTris = false;
+		this.drawLayers = false;
 	}
 
 	public void setPolygon( Polygon polygon ) {
@@ -49,62 +52,39 @@ class KirkpatrickMeshView extends View {
 		this.ratioToScalePoly = min(wScale, hScale);
 	}
 
-	public void setupLevel( int layerToDraw ) {
-		switch( layerToDraw ) {
-			case -3:
-				// polygon only
-				this.drawPolygon = true;
-				this.drawPolygonTris = false;
-				this.drawOuterTri = false;
-				this.drawLayers = false;
-				break;
-			case -2:
-				// polygon triangulated
-				this.drawPolygon = false;
-				this.drawPolygonTris = true;
-				this.drawOuterTri = false;
-				this.drawLayers = false;
-				break;
-			case -1:
-				// polygon triangulated with outer tri
-				this.drawPolygon = false;
-				this.drawPolygonTris = true;
-				this.drawOuterTri = true;
-				this.drawLayers = false;
-				break;
-			case 0:
-				// start of normal layer processing
-				this.drawPolygon = false;
-				this.drawPolygonTris = false;
-				this.drawOuterTri = false;
-				this.drawLayers = true;
-				break;
-		}
-		console.log("level setup");
+	public void setMesh( LayeredMesh mesh ) {
+		this.mesh = kpMesh;
 	}
 
 	public boolean nextLevel() {
-		if ( this.layerToDraw < this.mesh.layers.size() - 1 ) {
-			// there are still layers to draw
-			this.layerToDraw++;
-			setupLevel( this.layerToDraw );
-			console.log("ready to draw next level of mesh: "+this.layerToDraw);
-			return true;
+		this.layerToDraw++;
+		return this.layerToDraw < this.mesh.layers.size();
+	}
+
+	public ArrayList<Polygon> getPolygonTris() {
+		ArrayList<Polygon> polygonTris = new ArrayList<Polygon>();
+		ArrayList<Polygon> polys = this.mesh.getPolygonsByLayer( 0 );
+		for( int i; i < polys.size(); i++ ) {
+			if ( polys.get(i).parentId == this.polygon.id ) {
+				polygonTris.add(polys.get(i));
+			}
 		}
-		console.log("!!!!!!!!FINAL STATE OF MESH!!!!!!!!!!");
-		console.log(this.mesh.vertices.size() + " vertices");
-		for( int i = 0; i < this.mesh.vertices.size(); i++ ){
-			console.log(this.mesh.vertices.get(i));
+		return polygonTris;
+	}
+
+	public ArrayList<Polygon> getOuterTris() {
+		ArrayList<Polygon> outerTris = new ArrayList<Polygon>();
+		ArrayList<Polygon> polys = this.mesh.getPolygonsByLayer( 0 );
+		for( int i; i < polys.size(); i++ ) {
+			if ( polys.get(i).parentId == this.outerTri.id ) {
+				outerTris.add(polys.get(i));
+			}
 		}
-		console.log(this.mesh.edges.size() + " edges");
-		for( int i = 0; i < this.mesh.edges.size(); i++ ){
-			console.log(this.mesh.edges.get(i));
-		}
-		console.log(this.mesh.faces.size() + " faces");
-		for( int i = 0; i < this.mesh.faces.size(); i++ ){
-			console.log(this.mesh.faces.get(i));
-		}
-		return false;
+		return outerTris;
+	}
+
+	public ArrayList<Polygon> getLayerTris() {
+		return this.mesh.getPolygonsByLayer( this.layerToDraw );
 	}
 
 	public void render( boolean drawHoles ) {
@@ -116,28 +96,36 @@ class KirkpatrickMeshView extends View {
 			}
 		}
 
-		if ( drawPolygon ) {
+		if ( drawPoly ) {
 			this.polygon.render();
 		}
 		if ( drawOuterTri ) {
 			this.outerTri.render();
 		}
-		if ( drawPolygonTris ) {
-			ArrayList<Polygon> polysToDraw = this.mesh.getPolygonsByLayer( 0 );
+		if ( drawPolyTris ) {
+			ArrayList<Polygon> polysToDraw = getPolygonTris();
 			for( int i; i < polysToDraw.size(); i++ ) {
-				if ( polysToDraw.get(i).parentId == this.polygon.id ) {
-					if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
-						polysToDraw.get(i).selected = true;
-					} else {
-						polysToDraw.get(i).selected = false;
-					}
-					polysToDraw.get(i).render(true);
+				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
+					polysToDraw.get(i).selected = true;
+				} else {
+					polysToDraw.get(i).selected = false;
 				}
+				polysToDraw.get(i).render(true);
+			}
+		}
+		if ( drawOuterTris ) {
+			ArrayList<Polygon> polysToDraw = getOuterTris();
+			for( int i; i < polysToDraw.size(); i++ ) {
+				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
+					polysToDraw.get(i).selected = true;
+				} else {
+					polysToDraw.get(i).selected = false;
+				}
+				polysToDraw.get(i).render(true);
 			}
 		}
 		if ( drawLayers ) {
-			ArrayList<Polygon> polysToDraw =
-				this.mesh.getPolygonsByLayer( this.layerToDraw );
+			ArrayList<Polygon> polysToDraw = getLayerTris( this.layerToDraw );
 			// draw requested layer
 			for( int i; i < polysToDraw.size(); i++ ) {
 				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
@@ -153,12 +141,6 @@ class KirkpatrickMeshView extends View {
 	public void render() {
 		// draw polygon only by default
 		render( false );
-	}
-
-	public void finalizeView() {
-		this.mesh = compGeoHelper.createKirkpatrickDataStructure(
-				this.polygon, this.outerTri);
-		finalized = true;
 	}
 
 	public void mouseUpdate() {
