@@ -28,6 +28,30 @@ class Polygon {
 		this.holes = new ArrayList<Polygon>();
 	}
 
+	public Polygon copy() {
+		// TODO: unable to do a non awkward constructor copy and
+		// unsure of overriding clone in processing.js, thus copy
+		Polygon copy = new Polygon(this.id);
+		copy.id = this.id;
+		copy.parentId = this.parentId;
+		copy.points = new ArrayList<PolyPoint>();
+		for ( int i = 0; i < this.points.size(); i++ ) {
+			copy.points.add(this.points.get(i).copy());
+		}
+
+		copy.cFill = this.cFill;
+		copy.cStroke = this.cStroke;
+		copy.cHighlight = this.cHighlight;
+		copy.selected = this.selected;
+		copy.centerPoint = new PolyPoint(this.getCenterPoint);
+
+		copy.holes = new ArrayList<Polygon>();
+		for ( int i = 0; i < this.holes.size(); i++ ) {
+			copy.holes.add(this.holes.get(i).copy());
+		}
+		return copy;
+	}
+
 	public void addPoint(float x, float y) {
 		this.points.add(new PolyPoint(x, y));
 		this.centerPoint = null;
@@ -246,6 +270,18 @@ class PolyPoint {
 		this.cVertexHighlight = color(0, 0, 255);
 
 		this.selected = false;
+	}
+
+	public PolyPoint copy() {
+		// TODO: unable to do a non awkward constructor copy and
+		// unsure of overriding clone in processing.js, thus copy
+		PolyPoint copy = new PolyPoint(this.x, this.y);
+		copy.size = this.size;
+		copy.cStroke = this.cStroke;
+		copy.cVertexFill = this.cVertexFill;
+		copy.cVertexHighlight = this.cVertexHighlight;
+		copy.selected = this.selected;
+		return copy;
 	}
 
 	public void move(float xnew, float ynew) {
