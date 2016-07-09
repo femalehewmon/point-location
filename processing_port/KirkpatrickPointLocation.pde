@@ -37,8 +37,10 @@ void setup() {
 
 	// create views
 	pcreate = new PolygonCreationView(0, 0, width, height);
-	kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
-	lgraph = new LayeredGraphView(width/2.0, 0, width, height);
+	//kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
+	//lgraph = new LayeredGraphView(width/2.0, 0, width, height);
+	kpView = new KirkpatrickMeshView(width/2.0, 0, width, height);
+	lgraph = new LayeredGraphView(0, 0, width/2.0, height);
 	pcreate.visible = true;
 	lgraph.visible = false;
 	kpView.visible = false;
@@ -67,25 +69,61 @@ void draw() {
 					sceneControl.scenePercentageStep );
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
+				Mesh kpMesh = compGeoHelper.createKirkpatrickDataStructure(
+						pcreate.polygon, kpView.outerTri);
+				lgraph.setMesh( kpMesh );
+				kpView.setMesh( kpMesh );
 			}
 			break;
-		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
+		case sceneControl.TRIANGULATE_POLY:
 			if ( !kpView.finalized ) {
 				// create kp data structure based on newly positioned polygon
 				kpView.finalizeView();
+				lgraph.setLayerCount(kpView.mesh.layers.size());
+				pcreate.visible = false;
 				kpView.visible = true;
-				sceneControl.currScene = sceneControl.DONE;
+				lgraph.visible = true;
+				lgraph.addShapes(0, kpView.getPolygonTris());
 			}
+			kpView.drawPoly = true;
+			kpView.drawPolyTris = true;
 			if ( sceneControl.update() ) {
-				if ( !kpView.nextLevel() ) {
-					sceneControl.nextScene();
-				} else {
+				sceneControl.nextScene();
+				lgraph.addShapes(0, kpView.getOuterTris());
+			}
+			break;
+		case sceneControl.SURROUND_POLY_WITH_OUTER_TRI:
+			kpView.drawOuterTri = true;
+			if ( sceneControl.update() ) {
+				sceneControl.nextScene();
+				kpView.drawOuterTri = false;
+			}
+			break;
+		case sceneControl.TRIANGULATE_OUTER_TRI:
+			kpView.drawOuterTris = true;
+			if ( sceneControl.update() ) {
+				sceneControl.nextScene();
+				kpView.drawOuterTris = false;
+				kpView.drawPoly = false;
+				kpView.drawPolyTris = false;
+			}
+			break;
+		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
+			kpView.drawLayers = true;
+			if ( sceneControl.update() ) {
+				if ( kpView.nextLevel() ) {
 					// reset scene for next level
 					sceneControl.reset();
+					lgraph.addShapes(kpView.layerToDraw, kpView.getLayerTris());
+				} else {
+					// if no levels remain, go to next scene
+					kpView.drawLayers = false;
+					sceneControl.nextScene();
 				}
 			}
 			break;
 		case sceneControl.DONE:
+			kpView.drawOuterTri = true;
 			break;
 	}
 

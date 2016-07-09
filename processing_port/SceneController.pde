@@ -3,10 +3,13 @@ class SceneController {
 	float scenePercentageStep;
 	float scenePercentComplete;
 	float sceneRelativePercentComplete;
-	int SCENE_DURATION = 20;
+	int SCENE_DURATION = 50;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
+	final String TRIANGULATE_POLY = "TRIANGULATE POLY";
+	final String SURROUND_POLY_WITH_OUTER_TRI = "SURROUND POLY WITH OUTER TRI";
+	final String TRIANGULATE_OUTER_TRI = "TRIANGULATE OUTER TRI";
 	final String CREATE_KIRKPATRICK_DATA_STRUCT = "CREATE KP DATA STRUCT";
 	final String DONE = "DONE";
 
@@ -41,8 +44,17 @@ class SceneController {
 			case CENTER_AND_RESIZE_POLYGON:
 				this.currScene = CREATE_POLYGON;
 				break;
-			case CREATE_KIRKPATRICK_DATA_STRUCT:
+			case TRIANGULATE_POLY:
 				this.currScene = CENTER_AND_RESIZE_POLYGON;
+				break;
+			case SURROUND_POLY_WITH_OUTER_TRI:
+				this.currScene = TRIANGULATE_POLY;
+				break;
+			case TRIANGULATE_OUTER_TRI:
+				this.currScene = SURROUND_POLY_WITH_OUTER_TRI;
+				break;
+			case CREATE_KIRKPATRICK_DATA_STRUCT:
+				this.currScene = TRIANGULATE_OUTER_TRI;
 				break;
 			case DONE:
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCT;
@@ -59,6 +71,15 @@ class SceneController {
 				this.currScene = CENTER_AND_RESIZE_POLYGON;
 				break;
 			case CENTER_AND_RESIZE_POLYGON:
+				this.currScene = TRIANGULATE_POLY;
+				break;
+			case TRIANGULATE_POLY:
+				this.currScene = SURROUND_POLY_WITH_OUTER_TRI;
+				break;
+			case SURROUND_POLY_WITH_OUTER_TRI:
+				this.currScene = TRIANGULATE_OUTER_TRI;
+				break;
+			case TRIANGULATE_OUTER_TRI:
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCT;
 				break;
 			case CREATE_KIRKPATRICK_DATA_STRUCT:
