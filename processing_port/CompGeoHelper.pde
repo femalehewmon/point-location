@@ -2,12 +2,12 @@ class CompGeoHelper {
 
 	public CompGeoHelper() {}
 
-	public KirkpatrickMesh createKirkpatrickDataStructure(
+	public LayeredMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
 		console.log("Creating KP Data Structure");
 
-		// A KirkpatrickMesh will serve as Kirkpatrick's Data Structure
-		KirkpatrickMesh mesh = new KirkpatrickMesh( );
+		// A LayeredMesh will serve as Kirkpatrick's Data Structure
+		LayeredMesh mesh = new LayeredMesh( );
 
 		// triangulate the main polygon
 		console.log("triangulate and add poly to kp");
@@ -19,6 +19,7 @@ class CompGeoHelper {
 		console.log("triangulate and add outer tri to kp");
 		mesh.addTrianglesToLayer( 0, outerTri.triangulate() );
 
+		/*
 		console.log("!!!!!!!!STARTING STATE OF MESH!!!!!!!!!!");
 		console.log(mesh.vertices.size() + " vertices");
 		for( int i = 0; i < mesh.vertices.size(); i++ ){
@@ -32,11 +33,11 @@ class CompGeoHelper {
 		for( int i = 0; i < mesh.faces.size(); i++ ){
 			console.log(mesh.faces.get(i));
 		}
-
 		console.log(mesh.outerEdges.size() + " outer edges");
 		for( int i = 0; i < mesh.outerEdges.size(); i++ ) {
 			console.log(mesh.outerEdges.get(i));
 		}
+		*/
 
 		int layerCount = 0;
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
@@ -59,7 +60,7 @@ class CompGeoHelper {
 				}
 
 				// Remove triangles surrounding ildv from mesh
-				mesh.removeLowDegreeVertexFromMesh( ildv.get(i), faces );
+				mesh.removeVertexFromMesh( ildv.get(i), faces );
 
 				if ( convex_hull != null ) {
 					// Add convex hull triangulation to mesh

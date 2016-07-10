@@ -117,7 +117,7 @@ class Mesh {
 
 	int addFaceToMesh( Face f ) {
 		if ( !this.faces.contains(f) ) {
-			console.log("New face " + f.id);
+			//console.log("New face " + f.id);
 			this.faces.add(f);
 		}
 		return this.faces.indexOf( f );
@@ -125,7 +125,7 @@ class Mesh {
 
 	int addVertexToMesh( Vertex v ) {
 		if ( !this.vertices.contains(v) ) {
-			console.log("New vertex " + v.x + ", " + v.y);
+			//console.log("New vertex " + v.x + ", " + v.y);
 			this.vertices.add(v);
 		}
 		return this.vertices.indexOf( v );
@@ -133,9 +133,9 @@ class Mesh {
 
 	int addEdgeToMesh( Edge e ) {
 		if ( !this.edges.contains(e) ) {
-			console.log("New edge "
-					+ e.start.x + ", " + e.start.y + "  to  "
-					+ e.end.x + ", " + e.end.y);
+			//console.log("New edge "
+		//			+ e.start.x + ", " + e.start.y + "  to  "
+		//			+ e.end.x + ", " + e.end.y);
 			this.edges.add(e);
 			this.outerEdges.add(e);
 		}
@@ -150,15 +150,15 @@ class Mesh {
 				removeFaceFromMesh(
 						this.faces.get(this.faces.indexOf(tris.get(i))));
 			} else {
-				console.log(
-						"Mesh does not contain face.. doing something wrong?");
+				//console.log(
+				//		"Mesh does not contain face.. doing something wrong?");
 			}
 		}
 	}
 
 	boolean removeFaceFromMesh( Face f ) {
 		if ( this.faces.contains(f) ) {
-			console.log("attempt to remove face " + f.id + " from mesh");
+			//console.log("attempt to remove face " + f.id + " from mesh");
 
 			// Get all edges connected to the face
 			ArrayList<Edge> eof = edgesOfFace( f );
@@ -181,16 +181,16 @@ class Mesh {
 				}
 			}
 
-			console.log(" =============== " );
-			console.log(" EDGES TO REMOVE " );
+			//console.log(" =============== " );
+			//console.log(" EDGES TO REMOVE " );
 			for ( int i = 0; i < edges_to_remove.size(); i++ ){
-				console.log(edges_to_remove.get(i));
+				//console.log(edges_to_remove.get(i));
 			}
-			console.log(" EDGES TO UPDATE " );
+			//console.log(" EDGES TO UPDATE " );
 			for ( int i = 0; i < edges_to_update.size(); i++ ){
-				console.log(edges_to_update.get(i));
+				//console.log(edges_to_update.get(i));
 			}
-			console.log(" =============== " );
+			//console.log(" =============== " );
 
 			// Go through list of connected vertices and update any references
 			// within the vertices to the edges that will be removed
@@ -208,8 +208,8 @@ class Mesh {
 					for ( int j = 0; j < eov.size(); j++ ) {
 						if ( !edges_to_remove.contains(eov.get(j)) ) {
 							vof.get(i).setEdge( eov.get(j) );
-							console.log("updated edge of vertex "
-									+ vof.get(i).description);
+							//console.log("updated edge of vertex "
+							//		+ vof.get(i).description);
 							break;
 						}
 					}
@@ -231,9 +231,9 @@ class Mesh {
 			}
 			for( int i = 0; i < edges_to_remove.size(); i++ ) {
 				if ( this.edges.remove( edges_to_remove.get(i) ) ) {
-					console.log("----------> remove edge from mesh, " +
-							+ edges_to_remove.get(i).start.description + ", "
-							+ edges_to_remove.get(i).end.description);
+					//console.log("----------> remove edge from mesh, " +
+					//		+ edges_to_remove.get(i).start.description + ", "
+					//		+ edges_to_remove.get(i).end.description);
 					if ( this.outerEdges.contains( edges_to_remove.get(i))){
 						this.outerEdges.remove( edges_to_remove.get(i) );
 					}
@@ -245,8 +245,8 @@ class Mesh {
 			// Next, safely remove vertices from mesh
 			for( int i = 0; i < vertices_to_remove.size(); i++) {
 				if ( this.vertices.remove( vertices_to_remove.get(i) ) ) {
-					console.log("----------> remove vertex from mesh, " +
-							vof.get(i).description);
+					//console.log("----------> remove vertex from mesh, " +
+					//		vof.get(i).description);
 				} else {
 					console.log("ERROR: failed to remove vertex from mesh");
 				}
@@ -254,7 +254,7 @@ class Mesh {
 
 			// Finally, remove face itself from mesh
 			if ( this.faces.remove( f ) ) {
-				console.log("----------> remove face from mesh, " + f.id);
+				//console.log("----------> remove face from mesh, " + f.id);
 			} else {
 				console.log("ERROR: failed to remove face from mesh");
 			}
@@ -281,7 +281,7 @@ class Mesh {
 				// this is done to correctly handle traversal of mesh with
 				// inner holes/inner edges in the outerEdge list caused by
 				// face removal
-				console.log("switching direction to find different outer edge");
+				//console.log("switching direction to find different outer edge");
 				if ( v.equals(e.end) ) {
 					e = e.rnext;
 				} else if ( v.equals(e.start) ) {
@@ -475,7 +475,7 @@ class Edge {
 			this.rprev = null;
 			this.rprev = null;
 		} else {
-			console.log("face not in edge");
+			console.log("WARNING: face not in edge");
 		}
 
 		if ( isEmpty() ) {

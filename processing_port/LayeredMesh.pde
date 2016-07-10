@@ -25,7 +25,7 @@ class LayeredMesh extends Mesh {
 	public void addTrianglesToLayer( int layer, ArrayList<Polygon> tris ) {
 		// TODO: validate that triangle ID has not already been added?
 		console.log("*************************");
-		console.log("Adding triangles to layer " + layer);
+		console.log("Adding " + tris.size() + " triangles to layer " + layer);
 		console.log("*************************");
 
 		if ( layer >= layers.size() ) {
@@ -40,7 +40,7 @@ class LayeredMesh extends Mesh {
 			}
 			polyIds.add( tris.get(i).id );
 		}
-		layers.get(layer).addPolygonsToLayer( polyIds );
+		layers.get(layer).addPolygonsToSubLayer( polyIds );
 		addTrianglesToMesh( tris );
 	}
 
@@ -55,37 +55,78 @@ class LayeredMesh extends Mesh {
 		this.layers.get( currLayer ).removeVertexFromLayer( vertex, polyIds );
 	}
 
-	public ArrayList<Polygon> getPolygonsByLayer( int layer ) {
-		ArrayList<Polygon> polys = new ArrayList<Polygon>();
-		if ( 0 > layer || layer >= layers.size() ) {
-			console.log("ERROR: layer does not exist, cannot get polygons");
-		} else {
-			MeshLayer currLayer;
-			for ( int i = 0; i <= layer; i++ ) {
-				currLayer = this.layers.get(i);
-			}
-			for( int i = 0; i < currLayer.visiblePolygons.size(); i++ ) {
-				polys.add(
-						this.polygons.get(currLayer.visiblePolygons.get(i)));
-			}
-		}
-		return polys;
-	}
-
 	public ArrayList<Polygon> getVisiblePolygonsByLayer( int layer ) {
+		int i, j;
 		ArrayList<Polygon> polys = new ArrayList<Polygon>();
 		if ( 0 > layer || layer >= layers.size() ) {
 			console.log("ERROR: layer does not exist, cannot get polygons");
 		} else {
 			ArrayList<Integer> polyIds = new ArrayList<Integer>();
-			for ( int i = 0; i <= layer; i++ ) {
-				polyIds.addAll( this.layers.get(i).getPolyg
-				currLayer = this.layers.get(i);
-				for ( int j = 0;
+			ArrayList<Integer> addedPolys;
+			ArrayList<Integer> removedPolys;
+			for ( i = 0; i <= layer; i++ ) {
+				addedPolys = this.layers.get(i).getPolygonsAddedToLayer();
+				for ( j = 0; j < addedPolys.size(); j++ ) {
+					polyIds.add( addedPolys.get(j) );
+				}
+				removedPolys = this.layers.get(i).getPolygonsRemovedFromLayer();
+				for ( j = 0; j < removedPolys.size(); j++ ) {
+					polyIds.remove( polyIds.getIndexOf(removedPolys.get(j)) );
+				}
 			}
-			for( int i = 0; i < currLayer.visiblePolygons.size(); i++ ) {
-				polys.add(
-						this.polygons.get(currLayer.visiblePolygons.get(i)));
+			// an array of polygons visible at the completion of the layer
+			polys = getPolygonsById( polyIds );
+		}
+		return polys;
+	}
+
+	public ArrayList<ArrayList<Polygon>> getPolygonsAddedBySubLayer(int layer){
+		int i, j;
+		ArrayList<ArrayList<Polygon>> polys = new ArrayList<ArrayList<Polygon>>();
+		if ( 0 > layer || layer >= layers.size() ) {
+			console.log("ERROR: layer does not exist, cannot get polygons");
+		} else {
+			ArrayList<Integer> polyIds = new ArrayList<Integer>();
+			ArrayList<Integer> addedPolys;
+			for ( i = 0; i < this.layers.get(i).subLayers.size(); i++ ) {
+				addedPolys =
+					layers.get(i).subLayers.get(j).getPolygonsAddedToLayer();
+
+				for ( j = 0; j < addedPolys.size(); j++ ) {
+					polyIds.add( addedPolys.get(j) );
+				}	
+
+				// add polygons remove in this sublayer
+				polys.add(getPolygonsById( polyIds ));
+				polyIds.clear();
+			}
+
+			// add polygons visible at base of this layer 
+			polys.add(getPolygonsById( polyIds ));
+		}
+		return polys;
+	}
+
+	public ArrayList<ArrayList<Polygon>> getPolygonsRemovedBySubLayer(int layer){
+		int i, j;
+		ArrayList<ArrayList<Polygon>> polys =
+			new ArrayList<ArrayList<Polygon>>();
+		if ( 0 > layer || layer >= layers.size() ) {
+			console.log("ERROR: layer does not exist, cannot get polygons");
+		} else {
+			ArrayList<Integer> polyIds = new ArrayList<Integer>();
+			ArrayList<Integer> removedPolys;
+			for ( i = 0; i < this.layers.get(i).subLayers.size(); i++ ) {
+				removedPolys =
+					layers.get(i).subLayers.get(j).getPolygonsRemovedFromLayer();
+
+				for ( j = 0; j < removedPolys.size(); j++ ) {
+					polyIds.add( removedPolys.get(j) );
+				}	
+
+				// add polygons remove in this sublayer
+				polys.add(getPolygonsById( polyIds ));
+				polyIds.clear();
 			}
 		}
 		return polys;
@@ -96,6 +137,7 @@ class LayeredMesh extends Mesh {
 		for ( int i = 0; i < polyIds.size(); i++ ){
 			polys.add( this.polygons.get( polyIds.get(i) ) );
 		}
+		return polys;
 	}
 
 }
@@ -108,39 +150,64 @@ class MeshLayer {
 	// added as a direct result of filling in for the removed polygons
 	// --- written for KP data structure, could be made more general?
 	ArrayList<Vertex> verticesRemoved;
-	ArrayList<ArrayList<Integer>> polygonsRemoved;
-	ArrayList<ArrayList<Integer>> polygonsAdded;
+	ArrayList<Integer> polygonsRemoved;
+	ArrayList<Integer> polygonsAdded;
 
 	ArrayList<MeshLayer> subLayers;
 
 	public MeshLayer() {
 		this.verticesRemoved = new ArrayList<Vertex>();
-		this.polygonsRemoved = new ArrayList<ArrayList<Integer>>();
+		this.polygonsRemoved = new ArrayList<Integer>();
 		this.polygonsAdded = new ArrayList<Integer>();
 		this.subLayers = new ArrayList<MeshLayer>();
 	}
 
 	public ArrayList<Integer> getPolygonsAddedToLayer() {
-		ArrayList<Integer> polyIds;
-		for ( int i = 0; i < this.subLayers.size(); i++ ) {
-			polyIds.addAll( this.subLayers.get(i).getPolygsonAddedToLayer() );
+		int i, j;
+		ArrayList<Integer> polyIds = new ArrayList<Integer>( polygonsAdded );
+		ArrayList<Integer> addedPolys;
+		for ( i = 0; i < subLayers.size(); i++ ) {
+			addedPolys = subLayers.get(i).getPolygonsAddedToLayer();
+			for ( j = 0; j < addedPolys.size(); j++ ) {
+				polyIds.add( addedPolys.get(j) );
+			}
+			// processing.js issue that this doesn't work?
+			// polyIds.addAll( this.subLayers.get(i).getPolygsonAddedToLayer());
+		}
+		return polyIds;
+	}
+
+	public ArrayList<Integer> getPolygonsRemovedFromLayer() {
+		int i, j;
+		ArrayList<Integer> polyIds = new ArrayList<Integer>();
+		ArrayList<Integer> removedPolys;
+		for ( i = 0; i < subLayers.size(); i++ ) {
+			removedPolys = subLayers.get(i).getPolygonsRemovedFromLayer();
+			for ( j = 0; j < removedPolys.size(); j++ ) {
+				polyIds.add( removedPolys.get(j) );
+			}
 		}
 		return polyIds;
 	}
 
 	public void addPolygonsToLayer( ArrayList<Integer> polyIds ) {
-		polygonsAdded.add( polyIds );
-	}
-
-	public void addPolygonsToLastSubLayer( ArrayList<Integer> polyIds ) {
-		this.subLayers.get( this.subLayers.size() - 1 ).addPolygonsToLayer(
-				polyIds);
+		for( int i = 0; i < polyIds.size(); i++ ) {
+			polygonsAdded.add( polyIds.get(i) );
+		}
 	}
 
 	public void removeVertexFromLayer(
 			Vertex vertex, ArrayList<Integer> polyIds ) {
 		verticesRemoved.add( vertex );
-		polygonsRemoved.add( polyIds );
+		for( int i = 0; i < polyIds.size(); i++ ) {
+			polygonsRemoved.add( polyIds.get(i) );
+		}
+	}
+
+	public void addPolygonsToSubLayer( ArrayList<Integer> polyIds ) {
+		MeshLayer subLayer = new MeshLayer();
+		subLayer.addPolygonsToLayer( polyIds );
+		this.subLayers.add( subLayer );
 	}
 
 	public void removeVertexFromLastSubLayer(

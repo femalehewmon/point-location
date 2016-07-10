@@ -1,14 +1,17 @@
 class KirkpatrickMeshView extends View {
 
-	KirkpatrickMesh mesh;
+	LayeredMesh mesh;
 
 	Polygon polygon;
 	Polygon outerTri;
+	ArrayList<Polygon> polygonTris;
+	ArrayList<Polygon> outerTris;
 	float ratioToScalePoly;
 	float xPosToMovePoly;
 	float yPosToMovePoly;
 
 	int layerToDraw;
+	int subLayerToDraw;
 	boolean drawPoly;
 	boolean drawPolyTris;
 	boolean drawOuterTri;
@@ -29,6 +32,12 @@ class KirkpatrickMeshView extends View {
 		this.outerTri.addPoint( xCenter, y1 + 10 );
 		this.outerTri.addPoint( x2 - 10, y2 - 10 );
 		this.outerTri.addPoint( x1 + 10, y2 - 10 );
+
+		this.polygonTris = new ArrayList<Polygon>();
+		this.outerTris = new ArrayList<Polygon>();
+		// a little crazy, but designed to hold sublayers.. a better way?
+		this.subLayerTrisAdded = new ArrayList<ArrayList<ArrayList<Polygon>>>();
+		this.subLayerTrisRemoved = new ArrayList<ArrayList<ArrayList<Polygon>>>();
 
 		// ratio and position that the polygon will need to adjust to in order
 	    // to fit in this view
@@ -53,38 +62,32 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
-		this.mesh = kpMesh;
+		int i;
+		console.log("setting mesh in kpview");
+		this.outerTris.clear();
+		this.polygonTris.clear();
+		if ( this.mesh != null ) {
+			this.mesh.clear();
+		}
+
+		this.mesh = mesh;
+		ArrayList<Polygon> polys = this.mesh.getVisiblePolygonsByLayer( 0 );
+		for( i = 0; i < polys.size(); i++ ) {
+			if ( polys.get(i).parentId == this.polygon.id ) {
+				this.polygonTris.add(polys.get(i));
+			} else if ( polys.get(i).parentId == this.outerTri.id ) {
+				this.outerTris.add(polys.get(i));
+			}
+		}
+
+		for( i = 0; i < this.mesh.layers.size(); i++ ) {
+
+		}
 	}
 
 	public boolean nextLevel() {
 		this.layerToDraw++;
 		return this.layerToDraw < this.mesh.layers.size();
-	}
-
-	public ArrayList<Polygon> getPolygonTris() {
-		ArrayList<Polygon> polygonTris = new ArrayList<Polygon>();
-		ArrayList<Polygon> polys = this.mesh.getPolygonsByLayer( 0 );
-		for( int i; i < polys.size(); i++ ) {
-			if ( polys.get(i).parentId == this.polygon.id ) {
-				polygonTris.add(polys.get(i));
-			}
-		}
-		return polygonTris;
-	}
-
-	public ArrayList<Polygon> getOuterTris() {
-		ArrayList<Polygon> outerTris = new ArrayList<Polygon>();
-		ArrayList<Polygon> polys = this.mesh.getPolygonsByLayer( 0 );
-		for( int i; i < polys.size(); i++ ) {
-			if ( polys.get(i).parentId == this.outerTri.id ) {
-				outerTris.add(polys.get(i));
-			}
-		}
-		return outerTris;
-	}
-
-	public ArrayList<Polygon> getLayerTris() {
-		return this.mesh.getPolygonsByLayer( this.layerToDraw );
 	}
 
 	public void render( boolean drawHoles ) {
@@ -103,31 +106,29 @@ class KirkpatrickMeshView extends View {
 			this.outerTri.render();
 		}
 		if ( drawPolyTris ) {
-			ArrayList<Polygon> polysToDraw = getPolygonTris();
-			for( int i; i < polysToDraw.size(); i++ ) {
-				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
-					polysToDraw.get(i).selected = true;
+			for( int i; i < this.polygonTris.size(); i++ ) {
+				if ( selectedShapes.contains(this.polygonTris.get(i).id) ) {
+					this.polygonTris.get(i).selected = true;
 				} else {
-					polysToDraw.get(i).selected = false;
+					this.polygonTris.get(i).selected = false;
 				}
-				polysToDraw.get(i).render(true);
+				this.polygonTris.get(i).render(true);
 			}
 		}
 		if ( drawOuterTris ) {
-			ArrayList<Polygon> polysToDraw = getOuterTris();
-			for( int i; i < polysToDraw.size(); i++ ) {
-				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
-					polysToDraw.get(i).selected = true;
+			for( int i; i < this.outerTris.size(); i++ ) {
+				if ( selectedShapes.contains(this.outerTris.get(i).id) ) {
+					this.outerTris.get(i).selected = true;
 				} else {
-					polysToDraw.get(i).selected = false;
+					this.outerTris.get(i).selected = false;
 				}
-				polysToDraw.get(i).render(true);
+				this.outerTris.get(i).render(true);
 			}
 		}
 		if ( drawLayers ) {
 			ArrayList<Polygon> polysToDraw = getLayerTris( this.layerToDraw );
 			// draw requested layer
-			for( int i; i < polysToDraw.size(); i++ ) {
+			for( int i; i < this.layerTris.get(this.layerToDraw).size(); i++ ) {
 				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
 					polysToDraw.get(i).selected = true;
 				} else {

@@ -13,7 +13,12 @@ class LayeredGraphView extends View {
 		setLayerCount( 1 );
 	}
 
-	public void setLayerCount( int numLayers ) {
+	public void setMesh( LayeredMesh mesh ) {
+		setLayerCount( mesh.layers.size() );
+		this.finalized = false;
+	}
+
+	private void setLayerCount( int numLayers ) {
 		this.numLayers = numLayers;
 		this.ydiv = h / numLayers;
 		for (int i = 0; i < numLayers; i++) {
@@ -22,16 +27,10 @@ class LayeredGraphView extends View {
 				colorsByLayer[i] = color(random(255), random(255), random(255));
 			}
 		}
-		this.finalized = false;
-	}
-
-	public void setMesh( LayeredMesh mesh ) {
-
 	}
 
 	public void addShape(int layer, Polygon shape) {
 		shapesByLayer[layer].add( shape.copy() );
-		finalized = false;
 	}
 
 	public void addShapes(int layer, ArrayList<Polygon> shapes) {
@@ -80,7 +79,6 @@ class LayeredGraphView extends View {
 		for (i = 0; i < numLayers; i ++) {
 			ypos = h - (ydiv * (i+1)) + (ydiv/2);
 			xdiv = w / shapesByLayer[i].size();
-			console.log(shapesByLayer[i].size() + " tris on layers " + i);
 			for (j = 0; j < shapesByLayer[i].size(); j++) {
 				xpos = (xdiv * j) + (xdiv/2);
 				shapesByLayer[i].get(j).move(xpos, ypos);

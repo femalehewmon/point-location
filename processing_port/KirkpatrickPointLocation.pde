@@ -37,10 +37,10 @@ void setup() {
 
 	// create views
 	pcreate = new PolygonCreationView(0, 0, width, height);
-	//kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
-	//lgraph = new LayeredGraphView(width/2.0, 0, width, height);
-	kpView = new KirkpatrickMeshView(width/2.0, 0, width, height);
-	lgraph = new LayeredGraphView(0, 0, width/2.0, height);
+	kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
+	lgraph = new LayeredGraphView(width/2.0, 0, width, height);
+	//kpView = new KirkpatrickMeshView(width/2.0, 0, width, height);
+	//lgraph = new LayeredGraphView(0, 0, width/2.0, height);
 	pcreate.visible = true;
 	lgraph.visible = false;
 	kpView.visible = false;
@@ -69,27 +69,28 @@ void draw() {
 					sceneControl.scenePercentageStep );
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
-				Mesh kpMesh = compGeoHelper.createKirkpatrickDataStructure(
-						pcreate.polygon, kpView.outerTri);
-				lgraph.setMesh( kpMesh );
-				kpView.setMesh( kpMesh );
 			}
 			break;
 		case sceneControl.TRIANGULATE_POLY:
-			if ( !kpView.finalized ) {
-				// create kp data structure based on newly positioned polygon
-				kpView.finalizeView();
-				lgraph.setLayerCount(kpView.mesh.layers.size());
+			if ( !sceneControl.sceneReady ) {
+				Mesh kpMesh = compGeoHelper.createKirkpatrickDataStructure(
+						pcreate.polygon, kpView.outerTri);
+				//lgraph.setMesh( kpMesh );
+				kpView.setMesh( kpMesh );
+
 				pcreate.visible = false;
 				kpView.visible = true;
-				lgraph.visible = true;
-				lgraph.addShapes(0, kpView.getPolygonTris());
+				//lgraph.visible = true;
+				//lgraph.addShapes(0, kpView.getPolygonTris());
 			}
-			kpView.drawPoly = true;
+
+			kpView.drawPoly = false;
 			kpView.drawPolyTris = true;
+			kpView.drawOuterTri = false;
+
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
-				lgraph.addShapes(0, kpView.getOuterTris());
+				//lgraph.addShapes(0, kpView.getOuterTris());
 			}
 			break;
 		case sceneControl.SURROUND_POLY_WITH_OUTER_TRI:
@@ -114,7 +115,7 @@ void draw() {
 				if ( kpView.nextLevel() ) {
 					// reset scene for next level
 					sceneControl.reset();
-					lgraph.addShapes(kpView.layerToDraw, kpView.getLayerTris());
+					//lgraph.addShapes(kpView.layerToDraw, kpView.getLayerTris());
 				} else {
 					// if no levels remain, go to next scene
 					kpView.drawLayers = false;
@@ -123,7 +124,6 @@ void draw() {
 			}
 			break;
 		case sceneControl.DONE:
-			kpView.drawOuterTri = true;
 			break;
 	}
 

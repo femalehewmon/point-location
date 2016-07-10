@@ -13,6 +13,8 @@ class SceneController {
 	final String CREATE_KIRKPATRICK_DATA_STRUCT = "CREATE KP DATA STRUCT";
 	final String DONE = "DONE";
 
+	boolean sceneReady = false;
+
 	public SceneController() {
 		this.currScene = CREATE_POLYGON;
 		reset();
@@ -23,6 +25,7 @@ class SceneController {
 		this.scenePercentageStep = 1.0/(float)SCENE_DURATION;
 		this.scenePercentComplete = 0.0;
 		this.sceneRelativePercentComplete = 0.0;
+		this.sceneReady = false;
 	}
 
 	public boolean update() {
@@ -34,6 +37,7 @@ class SceneController {
 		scenePercentComplete = (float)sceneTimer / (float)SCENE_DURATION;
 		sceneRelativePercentComplete =
 			1.0 / (sceneControl.SCENE_DURATION - sceneControl.sceneTimer);
+		sceneReady = true;
 		return next_scene;
 	}
 
