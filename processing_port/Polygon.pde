@@ -267,8 +267,8 @@ class PolyPoint {
 		this.y = y;
 		this.size = 10;
 		this.cStroke = color(0);
-		this.cVertexFill = color(0);
-		this.cVertexHighlight = color(0, 0, 255);
+		this.cFill = color(0);
+		this.cHighlight = color(255);
 
 		this.selected = false;
 	}
