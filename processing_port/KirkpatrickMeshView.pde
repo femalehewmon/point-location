@@ -215,21 +215,22 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void mouseUpdate() {
-		return; // TODO: renable
 		color c = pickbuffer.get(mouseX, mouseY);
-		int i, j;
-		ArrayList<Polygon> polysToDraw =
-			this.mesh.getPolygonsByLayer( this.layerToDraw );
-		for( int i; i < polysToDraw.size(); i++ ) {
-			if (color(polysToDraw.get(i).id) == c) {
-				Message msg = new Message();
-				msg.k = MSG_TRIANGLE;
-				msg.v = polysToDraw.get(j).id;
-				messages.add(msg);
+		int i;
+		if ( layerToDraw < this.layerTris.size() ) {
+			ArrayList<Integer> polysToDraw =
+				this.layerTris.get( this.layerToDraw );
+			for( int i; i < polysToDraw.size(); i++ ) {
+				if (color(polysToDraw.get(i)) == c) {
+					Message msg = new Message();
+					msg.k = MSG_TRIANGLE;
+					msg.v = polysToDraw.get(i);
+					messages.add(msg);
+				}
 			}
-		}
-		if (keyPressed) {
-			image(pickbuffer, 0, 0);
+			if (keyPressed) {
+				image(pickbuffer, 0, 0);
+			}
 		}
 	}
 
