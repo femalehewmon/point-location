@@ -60,7 +60,7 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
-		int i, j, k;
+		int i, j, k, l;
 		// clear previously set mesh
 		this.outerTris.clear();
 		this.polygonTris.clear();
@@ -93,7 +93,25 @@ class KirkpatrickMeshView extends View {
 				// initialize new layer with same polygons as last layer
 				this.layerTris.add(new ArrayList<Integer>(
 							layerTris.get( layerTris.size() - 1 )));
-				this.layerVertices.add(new ArrayList<PolyPoint>());
+				if ( j == 0 ) {
+					this.layerVertices.add(new ArrayList<PolyPoint>());
+					// if first sublayer, add set of all vertices to be removed
+					verticesRemoved =
+						mesh.layers.get(i).getVerticesRemovedFromLayer();
+					for ( k = 0; k < verticesRemoved.size(); k++ ) {
+						PolyPoint point = new PolyPoint(
+									verticesRemoved.get(k).x,
+									verticesRemoved.get(k).y);
+						point.size = 15;
+						this.layerVertices.get(
+								this.layerVertices.size() - 1).add(point);
+					}
+				} else {
+					// otherwise, copy list of still visible vertices from
+					// previous layer
+					this.layerVertices.add(new ArrayList<PolyPoint>(
+								layerVertices.get(layerVertices.size() - 1)));
+				}
 				// get list of polygons added and removed from current layer
 				// for KP data structure, should be either a list of added
 				// or removed, but check for and handle both
@@ -104,17 +122,18 @@ class KirkpatrickMeshView extends View {
 					// if vertices were highlighted at this sublayer,
 					// add a 2nd layer as a visual placeholder while
 					// identifying the vertices
-					// then, add vertices identified
-					for ( k = 0; k < verticesRemoved.size(); k++ ) {
-						this.layerVertices.get(
-								this.layerVertices.size() - 1).add(
-								new PolyPoint(
-									verticesRemoved.get(k).x,
-									verticesRemoved.get(k).y) );
-					}
 					this.layerTris.add(new ArrayList<Integer>(
 								layerTris.get( layerTris.size() - 1 )));
-					this.layerVertices.add(new ArrayList<PolyPoint>());
+					this.layerVertices.add(new ArrayList<PolyPoint>(
+								layerVertices.get(layerVertices.size() - 1)));
+					// then, remove vertices identified
+					for ( k = 0; k < verticesRemoved.size(); k++ ) {
+						this.layerVertices.get(
+								this.layerVertices.size() - 1).remove(
+								this.layerVertices.get(
+									this.layerVertices.size() - 1).indexOf(
+									verticesRemoved.get(k)));
+					}
 				}
 				for ( k = 0; k < polysRemoved.size(); k++ ) {
 					this.layerTris.get( layerTris.size() - 1 ).remove(
@@ -161,6 +180,18 @@ class KirkpatrickMeshView extends View {
 			polysToDraw = this.mesh.getPolygonsById(
 					this.layerTris.get(layerToDraw));
 			verticesToDraw = this.layerVertices.get(layerToDraw);
+			// identify vertices to be removed in next layer and highlight
+			// TODO: move this out of rendering loop
+			if ( layerToDraw < this.layerTris.size() - 1 ) {
+				for ( i = 0; i < verticesToDraw.size(); i++ ) {
+					if ( !this.layerVertices.get(layerToDraw + 1).contains(
+							   verticesToDraw.get(i)) ) {
+						verticesToDraw.get(i).selected = true;
+					} else {
+						verticesToDraw.get(i).selected = false;
+					}
+				}
+			}
 		}
 
 		// render polygons to draw
@@ -174,7 +205,6 @@ class KirkpatrickMeshView extends View {
 		}
 		// render vertices to draw
 		for( i = 0; i < verticesToDraw.size(); i++ ) {
-			verticesToDraw.selected = true;
 			verticesToDraw.get(i).render();
 		}
 	}
