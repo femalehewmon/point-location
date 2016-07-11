@@ -98,9 +98,10 @@ class Polygon {
 			triangles.add(tri);
 		}
 
-		// set parentId of all triangulated triangles
+		// set parentId and color of all triangulated triangles
 		for ( int i = 0; i < triangles.size(); i++ ) {
 			triangles.get(i).parentId = this.id;
+			triangles.get(i).cFill = this.cFill;
 		}
 
 		return triangles;
