@@ -8,16 +8,17 @@ class CompGeoHelper {
 
 		// A LayeredMesh will serve as Kirkpatrick's Data Structure
 		LayeredMesh mesh = new LayeredMesh( );
+		int currLayer = mesh.createNewLayer();
 
 		// triangulate the main polygon
 		console.log("triangulate and add poly to kp");
-		mesh.addTrianglesToLayer( 0, poly.triangulate() );
+		mesh.addTrianglesToLayer( currLayer, poly.triangulate() );
 
 		// triangulate the outer triangle with a hole in the middle for
 		// the original polygon
 		outerTri.addHole( poly );
 		console.log("triangulate and add outer tri to kp");
-		mesh.addTrianglesToLayer( 0, outerTri.triangulate() );
+		mesh.addTrianglesToLayer( currLayer, outerTri.triangulate() );
 
 		/*
 		console.log("!!!!!!!!STARTING STATE OF MESH!!!!!!!!!!");
@@ -39,10 +40,10 @@ class CompGeoHelper {
 		}
 		*/
 
-		int layerCount = 0;
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
 		do {
 			console.log("Found set of " + ildv.size() + " ILDV");
+			int currLayer = mesh.createNewLayer();
 			for ( int i = 0; i < ildv.size(); i++ ) {
 				console.log("Processing ILDV: " + ildv.get(i).description);
 				// Get faces (triangles) surrounding ildv
@@ -60,11 +61,12 @@ class CompGeoHelper {
 				}
 
 				// Remove triangles surrounding ildv from mesh
-				mesh.removeVertexFromMesh( ildv.get(i), faces );
+				mesh.removeVertexFromLayer( currLayer, ildv.get(i), faces );
 
 				if ( convex_hull != null ) {
 					// Add convex hull triangulation to mesh
-					mesh.addTrianglesToNextLayer( convex_hull.triangulate() );
+					mesh.addTrianglesToLayer( currLayer,
+							convex_hull.triangulate() );
 				} else {
 					console.log("Convex Hull was null");
 				}
@@ -72,7 +74,6 @@ class CompGeoHelper {
 			}
 			// Get new ildv for next layer
 			ildv = independentLowDegreeVertices( mesh, outerTri );
-			layerCount++;
 
 		} while ( mesh.vertices.size() > 3 );
 

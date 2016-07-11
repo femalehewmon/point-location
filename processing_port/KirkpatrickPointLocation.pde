@@ -82,11 +82,11 @@ void draw() {
 				kpView.visible = true;
 				//lgraph.visible = true;
 				//lgraph.addShapes(0, kpView.getPolygonTris());
-			}
 
-			kpView.drawPoly = false;
-			kpView.drawPolyTris = true;
-			kpView.drawOuterTri = false;
+				kpView.drawPoly = false;
+				kpView.drawPolyTris = true;
+				kpView.drawOuterTri = false;
+			}
 
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
@@ -97,16 +97,9 @@ void draw() {
 			kpView.drawOuterTri = true;
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
-				kpView.drawOuterTri = false;
-			}
-			break;
-		case sceneControl.TRIANGULATE_OUTER_TRI:
-			kpView.drawOuterTris = true;
-			if ( sceneControl.update() ) {
-				sceneControl.nextScene();
-				kpView.drawOuterTris = false;
 				kpView.drawPoly = false;
 				kpView.drawPolyTris = false;
+				kpView.drawOuterTri = true;
 			}
 			break;
 		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:

@@ -4,18 +4,18 @@ class KirkpatrickMeshView extends View {
 
 	Polygon polygon;
 	Polygon outerTri;
-	ArrayList<Polygon> polygonTris;
-	ArrayList<Polygon> outerTris;
+	ArrayList<Integer> polygonTris;
+	ArrayList<ArrayList<Integer>> layerTris;
+	ArrayList<ArrayList<PolyPoint>> layerVertices;
+
 	float ratioToScalePoly;
 	float xPosToMovePoly;
 	float yPosToMovePoly;
 
 	int layerToDraw;
-	int subLayerToDraw;
 	boolean drawPoly;
 	boolean drawPolyTris;
 	boolean drawOuterTri;
-	boolean drawOuterTris;
 	boolean drawLayers;
 
 	public KirkpatrickMeshView( float x1, float y1, float x2, float y2) {
@@ -33,11 +33,10 @@ class KirkpatrickMeshView extends View {
 		this.outerTri.addPoint( x2 - 10, y2 - 10 );
 		this.outerTri.addPoint( x1 + 10, y2 - 10 );
 
-		this.polygonTris = new ArrayList<Polygon>();
-		this.outerTris = new ArrayList<Polygon>();
-		// a little crazy, but designed to hold sublayers.. a better way?
-		this.subLayerTrisAdded = new ArrayList<ArrayList<ArrayList<Polygon>>>();
-		this.subLayerTrisRemoved = new ArrayList<ArrayList<ArrayList<Polygon>>>();
+		this.polygonTris = new ArrayList<Integer>();
+		this.outerTris = new ArrayList<Integer>();
+		this.layerTris = new ArrayList<ArrayList<Integer>>();
+		this.layerVertices = new ArrayList<ArrayList<PolyPoint>>();
 
 		// ratio and position that the polygon will need to adjust to in order
 	    // to fit in this view
@@ -50,7 +49,6 @@ class KirkpatrickMeshView extends View {
 		this.drawPoly = false;
 		this.drawPolyTris = false;
 		this.drawOuterTri = false;
-		this.drawOuterTris = false;
 		this.drawLayers = false;
 	}
 
@@ -62,8 +60,8 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
-		int i;
-		console.log("setting mesh in kpview");
+		int i, j, k;
+		// clear previously set mesh
 		this.outerTris.clear();
 		this.polygonTris.clear();
 		if ( this.mesh != null ) {
@@ -71,71 +69,113 @@ class KirkpatrickMeshView extends View {
 		}
 
 		this.mesh = mesh;
+		this.layerTris.add( new ArrayList<Integer>() );
+		this.layerVertices.add( new ArrayList<PolyPoint>() );
+
+		// set polygon and outer triangle tris
 		ArrayList<Polygon> polys = this.mesh.getVisiblePolygonsByLayer( 0 );
 		for( i = 0; i < polys.size(); i++ ) {
 			if ( polys.get(i).parentId == this.polygon.id ) {
-				this.polygonTris.add(polys.get(i));
-			} else if ( polys.get(i).parentId == this.outerTri.id ) {
-				this.outerTris.add(polys.get(i));
+				this.polygonTris.add(polys.get(i).id);
+			}
+			// add all layer 0 triangles to base layer level
+			this.layerTris.get(0).add( polys.get(i).id );
+		}
+
+		// set per layer tris, split into sublayers
+		ArrayList<MeshLayer> subLayers;
+		ArrayList<Integer> polysAdded;
+		ArrayList<Integer> polysRemoved;
+		ArrayList<Vertex> verticesRemoved;
+		for( i = 1; i < this.mesh.layers.size(); i++ ) {
+			subLayers = mesh.layers.get(i).subLayers;
+			for( j = 0; j < subLayers.size(); j++ ) {
+				// initialize new layer with same polygons as last layer
+				this.layerTris.add(new ArrayList<Integer>(
+							layerTris.get( layerTris.size() - 1 )));
+				this.layerVertices.add(new ArrayList<PolyPoint>());
+				// get list of polygons added and removed from current layer
+				// for KP data structure, should be either a list of added
+				// or removed, but check for and handle both
+				polysAdded = subLayers.get(j).getPolygonsAddedToLayer();
+				polysRemoved = subLayers.get(j).getPolygonsRemovedFromLayer();
+				verticesRemoved = subLayers.get(j).getVerticesRemovedFromLayer();
+				if ( verticesRemoved.size() > 0 ) {
+					// if vertices were highlighted at this sublayer,
+					// add a 2nd layer as a visual placeholder while
+					// identifying the vertices
+					// then, add vertices identified
+					for ( k = 0; k < verticesRemoved.size(); k++ ) {
+						this.layerVertices.get(
+								this.layerVertices.size() - 1).add(
+								new PolyPoint(
+									verticesRemoved.get(k).x,
+									verticesRemoved.get(k).y) );
+					}
+					this.layerTris.add(new ArrayList<Integer>(
+								layerTris.get( layerTris.size() - 1 )));
+					this.layerVertices.add(new ArrayList<PolyPoint>());
+				}
+				for ( k = 0; k < polysRemoved.size(); k++ ) {
+					this.layerTris.get( layerTris.size() - 1 ).remove(
+							this.layerTris.get( layerTris.size() - 1).indexOf(
+								polysRemoved.get(k)) );
+				}
+				for ( k = 0; k < polysAdded.size(); k++ ) {
+					this.layerTris.get( layerTris.size() - 1 ).add(
+							polysAdded.get(k) );
+				}
 			}
 		}
 
-		for( i = 0; i < this.mesh.layers.size(); i++ ) {
-
-		}
 	}
 
 	public boolean nextLevel() {
 		this.layerToDraw++;
-		return this.layerToDraw < this.mesh.layers.size();
+		return this.layerToDraw < this.layerTris.size();
 	}
 
 	public void render( boolean drawHoles ) {
+		int i, j;
 		//super.render(); // draw view background
 		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
-		for (int i = 0; i < messages.size(); i++) {
+		for ( i = 0; i < messages.size(); i++) {
 			if (messages.get(i).k == MSG_TRIANGLE) {
 				selectedShapes.add(messages.get(i).v);
 			}
 		}
 
+		ArrayList<Polygon> polysToDraw = new ArrayList<Polygon>();
+		ArrayList<PolyPoint> verticesToDraw = new ArrayList<PolyPoint>();
 		if ( drawPoly ) {
 			this.polygon.render();
 		}
-		if ( drawOuterTri ) {
+		if ( drawPolyTris ) {
+			polysToDraw = this.mesh.getPolygonsById(this.polygonTris);
+		}
+		if ( drawOuterTri || drawLayers ) {
 			this.outerTri.render();
 		}
-		if ( drawPolyTris ) {
-			for( int i; i < this.polygonTris.size(); i++ ) {
-				if ( selectedShapes.contains(this.polygonTris.get(i).id) ) {
-					this.polygonTris.get(i).selected = true;
-				} else {
-					this.polygonTris.get(i).selected = false;
-				}
-				this.polygonTris.get(i).render(true);
-			}
-		}
-		if ( drawOuterTris ) {
-			for( int i; i < this.outerTris.size(); i++ ) {
-				if ( selectedShapes.contains(this.outerTris.get(i).id) ) {
-					this.outerTris.get(i).selected = true;
-				} else {
-					this.outerTris.get(i).selected = false;
-				}
-				this.outerTris.get(i).render(true);
-			}
-		}
 		if ( drawLayers ) {
-			ArrayList<Polygon> polysToDraw = getLayerTris( this.layerToDraw );
-			// draw requested layer
-			for( int i; i < this.layerTris.get(this.layerToDraw).size(); i++ ) {
-				if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
-					polysToDraw.get(i).selected = true;
-				} else {
-					polysToDraw.get(i).selected = false;
-				}
-				polysToDraw.get(i).render(true);
+			// draw up to requested layer
+			polysToDraw = this.mesh.getPolygonsById(
+					this.layerTris.get(layerToDraw));
+			verticesToDraw = this.layerVertices.get(layerToDraw);
+		}
+
+		// render polygons to draw
+		for( i = 0; i < polysToDraw.size(); i++ ) {
+			if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
+				polysToDraw.get(i).selected = true;
+			} else {
+				polysToDraw.get(i).selected = false;
 			}
+			polysToDraw.get(i).render(false);
+		}
+		// render vertices to draw
+		for( i = 0; i < verticesToDraw.size(); i++ ) {
+			verticesToDraw.selected = true;
+			verticesToDraw.get(i).render();
 		}
 	}
 
