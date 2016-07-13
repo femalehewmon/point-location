@@ -61,7 +61,8 @@ class CompGeoHelper {
 				}
 
 				// Remove triangles surrounding ildv from mesh
-				mesh.removeVertexFromLayer( currLayer, ildv.get(i), faces );
+				mesh.removeVertexFromLayer( currLayer, ildv.get(i) );
+				mesh.removeFacesFromLayer( currLayer, faces );
 
 				if ( convex_hull != null ) {
 					// Add convex hull triangulation to mesh
