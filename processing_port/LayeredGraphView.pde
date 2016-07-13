@@ -1,118 +1,158 @@
 class LayeredGraphView extends View {
 
-	int numLayers;
+	LayeredMesh mesh;
+
+	int layerToDraw;
+	ArrayList<ArrayList<Integer>> layers;
+
 	float ydiv;
-	HashMap<Integer, ArrayList<Polygon>> shapesByLayer;
-	HashMap<Integer, color> colorsByLayer;
-	boolean finalized = false;
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
-		this.shapesByLayer = new HashMap<Integer, ArrayList<Polygon>>();
-		this.colorsByLayer = new HashMap<Integer, color>();
-		setLayerCount( 1 );
+
+		this.mesh = null;
+		this.layers = new ArrayList<ArrayList<Integer>>();
+		this.layerToDraw = 0;
+
+		this.ydiv = this.h;
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
-		setLayerCount( mesh.layers.size() );
-		this.finalized = false;
+		this.layers.clear();
+		if ( this.mesh != null ) {
+			this.mesh.clear();
+		}
+
+		this.mesh = mesh.copy();
+		this.layers = flattenMesh();
 	}
 
-	private void setLayerCount( int numLayers ) {
-		this.numLayers = numLayers;
-		this.ydiv = h / numLayers;
-		for (int i = 0; i < numLayers; i++) {
-			if ( !shapesByLayer.containsKey(i) ) {
-				shapesByLayer[i] = new ArrayList<Polygon>();
-				colorsByLayer[i] = color(random(255), random(255), random(255));
+	private ArrayList<ArrayList<Integer>> flattenMesh() {
+		int i, j;
+		ArrayList<ArrayList<Integer>> flattenedMesh =
+			new ArrayList<ArrayList<Integer>>();
+
+		// set layer count
+		this.ydiv = h / this.mesh.layers.size();
+
+		// create flattened layer list and
+		// move polygons to final positions and scales in layered graph
+		int subPolyCount;
+		ArrayList<Integer> subPolys;
+		Polygon poly;
+		float xdiv;
+		float xpos, ypos;
+		float minRatio;
+		float xratio, yratio;
+		for (i = 0; i < this.mesh.layers.size(); i ++) {
+			// add new layer to flattened mesh as visual buffer
+			// used to maintain same layering structure as kpMeshView
+			flattenedMesh.add( new ArrayList<Integer> );
+
+			// calculate vertical center position for polygons on this layer
+			ypos = h - (ydiv * (i+1)) + (ydiv/2);
+			// calculate horizontal division for all polygons on this layer
+			int polyCount = 0;
+			for( j = 0; j < mesh.layers.get(i).subLayers.size(); j++ ) {
+				polyCount += mesh.layers.get(i).subLayers.get(j).
+					getPolygonsAddedToLayer().size();
+			}
+			xdiv = w / (float)(polyCount);
+
+			subPolyCount = 0;
+			for (j = 0; j < mesh.layers.get(i).subLayers.size(); j++) {
+
+				subPolys =
+					mesh.layers.get(i).subLayers.get(j).getPolygonsAddedToLayer();
+
+				minRatio = -1;
+				for ( k = 0; k < subPolys.size(); k++ ) {
+					// calculate position in layer of graph for this polygon
+					xpos = x1 + (xdiv * subPolyCount) + (xdiv/2.0);
+
+					// setup future partial move on render
+					poly = mesh.polygons.get(subPolys.get(k));
+					poly.animateMove( xpos, ypos, sceneControl.SCENE_DURATION);
+
+					// calculate scaling ratio for this shape
+					xratio = xdiv / poly.getWidth();
+					yratio = ydiv / poly.getHeight();
+					if (xratio < minRatio || minRatio == -1) {
+						minRatio = xratio;
+					}
+					if (yratio < minRatio || minRatio == -1) {
+						minRatio = yratio;
+					}
+
+					mesh.polygons.put( subPolys.get(k), poly );
+					subPolyCount++;
+				}
+
+				// add list of sublayer polygons to graph levels to draw
+				flattenedMesh.add(subPolys);
 			}
 		}
-	}
 
-	public void addShape(int layer, Polygon shape) {
-		shapesByLayer[layer].add( shape.copy() );
-	}
-
-	public void addShapes(int layer, ArrayList<Polygon> shapes) {
-		for ( int i = 0; i < shapes.size(); i++ ) {
-			addShape( layer, shapes.get(i) );
+		Iterator<Integer> iterator = mesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			// setup future partial scale on render
+			Integer polyId = iterator.next();
+			poly = mesh.polygons.get( polyId );
+			poly.animateScale( minRatio, sceneControl.SCENE_DURATION );
+			mesh.polygons.put( polyId, poly );
 		}
+
+		return flattenedMesh;
+	}
+
+	public boolean nextLevel() {
+		this.layerToDraw += 1;
+		return this.layerToDraw < this.layers.size();
 	}
 
 	public void render() {
 		super.render(); // draw view background
+		int i, j, k;
+
 		if (!finalized) {
 			finalizeView();
 		}
 		// get list of selected polygons
 		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
-		for (int i = 0; i < messages.size(); i++) {
+		for ( i = 0; i < messages.size(); i++) {
 			if (messages.get(i).k == MSG_TRIANGLE) {
 				selectedShapes.add(messages.get(i).v);
 			}
 		}
 
-		for (int i = 0; i < numLayers; i++) {
-			// draw layer background
-			//fill(colorsByLayer[i]);
+		// draw layer backgrounds
+		for ( i = 0; i < this.mesh.layers.size(); i++) {
 			fill(color(255));
 			rect(x1, h - (ydiv*(i+1)), w, ydiv);
-			// draw layer shapes
-			for (int j = 0; j < shapesByLayer[i].size(); j++) {
-				if (selectedShapes.contains(shapesByLayer[i].get(j).id)) {
-					shapesByLayer[i].get(j).selected = true;
+		}
+
+		// render polygons
+		for ( i = 0; i < layerToDraw; i++ ) {
+			for ( j = 0; j < this.layers.get(i).size(); j++ ) {
+				if( selectedShapes.contains( this.layers.get(i).get(j) )) {
+					mesh.polygons.get( layers.get(i).get(j) ).selected = true;
 				} else {
-					shapesByLayer[i].get(j).selected = false;
+					mesh.polygons.get( layers.get(i).get(j) ).selected = false;
 				}
-				shapesByLayer[i].get(j).render();
+				mesh.polygons.get( layers.get(i).get(j) ).render();
 			}
 		}
-	}
-
-	public void finalizeView() {
-		int i, j;
-		float xdiv;
-		float xpos, ypos;
-		float minRatio = POSITIVE_INFINITY;
-		float xratio, yratio;
-		// move polygons to final positions in layered graph
-		for (i = 0; i < numLayers; i ++) {
-			ypos = h - (ydiv * (i+1)) + (ydiv/2);
-			xdiv = w / shapesByLayer[i].size();
-			for (j = 0; j < shapesByLayer[i].size(); j++) {
-				xpos = (xdiv * j) + (xdiv/2);
-				shapesByLayer[i].get(j).move(xpos, ypos);
-				// calculate scaling ratio for this shape
-				xratio = xdiv / shapesByLayer[i].get(j).getWidth();
-				yratio = ydiv / shapesByLayer[i].get(j).getHeight();
-				if (xratio < minRatio) {
-					minRatio = xratio;
-				}
-				if (yratio < minRatio) {
-					minRatio = yratio;
-				}
-			}
-		}
-		// scale polygons with overall min scale to maintain relative sizes
-		console.log("Min scale ratio is " + minRatio);
-		for (i = 0; i < numLayers; i ++) {
-			for (j = 0; j < shapesByLayer[i].size(); j++) {
-				shapesByLayer[i].get(j).scale(minRatio);
-			}
-		}
-
-		finalized = true;
 	}
 
 	public void mouseUpdate() {
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i, j;
-		for (i = 0; i < numLayers; i++) {
-			for (j = 0; j < shapesByLayer[i].size(); j++) {
-				if (color(shapesByLayer[i].get(j).id) == c) {
+		for (i = 0; i < this.layers.size(); i++) {
+			for (j = 0; j < this.layers.get(i).size(); j++) {
+				if (color( this.layers.get(i).get(j) ) == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
-					msg.v = shapesByLayer[i].get(j).id;
+					msg.v = this.layers.get(i).get(j);
 					messages.add(msg);
 				}
 			}
