@@ -53,7 +53,7 @@ void draw() {
 	switch( sceneControl.currScene ) {
 		case sceneControl.CREATE_POLYGON:
 			if ( DEMO ) {
-				pcreate.demoRect();
+				pcreate.demo();
 			}
 			if ( pcreate.finalized ) {
 				// set polygon to calculate movement required to center in view
@@ -75,13 +75,13 @@ void draw() {
 			if ( !sceneControl.sceneReady ) {
 				Mesh kpMesh = compGeoHelper.createKirkpatrickDataStructure(
 						pcreate.polygon, kpView.outerTri);
-				//lgraph.setMesh( kpMesh );
+				lgraph.setMesh( kpMesh );
 				kpView.setMesh( kpMesh );
 
 				pcreate.visible = false;
 				kpView.visible = true;
-				//lgraph.visible = true;
-				//lgraph.addShapes(0, kpView.getPolygonTris());
+				lgraph.visible = true;
+				lgraph.nextLevel();
 
 				kpView.drawPoly = false;
 				kpView.drawPolyTris = true;
@@ -90,7 +90,6 @@ void draw() {
 
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
-				//lgraph.addShapes(0, kpView.getOuterTris());
 			}
 			break;
 		case sceneControl.SURROUND_POLY_WITH_OUTER_TRI:
@@ -100,6 +99,8 @@ void draw() {
 				kpView.drawPoly = false;
 				kpView.drawPolyTris = false;
 				kpView.drawOuterTri = true;
+				kpView.outerTri.cFill = color(200, 200, 200);
+				lgraph.nextLevel();
 			}
 			break;
 		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
@@ -108,7 +109,7 @@ void draw() {
 				if ( kpView.nextLevel() ) {
 					// reset scene for next level
 					sceneControl.reset();
-					//lgraph.addShapes(kpView.layerToDraw, kpView.getLayerTris());
+					lgraph.nextLevel();
 				} else {
 					// if no levels remain, go to next scene
 					kpView.drawLayers = false;
@@ -123,11 +124,11 @@ void draw() {
 	if (pcreate.visible) {
 		pcreate.render();
 	}
-	if (lgraph.visible) {
-		lgraph.render();
-	}
 	if (kpView.visible) {
 		kpView.render();
+	}
+	if (lgraph.visible) {
+		lgraph.render();
 	}
 
 	messages.clear();

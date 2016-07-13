@@ -47,7 +47,9 @@ class LayeredGraphView extends View {
 		for (i = 0; i < this.mesh.layers.size(); i ++) {
 			// add new layer to flattened mesh as visual buffer
 			// used to maintain same layering structure as kpMeshView
-			flattenedMesh.add( new ArrayList<Integer> );
+			if ( i > 0 ) {
+				flattenedMesh.add( new ArrayList<Integer> );
+			}
 
 			// calculate vertical center position for polygons on this layer
 			ypos = h - (ydiv * (i+1)) + (ydiv/2);
