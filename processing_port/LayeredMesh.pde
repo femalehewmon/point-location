@@ -12,6 +12,19 @@ class LayeredMesh extends Mesh {
 		this.layers = new ArrayList<MeshLayer>();
 	}
 
+	public LayeredMesh copy() {
+		LayeredMesh copy = new LayeredMesh();
+		Iterator<Integer> iterator = polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			copy.polygons.put( polyId, this.polygons.get(polyId).copy() );
+		}
+		for( int i = 0; i < layers.size(); i++ ) {
+			copy.layers.add( layers.get(i).copy() );
+		}
+		return copy;
+	}
+
 	public int createNewLayer() {
 		this.layers.add( new MeshLayer() );
 		return this.layers.size() - 1;
@@ -44,15 +57,20 @@ class LayeredMesh extends Mesh {
 		addTrianglesToMesh( tris );
 	}
 
-	public void removeVertexFromLayer(
-			int layer, Vertex vertex, ArrayList<Face> faces ) {
+	public void removeVertexFromLayer( int layer, Vertex vertex ) {
+		ArrayList<Integer> polyIds = new ArrayList<Integer>();
+		// remove vertex and associated faces from current layer
+		this.layers.get(layer).removeVertexFromSubLayer( vertex );
+	}
+
+	public void removeFacesFromLayer( int layer, ArrayList<Face> faces ) {
 		super.removeFacesFromMesh( faces );
 		ArrayList<Integer> polyIds = new ArrayList<Integer>();
 		for ( int i = 0; i < faces.size(); i++ ) {
 			polyIds.add( faces.get(i).id );
 		}
 		// remove vertex and associated faces from current layer
-		this.layers.get(layer).removeVertexFromSubLayer( vertex, polyIds );
+		this.layers.get(layer).removePolygonsFromSubLayer( polyIds );
 	}
 
 	public ArrayList<Integer> getVisiblePolygonIdsByLayer( int layer ) {
@@ -70,7 +88,7 @@ class LayeredMesh extends Mesh {
 				}
 				removedPolys = this.layers.get(i).getPolygonsRemovedFromLayer();
 				for ( j = 0; j < removedPolys.size(); j++ ) {
-					polyIds.remove( polyIds.getIndexOf(removedPolys.get(j)) );
+					polyIds.remove( polyIds.indexOf(removedPolys.get(j)) );
 				}
 			}
 		}
@@ -137,11 +155,6 @@ class LayeredMesh extends Mesh {
 
 class MeshLayer {
 
-	// Mutually indexed, when a vertex is removed the same index in
-	// polygonsRemoved contains a list of associated polygons removed
-	// with it. Additionally, polygonsAdded contains the indexed polygons
-	// added as a direct result of filling in for the removed polygons
-	// --- written for KP data structure, could be made more general?
 	ArrayList<Vertex> verticesRemoved;
 	ArrayList<Integer> polygonsRemoved;
 	ArrayList<Integer> polygonsAdded;
@@ -153,6 +166,17 @@ class MeshLayer {
 		this.polygonsRemoved = new ArrayList<Integer>();
 		this.polygonsAdded = new ArrayList<Integer>();
 		this.subLayers = new ArrayList<MeshLayer>();
+	}
+
+	public MeshLayer copy() {
+		MeshLayer copy = new MeshLayer();
+		copy.verticesRemoved = new ArrayList<Vertex>( verticesRemoved );
+		copy.polygonsRemoved = new ArrayList<Integer>( polygonsRemoved );
+		copy.polygonsAdded = new ArrayList<Integer>( polygonsAdded );
+		for( int i = 0; i < subLayers.size(); i++ ) {
+			copy.subLayers.add( subLayers.get(i).copy() );
+		}
+		return copy;
 	}
 
 	public ArrayList<Integer> getPolygonsAddedToLayer() {
@@ -202,32 +226,37 @@ class MeshLayer {
 		}
 	}
 
-	public void removeVertexFromLayer(
-			Vertex vertex, ArrayList<Integer> polyIds ) {
-		verticesRemoved.add( vertex );
-		for( int i = 0; i < polyIds.size(); i++ ) {
-			polygonsRemoved.add( polyIds.get(i) );
-		}
-	}
-
 	public void addPolygonsToSubLayer( ArrayList<Integer> polyIds ) {
 		MeshLayer subLayer = new MeshLayer();
 		subLayer.addPolygonsToLayer( polyIds );
 		this.subLayers.add( subLayer );
 	}
 
-	public void removeVertexFromSubLayer(
-			Vertex vertex, ArrayList<Integer> polyIds ) {
+	public void removePolygonsFromLayer( ArrayList<Integer> polyIds ) {
+		for( int i = 0; i < polyIds.size(); i++ ) {
+			polygonsRemoved.add( polyIds.get(i) );
+		}
+	}
+
+	public void removePolygonsFromSubLayer( ArrayList<Integer> polyIds ) {
 		MeshLayer subLayer = new MeshLayer();
-		subLayer.removeVertexFromLayer( vertex, polyIds );
+		subLayer.removePolygonsFromLayer( polyIds );
 		this.subLayers.add( subLayer );
 	}
 
-	public void removeVertexFromLastSubLayer(
-			Vertex vertex, ArrayList<Integer> polyIds ) {
-		this.subLayers.get( this.subLayers.size() - 1 ).
-			removeVertexFromLayer( vertex, polyIds );
+	public void removeVertexFromLayer( Vertex vertex ) {
+		verticesRemoved.add( vertex );
 	}
 
+	public void removeVertexFromSubLayer( Vertex vertex ) {
+		MeshLayer subLayer = new MeshLayer();
+		subLayer.removeVertexFromLayer( vertex );
+		this.subLayers.add( subLayer );
+	}
+
+	public void removeVertexFromLastSubLayer( Vertex vertex ) {
+		this.subLayers.get( this.subLayers.size() - 1 ).
+			removeVertexFromLayer( vertex );
+	}
 
 }
