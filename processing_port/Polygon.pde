@@ -9,10 +9,21 @@ class Polygon {
 	color cStroke;
 	color cHighlight;
 	boolean selected;
+	boolean finalized;
 
 	PolyPoint centerPoint;
 
 	ArrayList<Polygon> holes;
+
+	// used for animation
+	PolyPoint moveToAnimate;
+	boolean moveFinished;
+	int moveStep;
+	int moveDuration;
+	float scaleToAnimate;
+	boolean scaleFinished;
+	int scaleStep;
+	int scaleDuration;
 
 	public Polygon(int id) {
 		this.id = id;
@@ -24,6 +35,12 @@ class Polygon {
 		this.cHighlight = color(0, 0, 255);
 		this.selected = false;
 		this.centerPoint = null;
+
+		this.finalized = false;
+		this.moveFinished = true;
+		this.scaleFinished = true;
+		this.newPosition = null;
+		this.newScale = 1.0;
 
 		this.holes = new ArrayList<Polygon>();
 	}
@@ -109,6 +126,7 @@ class Polygon {
 
 	public void render( boolean renderVertices ) {
 		if ( points.size() > 0 ) {
+			update();
 
 			// First, draw polygon
 			beginShape();
@@ -151,7 +169,28 @@ class Polygon {
 		render( false );
 	}
 
-	public void move( float x, float y, float percentToMove ) {
+	private void update() {
+		if ( !moveFinished ) {
+			move( this.moveToAnimate.x, this.moveToAnimate.y,
+					sceneControl.sceneRelativePercentComplete);
+			moveStep += 1;
+			moveFinished = (moveStep >= moveDuration);
+		}
+		if ( !scaleFinished ) {
+			scale( this.scaleToAnimate, sceneControl.scenePercentageStep);
+			scaleStep += 1;
+			scaleFinished = (scaleStep >= scaleDuration);
+		}
+	}
+
+	public void animateMove( float x, float y, int duration ) {
+		this.moveToAnimate = new PolyPoint(x, y);
+		this.moveFinished = false;
+		this.moveStep = 0;
+		this.moveDuration = duration;
+	}
+
+	public boolean move( float x, float y, float percentToMove ) {
 		// percentToMove can be used for controlled animation
 		PolyPoint currCenter = getCenter();
 		PolyPoint newCenter = new PolyPoint(
@@ -171,6 +210,13 @@ class Polygon {
 
 	public void move( float x, float y ) {
 		move( x, y, 1.0 ); // move instantly
+	}
+
+	public void animateScale( float scaleRatio, int duration ) {
+		this.scaleToAnimate = scaleRatio;
+		this.scaleFinished = false;
+		this.scaleStep = 0;
+		this.scaleDuration = duration;
 	}
 
 	public void scale( float scaleRatio, float percentToScale ) {
