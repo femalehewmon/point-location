@@ -30,7 +30,7 @@ class Polygon {
 		this.parentId = -1;
 
 		this.points = new ArrayList<PolyPoint>();
-		this.cFill = color(random(255), random(255), random(255));
+		this.cFill = color(255);//color(random(255), random(255), random(255));
 		this.cStroke = color(0);
 		this.cHighlight = color(0, 0, 255);
 		this.selected = false;
@@ -60,7 +60,7 @@ class Polygon {
 		copy.cStroke = this.cStroke;
 		copy.cHighlight = this.cHighlight;
 		copy.selected = this.selected;
-		copy.centerPoint = new PolyPoint(this.getCenterPoint);
+		copy.centerPoint = null;
 
 		copy.holes = new ArrayList<Polygon>();
 		for ( int i = 0; i < this.holes.size(); i++ ) {
@@ -172,12 +172,12 @@ class Polygon {
 	private void update() {
 		if ( !moveFinished ) {
 			move( this.moveToAnimate.x, this.moveToAnimate.y,
-					sceneControl.sceneRelativePercentComplete);
+					1 / (moveDuration - moveStep) );
 			moveStep += 1;
 			moveFinished = (moveStep >= moveDuration);
 		}
 		if ( !scaleFinished ) {
-			scale( this.scaleToAnimate, sceneControl.scenePercentageStep);
+			scale( this.scaleToAnimate, 1.0 / (float)scaleDuration);
 			scaleStep += 1;
 			scaleFinished = (scaleStep >= scaleDuration);
 		}
@@ -219,6 +219,26 @@ class Polygon {
 		this.scaleDuration = duration;
 	}
 
+	public void resizeToHeight( float height ) {
+		if ( height < this.getHeight() ) {
+			// scale down
+			scale( height / this.getHeight() , 1.0);
+		} else if ( height > this.getHeight() ) {
+			// scale up
+			scale( this.getHeight() / height , 1.0);
+		}
+	}
+
+	public void resizeToWidth( float width ) {
+		if ( width < this.getWidth() ) {
+			// scale down
+			scale( width / this.getWidth() , 1.0);
+		} else if ( width > this.getWidth() ) {
+			// scale up
+			scale( this.getWidth() / width , 1.0);
+		}
+	}
+
 	public void scale( float scaleRatio, float percentToScale ) {
 		scaleRatio = 1.0 - ((1.0 - scaleRatio) * percentToScale);
 		PolyPoint center = getCenter();
@@ -241,7 +261,7 @@ class Polygon {
 	public float getWidth() {
 		float xMin = POSITIVE_INFINITY;
 		float xMax = NEGATIVE_INFINITY;
-		for (i = 0; i < points.size() - 1; i++) {
+		for (i = 0; i < points.size(); i++) {
 			if (points.get(i).x < xMin) {
 				xMin = points.get(i).x;
 			}
@@ -255,7 +275,7 @@ class Polygon {
 	public float getHeight() {
 		float yMin = POSITIVE_INFINITY;
 		float yMax = NEGATIVE_INFINITY;
-		for (i = 0; i < points.size() - 1; i++) {
+		for (i = 0; i < points.size(); i++) {
 			if (points.get(i).y < yMin) {
 				yMin = points.get(i).y;
 			}
