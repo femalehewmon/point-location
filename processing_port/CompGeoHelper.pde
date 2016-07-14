@@ -5,6 +5,9 @@ class CompGeoHelper {
 	public LayeredMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
 		console.log("Creating KP Data Structure");
+		int i, j;
+		ArrayList<color> layerColors = new ArrayList<color>();
+		layerColors.add(color(random(255), random(255), random(255)));
 
 		// A LayeredMesh will serve as Kirkpatrick's Data Structure
 		LayeredMesh mesh = new LayeredMesh( );
@@ -16,47 +19,28 @@ class CompGeoHelper {
 
 		// triangulate the outer triangle with a hole in the middle for
 		// the original polygon
-		outerTri.addHole( poly );
 		console.log("triangulate and add outer tri to kp");
+		outerTri.addHole( poly );
+		outerTri.cFill = layerColors.get( layerColors.size() - 1 );
 		mesh.addTrianglesToLayer( currLayer, outerTri.triangulate() );
-
-		/*
-		console.log("!!!!!!!!STARTING STATE OF MESH!!!!!!!!!!");
-		console.log(mesh.vertices.size() + " vertices");
-		for( int i = 0; i < mesh.vertices.size(); i++ ){
-			console.log(mesh.vertices.get(i));
-		}
-		console.log(mesh.edges.size() + " edges");
-		for( int i = 0; i < mesh.edges.size(); i++ ){
-			console.log(mesh.edges.get(i));
-		}
-		console.log(mesh.faces.size() + " faces");
-		for( int i = 0; i < mesh.faces.size(); i++ ){
-			console.log(mesh.faces.get(i));
-		}
-		console.log(mesh.outerEdges.size() + " outer edges");
-		for( int i = 0; i < mesh.outerEdges.size(); i++ ) {
-			console.log(mesh.outerEdges.get(i));
-		}
-		*/
 
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
 		do {
 			console.log("Found set of " + ildv.size() + " ILDV");
+			layerColors.add(color(random(255), random(255), random(255)));
 			int currLayer = mesh.createNewLayer();
 			for ( int i = 0; i < ildv.size(); i++ ) {
 				console.log("Processing ILDV: " + ildv.get(i).description);
 				// Get faces (triangles) surrounding ildv
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
 
-				// Get the convex hull of the triangles surrounding the ildv
-				//Polygon convex_hull =
-				//	compGeoHelper.getConvexHull( mesh.verticesOfFaces(faces) ); 
+				// Get the outer (not-convex) hull of the surrounding triangles
 				ArrayList<Vertex> surrounding_vertices =
 					mesh.verticesSurroundingVertex( ildv.get(i) );
-				Polygon convex_hull = createPoly();
+				Polygon hull = createPoly();
+				hull.cFill = layerColors.get(mesh.layers.size() - 1);
 				for( int j = 0; j < surrounding_vertices.size(); j++ ) {
-					convex_hull.addPoint( surrounding_vertices.get(j).x,
+					hull.addPoint( surrounding_vertices.get(j).x,
 							surrounding_vertices.get(j).y );
 				}
 
@@ -64,10 +48,10 @@ class CompGeoHelper {
 				mesh.removeVertexFromLayer( currLayer, ildv.get(i) );
 				mesh.removeFacesFromLayer( currLayer, faces );
 
-				if ( convex_hull != null ) {
+				if ( hull != null ) {
 					// Add convex hull triangulation to mesh
 					mesh.addTrianglesToLayer( currLayer,
-							convex_hull.triangulate() );
+							hull.triangulate() );
 				} else {
 					console.log("Convex Hull was null");
 				}
@@ -88,6 +72,8 @@ class CompGeoHelper {
 			console.log("CONGRATULATIONS: mesh has only 3 vertices " +
 					"and 1 face!");
 		}
+
+		mesh.setLayerColors( layerColors );
 
 		return mesh;
 	}

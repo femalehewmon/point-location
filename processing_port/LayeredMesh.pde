@@ -1,6 +1,7 @@
 class LayeredMesh extends Mesh {
 
 	ArrayList<MeshLayer> layers;
+	ArrayList<color> layerColors;
 	HashMap<Integer, Polygon> polygons;
 
 	// Organizes faces into layers by id as they are added and removed,
@@ -10,6 +11,7 @@ class LayeredMesh extends Mesh {
 		super();
 		this.polygons = new HashMap<Integer, Polygon>();
 		this.layers = new ArrayList<MeshLayer>();
+		this.layerColors = new ArrayList<color>();
 	}
 
 	public LayeredMesh copy() {
@@ -22,12 +24,17 @@ class LayeredMesh extends Mesh {
 		for( int i = 0; i < layers.size(); i++ ) {
 			copy.layers.add( layers.get(i).copy() );
 		}
+		copy.layerColors = new ArrayList<color>(this.layerColors);
 		return copy;
 	}
 
 	public int createNewLayer() {
 		this.layers.add( new MeshLayer() );
 		return this.layers.size() - 1;
+	}
+
+	public void setLayerColors( ArrayList<color> layerColors ) {
+		this.layerColors = layerColors;
 	}
 
 	public void addTrianglesToNextLayer( ArrayList<Polygon> tris ) {
