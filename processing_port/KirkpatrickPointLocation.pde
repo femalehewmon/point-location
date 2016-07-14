@@ -26,7 +26,7 @@ POSITIVE_INFINITY = 9999999;
 NEGATIVE_INFINITY = -9999999;
 
 void setup() {
-	//size($(window).width(), $(window).height()); // get browser window size
+	//size($(window).width() - 100, $(window).height() - 100); // get browser window size
 	size( 1024, 768 ); // get browser window size
 
 	sceneControl = new SceneController();
@@ -39,8 +39,6 @@ void setup() {
 	pcreate = new PolygonCreationView(0, 0, width, height);
 	kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
 	lgraph = new LayeredGraphView(width/2.0, 0, width, height);
-	//kpView = new KirkpatrickMeshView(width/2.0, 0, width, height);
-	//lgraph = new LayeredGraphView(0, 0, width/2.0, height);
 	pcreate.visible = true;
 	lgraph.visible = false;
 	kpView.visible = false;
@@ -62,11 +60,13 @@ void draw() {
 			}
 			break;
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
-			pcreate.polygon.move(
-					kpView.xPosToMovePoly, kpView.yPosToMovePoly,
-					sceneControl.sceneRelativePercentComplete);
-			pcreate.polygon.scale( kpView.ratioToScalePoly,
-					sceneControl.scenePercentageStep );
+			if ( !sceneControl.sceneReady ) {
+				pcreate.polygon.animateMove(
+						kpView.xPosToMovePoly, kpView.yPosToMovePoly,
+						sceneControl.SCENE_DURATION );
+				pcreate.polygon.animateScale( kpView.ratioToScalePoly,
+						sceneControl.SCENE_DURATION );
+			}
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
 			}
@@ -112,7 +112,6 @@ void draw() {
 					lgraph.nextLevel();
 				} else {
 					// if no levels remain, go to next scene
-					kpView.drawLayers = false;
 					sceneControl.nextScene();
 				}
 			}
