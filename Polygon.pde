@@ -32,7 +32,7 @@ class Polygon {
 		this.childId = -1;
 
 		this.points = new ArrayList<PolyPoint>();
-		this.cFill = color(255);
+		this.cFill = color(random(255), random(255), random(255));
 		this.cStroke = color(0);
 		this.cHighlight = color(255);//color(0, 0, 255);
 		this.selected = false;
@@ -187,7 +187,8 @@ class Polygon {
 
 			// draw shape onto pickbuffer
 			pickbuffer.beginShape();
-			pickbuffer.stroke(color(this.id));
+			//pickbuffer.stroke(color(this.id));
+			pickbuffer.noStroke();
 			pickbuffer.fill(color(this.id));
 			for (int i = 0; i < points.size(); i++) {
 				pickbuffer.vertex(points.get(i).x, points.get(i).y);
