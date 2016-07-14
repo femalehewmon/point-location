@@ -73,13 +73,15 @@ class KirkpatrickMeshView extends View {
 		this.layerVertices.add( new ArrayList<PolyPoint>() );
 
 		// set polygon and outer triangle tris
-		ArrayList<Polygon> polys = this.mesh.getVisiblePolygonsByLayer( 0 );
-		for( i = 0; i < polys.size(); i++ ) {
-			if ( polys.get(i).parentId == this.polygon.id ) {
-				this.polygonTris.add(polys.get(i).id);
+		Iterator<Integer> iterator = mesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if ( mesh.polygons.get(polyId).parentId == polygon.id ) {
+				this.polygonTris.add(polyId);
+				this.layerTris.get(0).add( polyId );
+			} else if ( mesh.polygons.get(polyId).parentId == outerTri.id ) {
+				this.layerTris.get(0).add( polyId );
 			}
-			// add all layer 0 triangles to base layer level
-			this.layerTris.get(0).add( polys.get(i).id );
 		}
 
 		flattenMesh();
@@ -185,13 +187,20 @@ class KirkpatrickMeshView extends View {
 
 		// render polygons to draw
 		for( i = 0; i < polysToDraw.size(); i++ ) {
-			if ( selectedShapes.contains(polysToDraw.get(i).id) ) {
-				polysToDraw.get(i).selected = true;
+			if ( this.layerToDraw < layerTris.size() - 2 ) {
+				if ( this.polygonTris.contains(polysToDraw.get(i).id) ||
+				  (!this.layerTris.get(this.layerToDraw + 1).contains(
+					 polysToDraw.get(i).id) )) {
+					polysToDraw.get(i).selected = false;
+				} else {
+					polysToDraw.get(i).selected = true;
+				}
 			} else {
 				polysToDraw.get(i).selected = false;
 			}
 			polysToDraw.get(i).render(false);
 		}
+
 		// render vertices to draw
 		for( i = 0; i < verticesToDraw.size(); i++ ) {
 			verticesToDraw.get(i).render();
