@@ -9,6 +9,7 @@ class Polygon {
 	color cFill;
 	color cStroke;
 	color cHighlight;
+	float cAlpha;
 	boolean selected;
 	boolean finalized;
 
@@ -35,6 +36,7 @@ class Polygon {
 		this.cFill = color(random(255), random(255), random(255));
 		this.cStroke = color(0);
 		this.cHighlight = color(255);//color(0, 0, 255);
+		this.cAlpha = 255;
 		this.selected = false;
 		this.centerPoint = null;
 
@@ -62,6 +64,7 @@ class Polygon {
 		copy.cFill = this.cFill;
 		copy.cStroke = this.cStroke;
 		copy.cHighlight = this.cHighlight;
+		copy.cAlpha = this.cAlpha;
 		copy.selected = this.selected;
 		copy.centerPoint = null;
 
