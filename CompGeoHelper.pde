@@ -29,7 +29,7 @@ class CompGeoHelper {
 			console.log("Found set of " + ildv.size() + " ILDV");
 			layerColors.add(color(random(255), random(255), random(255)));
 			int currLayer = mesh.createNewLayer();
-			for ( int i = 0; i < ildv.size(); i++ ) {
+			for ( i = 0; i < ildv.size(); i++ ) {
 				console.log("Processing ILDV: " + ildv.get(i).description);
 				// Get faces (triangles) surrounding ildv
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
@@ -38,8 +38,14 @@ class CompGeoHelper {
 				ArrayList<Vertex> surrounding_vertices =
 					mesh.verticesSurroundingVertex( ildv.get(i) );
 				Polygon hull = createPoly();
+				// set replacement hull as child id so that the layers
+				// can be associated later during point location
+				for ( j = 0; j < faces.size(); j++ ) {
+					console.log("hull id is " + hull.id);
+					mesh.polygons.get(faces.get(j).id).childId = hull.id;
+				}
 				hull.cFill = layerColors.get(mesh.layers.size() - 1);
-				for( int j = 0; j < surrounding_vertices.size(); j++ ) {
+				for( j = 0; j < surrounding_vertices.size(); j++ ) {
 					hull.addPoint( surrounding_vertices.get(j).x,
 							surrounding_vertices.get(j).y );
 				}

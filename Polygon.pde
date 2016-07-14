@@ -3,6 +3,7 @@ class Polygon {
 
 	int id;
 	int parentId;
+	int childId;
 
 	ArrayList<PolyPoint> points;
 	color cFill;
@@ -28,6 +29,7 @@ class Polygon {
 	public Polygon(int id) {
 		this.id = id;
 		this.parentId = -1;
+		this.childId = -1;
 
 		this.points = new ArrayList<PolyPoint>();
 		this.cFill = color(255);
@@ -51,6 +53,7 @@ class Polygon {
 		Polygon copy = new Polygon(this.id);
 		copy.id = this.id;
 		copy.parentId = this.parentId;
+		copy.childId = this.childId;
 		copy.points = new ArrayList<PolyPoint>();
 		for ( int i = 0; i < this.points.size(); i++ ) {
 			copy.points.add(this.points.get(i).copy());
