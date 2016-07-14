@@ -6,6 +6,7 @@ class PolygonCreationView extends View {
 	public PolygonCreationView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
 		this.polygon = createPoly();
+		this.polygon.cFill = color(random(255), random(255), random(255));
 		this.cFill = color(255, 255, 255);
 		this.finalized = false;
 	}
