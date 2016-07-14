@@ -1,6 +1,7 @@
 class PointLocationView extends View {
 
-	LayeredMesh mesh;
+	LayeredMesh kpMesh;
+	LayeredMesh lgraphMesh;
 	ArrayList<ArrayList<Integer>> layers;
 	int layerToDraw;
 
@@ -8,31 +9,44 @@ class PointLocationView extends View {
 
 	public PointLocationView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
+
+		this.kpMesh = null;
+		this.lgraphMesh = null;
+
 		this.layers = new ArrayList<ArrayList<Integer>>();
-		this.mesh = null;
 		this.layerToDraw = 0;
+
 		this.pointSelected = null;
 	}
 
-	public void setMesh( LayeredMesh mesh ) {
-		if ( this.mesh != null ) {
-			this.mesh.clear();
+	public void setMesh( LayeredMesh kpMesh, LayeredMesh lgraphMesh ) {
+		if ( this.kpMesh != null ) {
+			this.kpMesh.clear();
 		}
-		this.mesh = mesh.copy();
+		if ( this.lgraphMesh != null ) {
+			this.lgraphMesh.clear();
+		}
+
+		this.kpMesh = kpMesh.copy();
+		this.lgraphMesh = lgraphMesh.copy();
+
 		resetSearch();
 	}
 
 	private void resetSearch() {
 		this.layerToDraw = 0;
 		this.layers.clear();
-		this.layers.add( mesh.getVisiblePolygonIdsByLayer(
-					mesh.layers.size() - 1) );
+		this.layers.add( kpMesh.getVisiblePolygonIdsByLayer(
+					kpMesh.layers.size() - 1) );
+		kpMesh.polygons.get(this.layers.get(0).get(0)).selected = false;
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
-		if(!mesh.polygons.get(this.layers.get(0).get(0)).containsPoint(x, y)){
+		if(!kpMesh.polygons.get(this.layers.get(0).get(0)).containsPoint(x, y)){
 			// only evaluate points placed inside the outer triangle
 			return false;
+		} else {
+			kpMesh.polygons.get(this.layers.get(0).get(0)).selected = true;
 		}
 
 		this.pointSelected = new PolyPoint(x , y);
@@ -42,7 +56,7 @@ class PointLocationView extends View {
 
 		// generate array of visible polygons per search layer
 		ArrayList<Integer> visiblePolys =
-			mesh.getVisiblePolygonIdsByLayer(mesh.layers.size() - 1);
+			kpMesh.getVisiblePolygonIdsByLayer(kpMesh.layers.size() - 1);
 
 		int i;
 		Polygon visiblePoly;
@@ -50,18 +64,18 @@ class PointLocationView extends View {
 			this.layers.add( visiblePolys );
 			ArrayList<Integer> nextLayer = new ArrayList<Integer>();
 			for ( i = 0; i < visiblePolys.size(); i++ ) {
-				visiblePoly = mesh.polygons.get(visiblePolys.get(i));
+				visiblePoly = kpMesh.polygons.get(visiblePolys.get(i));
 				if ( visiblePoly.containsPoint( x, y ) ){
 					Iterator<Integer> iterator =
-						mesh.polygons.keySet().iterator();
+						kpMesh.polygons.keySet().iterator();
 					while( iterator.hasNext() ) {
 						Integer polyId = iterator.next();
-						if ( mesh.polygons.get(polyId).childId ==
-								visiblePoly.parentId) {
-							if(mesh.polygons.get(polyId).containsPoint(x, y)){
-								mesh.polygons.get(polyId).selected = true;
+						if ( kpMesh.polygons.get(polyId).childId ==
+								visiblePoly.parentId ) {
+							if(kpMesh.polygons.get(polyId).containsPoint(x, y)){
+								kpMesh.polygons.get(polyId).selected = true;
 							} else {
-								mesh.polygons.get(polyId).selected = false;
+								kpMesh.polygons.get(polyId).selected = false;
 							}
 							nextLayer.add( polyId );
 						}
@@ -85,23 +99,31 @@ class PointLocationView extends View {
 	public void render() {
 		int i, j;
 
-		// highlight all selected layers to current point
+		ArrayList<Integer> selectedPolys = new ArrayList<Integer>();
 		for ( i = 0; i <= layerToDraw; i++ ) {
 			for ( j = 0; j < this.layers.get(i).size(); j++ ) {
-				if( this.mesh.polygons.get(
+				if( this.kpMesh.polygons.get(
 						this.layers.get(i).get(j)).selected) {
-					Message msg = new Message();
-					msg.k = MSG_TRIANGLE;
-					msg.v = this.layers.get(i).get(j);
-					messages.add(msg);
+					selectedPolys.add(this.layers.get(i).get(j));
 				}
-
 			}
+		}
+
+		// draw all polygons in layered graph mesh
+		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if ( selectedPolys.contains(polyId) ) {
+				lgraphMesh.polygons.get(polyId).selected = true;
+			} else {
+				lgraphMesh.polygons.get(polyId).selected = false;
+			}
+			lgraphMesh.polygons.get(polyId).render();
 		}
 
 		// draw polygons in current layer
 		for ( j = 0; j < this.layers.get(layerToDraw).size(); j++ ) {
-			Polygon poly = this.mesh.polygons.get(
+			Polygon poly = this.kpMesh.polygons.get(
 					this.layers.get(layerToDraw).get(j)).render();
 		}
 
