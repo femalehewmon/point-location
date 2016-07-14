@@ -9,6 +9,7 @@ class LayeredGraphView extends View {
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
+		this.cFill = color(255);
 
 		this.mesh = null;
 		this.layers = new ArrayList<ArrayList<Integer>>();
@@ -42,7 +43,7 @@ class LayeredGraphView extends View {
 		Polygon poly;
 		float xdiv;
 		float xpos, ypos;
-		float minRatio;
+		float minRatio = -1;
 		float xratio, yratio;
 		for (i = 0; i < this.mesh.layers.size(); i ++) {
 			// add new layer to flattened mesh as visual buffer
@@ -64,44 +65,40 @@ class LayeredGraphView extends View {
 			subPolyCount = 0;
 			for (j = 0; j < mesh.layers.get(i).subLayers.size(); j++) {
 
+				minRatio = -1;
 				subPolys =
 					mesh.layers.get(i).subLayers.get(j).getPolygonsAddedToLayer();
-
-				minRatio = -1;
 				for ( k = 0; k < subPolys.size(); k++ ) {
 					// calculate position in layer of graph for this polygon
 					xpos = x1 + (xdiv * subPolyCount) + (xdiv/2.0);
 
 					// setup future partial move on render
 					poly = mesh.polygons.get(subPolys.get(k));
-					poly.animateMove( xpos, ypos, sceneControl.SCENE_DURATION);
+					//poly.animateMove( xpos, ypos, sceneControl.SCENE_DURATION);
+					poly.move( xpos, ypos );
 
-					// calculate scaling ratio for this shape
-					xratio = xdiv / poly.getWidth();
-					yratio = ydiv / poly.getHeight();
-					if (xratio < minRatio || minRatio == -1) {
-						minRatio = xratio;
+					if ( minRatio == -1 || minRatio > ydiv / poly.getHeight()) {
+						minRatio = (ydiv) / poly.getHeight();
 					}
-					if (yratio < minRatio || minRatio == -1) {
-						minRatio = yratio;
+					if ( minRatio == -1 || minRatio > xdiv / poly.getWidth() ) {
+						minRatio = (xdiv) / poly.getWidth();
 					}
 
 					mesh.polygons.put( subPolys.get(k), poly );
 					subPolyCount++;
 				}
 
+				// scale polygons with minRatio from layer
+				for ( k = 0; k < subPolys.size(); k++ ) {
+					poly = mesh.polygons.get(subPolys.get(k));
+					poly.scale( minRatio );
+					//poly.animateScale( minRatio, sceneControl.SCENE_DURATION );
+					mesh.polygons.put( subPolys.get(k), poly );
+				}
+
 				// add list of sublayer polygons to graph levels to draw
 				flattenedMesh.add(subPolys);
 			}
-		}
-
-		Iterator<Integer> iterator = mesh.polygons.keySet().iterator();
-		while( iterator.hasNext() ) {
-			// setup future partial scale on render
-			Integer polyId = iterator.next();
-			poly = mesh.polygons.get( polyId );
-			poly.animateScale( minRatio, sceneControl.SCENE_DURATION );
-			mesh.polygons.put( polyId, poly );
 		}
 
 		return flattenedMesh;
@@ -129,7 +126,8 @@ class LayeredGraphView extends View {
 
 		// draw layer backgrounds
 		for ( i = 0; i < this.mesh.layers.size(); i++) {
-			fill(color(255));
+			noStroke();
+			fill(mesh.layerColors.get(i), 100);
 			rect(x1, h - (ydiv*(i+1)), w, ydiv);
 		}
 
