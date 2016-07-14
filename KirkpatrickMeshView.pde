@@ -27,7 +27,7 @@ class KirkpatrickMeshView extends View {
 		this.polygon = null;
 		// create outer triangle
 		this.outerTri = createPoly();
-		//this.outerTri.cFill = color(100, 100, 100);
+		this.outerTri.cFill = color(255);
 		// +10 to give a slight border
 		this.outerTri.addPoint( xCenter, y1 + 10 );
 		this.outerTri.addPoint( x2 - 10, y2 - 10 );
