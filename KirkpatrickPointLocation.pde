@@ -1,7 +1,7 @@
 final boolean DEMO = true;
 
 // Global variables
-int unique_poly_id = 0;
+int unique_poly_id = 100;
 
 // Helper global classes
 SceneController sceneControl;
@@ -80,7 +80,8 @@ void draw() {
 						pcreateView.polygon, kpView.outerTri);
 				kpView.setMesh( mesh );
 				graphView.setMesh( mesh );
-				plocateView.setMesh( mesh );
+				plocateView.setPolygon( pcreateView.polygon );
+				plocateView.setMesh( kpView.mesh, graphView.mesh );
 			}
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
@@ -128,6 +129,7 @@ void draw() {
 		case sceneControl.POINT_LOCATION:
 			if ( !sceneControl.sceneReady ) {
 				kpView.visible = false;
+				graphView.visible = false;
 				plocateView.visible = true;
 			}
 
@@ -165,6 +167,9 @@ void draw() {
 	}
 	if (kpView.visible) {
 		kpView.mouseUpdate();
+	}
+	if (plocateView.visible) {
+		plocateView.mouseUpdate();
 	}
 
 }
