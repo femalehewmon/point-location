@@ -1,5 +1,6 @@
 class PointLocationView extends View {
 
+	Polygon polygon;
 	LayeredMesh kpMesh;
 	LayeredMesh lgraphMesh;
 	ArrayList<ArrayList<Integer>> layers;
@@ -10,6 +11,7 @@ class PointLocationView extends View {
 	public PointLocationView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
+		this.polygon = null;
 		this.kpMesh = null;
 		this.lgraphMesh = null;
 
@@ -17,6 +19,10 @@ class PointLocationView extends View {
 		this.layerToDraw = 0;
 
 		this.pointSelected = null;
+	}
+
+	public void setPolygon( Polygon poly ) {
+		this.polygon = poly;
 	}
 
 	public void setMesh( LayeredMesh kpMesh, LayeredMesh lgraphMesh ) {
@@ -39,6 +45,8 @@ class PointLocationView extends View {
 		this.layers.add( kpMesh.getVisiblePolygonIdsByLayer(
 					kpMesh.layers.size() - 1) );
 		kpMesh.polygons.get(this.layers.get(0).get(0)).selected = false;
+		console.log("CFILL OF MAIN POLYGON");
+		console.log(kpMesh.polygons.get(this.layers.get(0).get(0)));
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
@@ -84,6 +92,7 @@ class PointLocationView extends View {
 			}
 			visiblePolys = nextLayer;
 		} while ( visiblePolys.size() > 0 )
+		this.layers.add( visiblePolys );
 	}
 
 	public boolean nextLevel() {
@@ -96,8 +105,46 @@ class PointLocationView extends View {
 		return true;
 	}
 
+	public void drawConnectedPolygons( Polygon poly, boolean recurse ) {
+		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if ( poly.parentId == lgraphMesh.polygons.get(polyId).childId ) {
+				line(poly.getCenter().x,
+						poly.getCenter().y,
+						lgraphMesh.polygons.get(polyId).getCenter().x,
+						lgraphMesh.polygons.get(polyId).getCenter().y);
+				if ( recurse ) {
+					drawConnectedPolygons( lgraphMesh.polygons.get(polyId),
+						   recurse	);
+				}
+			}
+			/*
+			else if (poly.childId == lgraphMesh.polygons.get(polyId).parentId){
+				line( lgraphMesh.polygons.get(polyId).getCenter().x,
+						lgraphMesh.polygons.get(polyId).getCenter().y,
+						poly.getCenter().x,
+						poly.getCenter().y);
+			}
+			*/
+		}
+	}
+
 	public void render() {
 		int i, j;
+
+		if ( this.polygon != null ) {
+			this.polygon.render();
+		}
+
+		// Get list of selected polygons and draw graph edges
+		ArrayList<Polygon> connected = new ArrayList<Polygon>();
+		for ( i = 0; i < messages.size(); i++) {
+			if (messages.get(i).k == MSG_TRIANGLE) {
+				drawConnectedPolygons(
+						lgraphMesh.polygons.get(messages.get(i).v), true);
+			}
+		}
 
 		ArrayList<Integer> selectedPolys = new ArrayList<Integer>();
 		for ( i = 0; i <= layerToDraw; i++ ) {
@@ -105,6 +152,10 @@ class PointLocationView extends View {
 				if( this.kpMesh.polygons.get(
 						this.layers.get(i).get(j)).selected) {
 					selectedPolys.add(this.layers.get(i).get(j));
+					if ( i == layerToDraw ) {
+						drawConnectedPolygons(lgraphMesh.polygons.get(
+									this.layers.get(i).get(j)), false);
+					}
 				}
 			}
 		}
@@ -130,6 +181,21 @@ class PointLocationView extends View {
 		// draw selected point that is currently being evaluated
 		if ( pointSelected != null ) {
 			pointSelected.render();
+		}
+	}
+
+	public void mouseUpdate() {
+		color c = pickbuffer.get(mouseX, mouseY);
+		int i;
+		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if (color(polyId) == c) {
+				Message msg = new Message();
+				msg.k = MSG_TRIANGLE;
+				msg.v = polyId;
+				messages.add(msg);
+			}
 		}
 	}
 
