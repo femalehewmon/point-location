@@ -50,7 +50,7 @@ class PointLocationView extends View {
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
-		if(!kpMesh.polygons.get(this.layers.get(0).get(0)).containsPoint(x, y)){
+		if( !inMeshBounds(x, y) ) {
 			// only evaluate points placed inside the outer triangle
 			return false;
 		} else {
@@ -181,7 +181,15 @@ class PointLocationView extends View {
 		// draw selected point that is currently being evaluated
 		if ( pointSelected != null ) {
 			pointSelected.render();
+		} else if( inMeshBounds( mouseX, mouseY ) ) {
+			stroke(color(0));
+			fill(color(0));
+			ellipse( mouseX, mouseY, 10, 10);
 		}
+	}
+
+	public boolean inMeshBounds( float x, float y ) {
+		return kpMesh.polygons.get(layers.get(0).get(0)).containsPoint(x, y);
 	}
 
 	public void mouseUpdate() {
