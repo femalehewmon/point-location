@@ -30,7 +30,7 @@ class Polygon {
 		this.parentId = -1;
 
 		this.points = new ArrayList<PolyPoint>();
-		this.cFill = color(255);//color(random(255), random(255), random(255));
+		this.cFill = color(255);
 		this.cStroke = color(0);
 		this.cHighlight = color(0, 0, 255);
 		this.selected = false;
@@ -119,6 +119,7 @@ class Polygon {
 		for ( int i = 0; i < triangles.size(); i++ ) {
 			triangles.get(i).parentId = this.id;
 			triangles.get(i).cFill = this.cFill;
+			triangles.get(i).cHighlight = this.cHighlight;
 		}
 
 		return triangles;
@@ -334,7 +335,7 @@ class PolyPoint {
 		this.size = 10;
 		this.cStroke = color(0);
 		this.cFill = color(0);
-		this.cHighlight = color(255);
+		this.cHighlight = color(0, 0, 255);
 
 		this.selected = false;
 	}
