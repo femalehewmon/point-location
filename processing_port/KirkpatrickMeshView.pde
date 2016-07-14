@@ -54,8 +54,8 @@ class KirkpatrickMeshView extends View {
 
 	public void setPolygon( Polygon polygon ) {
 		this.polygon = polygon;
-		float wScale = (outerTri.getWidth() * 0.75 ) / polygon.getWidth();
-		float hScale = (outerTri.getHeight() * 0.75 ) / polygon.getHeight();
+		float wScale = (outerTri.getWidth() * 0.50 ) / polygon.getWidth();
+		float hScale = (outerTri.getHeight() * 0.50 ) / polygon.getHeight();
 		this.ratioToScalePoly = min(wScale, hScale);
 	}
 
@@ -68,10 +68,9 @@ class KirkpatrickMeshView extends View {
 			this.mesh.clear();
 		}
 
-		this.mesh = mesh;
+		this.mesh = mesh.copy();
 		this.layerTris.add( new ArrayList<Integer>() );
 		this.layerVertices.add( new ArrayList<PolyPoint>() );
-
 
 		// set polygon and outer triangle tris
 		ArrayList<Polygon> polys = this.mesh.getVisiblePolygonsByLayer( 0 );
@@ -118,17 +117,18 @@ class KirkpatrickMeshView extends View {
 					PolyPoint ildv = new PolyPoint(
 							verticesRemoved.get(k).x,
 							verticesRemoved.get(k).y);
-					ildv.selected = true;
+					ildv.size = 20;
+					ildv.cFill = color(0);
 					this.layerVertices.get(layerVertices.size() - 1).add(ildv);
 					// add this vertex to all previous subLayers before
 					// the current subLayer since it is to be removed in
 					// the next layer
 					for ( l = 0; l <= j ; l++ ) {
+						ildv = ildv.copy();
+						ildv.size = 20;
+						ildv.cFill = color(255);
 						this.layerVertices.get(layerVertices.size() - l - 2).add(
-								new PolyPoint(
-									verticesRemoved.get(k).x,
-									verticesRemoved.get(k).y)
-								);
+								ildv);
 					}
 				}
 				for ( k = 0; k < polysRemoved.size(); k++ ) {
@@ -146,8 +146,12 @@ class KirkpatrickMeshView extends View {
 
 
 	public boolean nextLevel() {
-		this.layerToDraw++;
-		return this.layerToDraw < this.layerTris.size();
+		this.layerToDraw += 1;
+		if ( this.layerToDraw >= this.layerTris.size() ) {
+			this.layerToDraw -= 1;
+			return false;
+		}
+		return true;
 	}
 
 	public void render( boolean drawHoles ) {
