@@ -217,9 +217,10 @@ class KirkpatrickMeshView extends View {
 					messages.add(msg);
 				}
 			}
-			if (keyPressed) {
-				image(pickbuffer, 0, 0);
-			}
+			// show pick buffer on button press
+			//if (keyPressed) {
+			//	image(pickbuffer, 0, 0);
+			//}
 		}
 	}
 

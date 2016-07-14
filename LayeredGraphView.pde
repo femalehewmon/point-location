@@ -127,7 +127,7 @@ class LayeredGraphView extends View {
 		// draw layer backgrounds
 		for ( i = 0; i < this.mesh.layers.size(); i++) {
 			noStroke();
-			fill(mesh.layerColors.get(i), 100);
+			fill(255);//mesh.layerColors.get(i), 50);
 			rect(x1, h - (ydiv*(i+1)), w, ydiv);
 		}
 
@@ -157,9 +157,10 @@ class LayeredGraphView extends View {
 				}
 			}
 		}
-		if (keyPressed) {
-			image(pickbuffer, 0, 0);
-		}
+		// show pick buffer on button press
+		//if (keyPressed) {
+		//	image(pickbuffer, 0, 0);
+		//}
 	}
 
 }
