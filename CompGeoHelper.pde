@@ -21,7 +21,7 @@ class CompGeoHelper {
 		// the original polygon
 		console.log("triangulate and add outer tri to kp");
 		outerTri.addHole( poly );
-		outerTri.cFill = layerColors.get( layerColors.size() - 1 );
+		//outerTri.cFill = layerColors.get( layerColors.size() - 1 );
 		mesh.addTrianglesToLayer( currLayer, outerTri.triangulate() );
 
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
@@ -33,6 +33,16 @@ class CompGeoHelper {
 				console.log("Processing ILDV: " + ildv.get(i).description);
 				// Get faces (triangles) surrounding ildv
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
+				// set colors of polygons removed on this layer
+				for ( j = 0; j < faces.size(); j++ ) {
+					if ( mesh.polygons.get(faces.get(j).id).parentId !=
+							poly.id ){
+						mesh.polygons.get(faces.get(j).id).cFill =
+							layerColors.get(mesh.layers.size() - 1);
+					} else {
+						mesh.polygons.get(faces.get(j).id).cFill = poly.cFill;
+					}
+				}
 
 				// Get the outer (not-convex) hull of the surrounding triangles
 				ArrayList<Vertex> surrounding_vertices =
@@ -41,10 +51,9 @@ class CompGeoHelper {
 				// set replacement hull as child id so that the layers
 				// can be associated later during point location
 				for ( j = 0; j < faces.size(); j++ ) {
-					console.log("hull id is " + hull.id);
 					mesh.polygons.get(faces.get(j).id).childId = hull.id;
 				}
-				hull.cFill = layerColors.get(mesh.layers.size() - 1);
+				// create hull with points of soon-to-be-removed faces
 				for( j = 0; j < surrounding_vertices.size(); j++ ) {
 					hull.addPoint( surrounding_vertices.get(j).x,
 							surrounding_vertices.get(j).y );
@@ -77,6 +86,12 @@ class CompGeoHelper {
 		else {
 			console.log("CONGRATULATIONS: mesh has only 3 vertices " +
 					"and 1 face!");
+		}
+
+		console.log(layerColors.get(layerColors.size() - 1));
+		for ( j = 0; j < mesh.faces.size(); j++ ) {
+			mesh.polygons.get(faces.get(j).id).cFill = layerColors.get(
+					layerColors.size() - 1);
 		}
 
 		mesh.setLayerColors( layerColors );
