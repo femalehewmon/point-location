@@ -1,7 +1,7 @@
 final boolean DEMO = true;
 
 // Global variables
-int unique_poly_id = 0;
+int unique_poly_id = 100;
 
 // Helper global classes
 SceneController sceneControl;
@@ -17,9 +17,10 @@ class Message {
 }
 
 // Views
-PolygonCreationView pcreate;
+PolygonCreationView pcreateView;
 KirkpatrickMeshView kpView;
-LayeredGraphView lgraph;
+LayeredGraphView graphView;
+PointLocationView plocateView;
 
 // Float.X_INFINITY throwing error, so self define
 POSITIVE_INFINITY = 9999999;
@@ -36,12 +37,14 @@ void setup() {
 	pickbuffer = createGraphics(width, height);
 
 	// create views
-	pcreate = new PolygonCreationView(0, 0, width, height);
+	pcreateView = new PolygonCreationView(0, 0, width, height);
 	kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
-	lgraph = new LayeredGraphView(width/2.0, 0, width, height);
-	pcreate.visible = true;
-	lgraph.visible = false;
+	graphView = new LayeredGraphView(width/2.0, 0, width, height);
+	plocateView = new PointLocationView(0, 0, width/2.0, height);
+	pcreateView.visible = true;
 	kpView.visible = false;
+	graphView.visible = false;
+	plocateView.visible = false;
 }
 
 void draw() {
@@ -51,37 +54,44 @@ void draw() {
 	switch( sceneControl.currScene ) {
 		case sceneControl.CREATE_POLYGON:
 			if ( DEMO ) {
-				pcreate.demo();
+				pcreateView.demo();
 			}
-			if ( pcreate.finalized ) {
+			if ( pcreateView.finalized ) {
 				// set polygon to calculate movement required to center in view
-				kpView.setPolygon( pcreate.polygon );
+				kpView.setPolygon( pcreateView.polygon );
 				sceneControl.nextScene();
 			}
 			break;
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
 			if ( !sceneControl.sceneReady ) {
-				pcreate.polygon.animateMove(
+				pcreateView.polygon.animateMove(
 						kpView.xPosToMovePoly, kpView.yPosToMovePoly,
 						sceneControl.SCENE_DURATION );
-				pcreate.polygon.animateScale( kpView.ratioToScalePoly,
+				pcreateView.polygon.animateScale( kpView.ratioToScalePoly,
 						sceneControl.SCENE_DURATION );
 			}
 			if ( sceneControl.update() ) {
 				sceneControl.nextScene();
 			}
 			break;
+		case sceneControl.CREATE_MESH:
+			if ( !sceneControl.sceneReady ) {
+				Mesh mesh = compGeoHelper.createKirkpatrickDataStructure(
+						pcreateView.polygon, kpView.outerTri);
+				kpView.setMesh( mesh );
+				graphView.setMesh( mesh );
+				plocateView.setPolygon( pcreateView.polygon );
+				plocateView.setMesh( kpView.mesh, graphView.mesh );
+			}
+			if ( sceneControl.update() ) {
+				sceneControl.nextScene();
+			}
 		case sceneControl.TRIANGULATE_POLY:
 			if ( !sceneControl.sceneReady ) {
-				Mesh kpMesh = compGeoHelper.createKirkpatrickDataStructure(
-						pcreate.polygon, kpView.outerTri);
-				lgraph.setMesh( kpMesh );
-				kpView.setMesh( kpMesh );
-
-				pcreate.visible = false;
+				pcreateView.visible = false;
 				kpView.visible = true;
-				lgraph.visible = true;
-				lgraph.nextLevel();
+				graphView.visible = true;
+				graphView.nextLevel();
 
 				kpView.drawPoly = false;
 				kpView.drawPolyTris = true;
@@ -95,24 +105,41 @@ void draw() {
 		case sceneControl.SURROUND_POLY_WITH_OUTER_TRI:
 			kpView.drawOuterTri = true;
 			if ( sceneControl.update() ) {
-				sceneControl.nextScene();
 				kpView.drawPoly = false;
 				kpView.drawPolyTris = false;
 				kpView.drawOuterTri = true;
 				kpView.outerTri.cFill = color(200, 200, 200);
-				lgraph.nextLevel();
+				graphView.nextLevel();
+				sceneControl.nextScene();
 			}
 			break;
 		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
 			kpView.drawLayers = true;
 			if ( sceneControl.update() ) {
 				if ( kpView.nextLevel() ) {
+					graphView.nextLevel();
 					// reset scene for next level
 					sceneControl.reset();
-					lgraph.nextLevel();
 				} else {
-					// if no levels remain, go to next scene
+					// if no levels remain in either view, go to next scene
 					sceneControl.nextScene();
+				}
+			}
+			break;
+		case sceneControl.POINT_LOCATION:
+			if ( !sceneControl.sceneReady ) {
+				kpView.visible = false;
+				graphView.visible = false;
+				plocateView.visible = true;
+			}
+
+			if ( plocateView.pointSelected != null ) {
+				if ( sceneControl.update() ) {
+					if ( plocateView.nextLevel() ) {
+						sceneControl.reset();
+					} else {
+						sceneControl.nextScene();
+					}
 				}
 			}
 			break;
@@ -120,23 +147,29 @@ void draw() {
 			break;
 	}
 
-	if (pcreate.visible) {
-		pcreate.render();
+	if (plocateView.visible) {
+		plocateView.render();
+	}
+	if (pcreateView.visible) {
+		pcreateView.render();
 	}
 	if (kpView.visible) {
 		kpView.render();
 	}
-	if (lgraph.visible) {
-		lgraph.render();
+	if (graphView.visible) {
+		graphView.render();
 	}
 
 	messages.clear();
 
-	if (lgraph.visible) {
-		lgraph.mouseUpdate();
+	if (graphView.visible) {
+		graphView.mouseUpdate();
 	}
 	if (kpView.visible) {
 		kpView.mouseUpdate();
+	}
+	if (plocateView.visible) {
+		plocateView.mouseUpdate();
 	}
 
 }
@@ -151,10 +184,13 @@ void mousePressed( ) {
 	if (mouseButton == LEFT) {
 		switch( sceneControl.currScene ) {
 			case sceneControl.CREATE_POLYGON:
-			if ( !DEMO && !pcreate.finalized ) {
-				pcreate.addPoint( mouseX, mouseY );
-			}
-			break;
+				if ( !DEMO && !pcreateView.finalized ) {
+					pcreateView.addPoint( mouseX, mouseY );
+				}
+				break;
+			case sceneControl.POINT_LOCATION:
+				plocateView.evaluatePoint( mouseX, mouseY );
+				break;
 		}
 	}
 }

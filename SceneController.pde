@@ -3,13 +3,15 @@ class SceneController {
 	float scenePercentageStep;
 	float scenePercentComplete;
 	float sceneRelativePercentComplete;
-	int SCENE_DURATION = 10;
+	int SCENE_DURATION = 150;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
+	final String CREATE_MESH = "CREATE MESH";
 	final String TRIANGULATE_POLY = "TRIANGULATE POLY";
 	final String SURROUND_POLY_WITH_OUTER_TRI = "SURROUND POLY WITH OUTER TRI";
 	final String CREATE_KIRKPATRICK_DATA_STRUCT = "CREATE KP DATA STRUCT";
+	final String POINT_LOCATION = "POINT LOCATION";
 	final String DONE = "DONE";
 
 	boolean sceneReady = false;
@@ -47,8 +49,11 @@ class SceneController {
 			case CENTER_AND_RESIZE_POLYGON:
 				this.currScene = CREATE_POLYGON;
 				break;
-			case TRIANGULATE_POLY:
+			case CREATE_MESH:
 				this.currScene = CENTER_AND_RESIZE_POLYGON;
+				break;
+			case TRIANGULATE_POLY:
+				this.currScene = CREATE_MESH;
 				break;
 			case SURROUND_POLY_WITH_OUTER_TRI:
 				this.currScene = TRIANGULATE_POLY;
@@ -56,8 +61,11 @@ class SceneController {
 			case CREATE_KIRKPATRICK_DATA_STRUCT:
 				this.currScene = SURROUND_POLY_WITH_OUTER_TRI;
 				break;
-			case DONE:
+			case POINT_LOCATION:
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCT;
+				break;
+			case DONE:
+				this.currScene = POINT_LOCATION;
 				break;
 		}
 		console.log("Next scene " + this.currScene);
@@ -71,6 +79,9 @@ class SceneController {
 				this.currScene = CENTER_AND_RESIZE_POLYGON;
 				break;
 			case CENTER_AND_RESIZE_POLYGON:
+				this.currScene = CREATE_MESH;
+				break;
+			case CREATE_MESH:
 				this.currScene = TRIANGULATE_POLY;
 				break;
 			case TRIANGULATE_POLY:
@@ -80,7 +91,10 @@ class SceneController {
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCT;
 				break;
 			case CREATE_KIRKPATRICK_DATA_STRUCT:
-				this.currScene = DONE;
+				this.currScene = POINT_LOCATION;
+				break;
+			case POINT_LOCATION:
+				this.currScene = POINT_LOCATION;
 				break;
 			case DONE:
 				break;

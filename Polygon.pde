@@ -3,6 +3,7 @@ class Polygon {
 
 	int id;
 	int parentId;
+	int childId;
 
 	ArrayList<PolyPoint> points;
 	color cFill;
@@ -28,11 +29,12 @@ class Polygon {
 	public Polygon(int id) {
 		this.id = id;
 		this.parentId = -1;
+		this.childId = -1;
 
 		this.points = new ArrayList<PolyPoint>();
-		this.cFill = color(255);
+		this.cFill = color(random(255), random(255), random(255));
 		this.cStroke = color(0);
-		this.cHighlight = color(0, 0, 255);
+		this.cHighlight = color(255);//color(0, 0, 255);
 		this.selected = false;
 		this.centerPoint = null;
 
@@ -51,6 +53,7 @@ class Polygon {
 		Polygon copy = new Polygon(this.id);
 		copy.id = this.id;
 		copy.parentId = this.parentId;
+		copy.childId = this.childId;
 		copy.points = new ArrayList<PolyPoint>();
 		for ( int i = 0; i < this.points.size(); i++ ) {
 			copy.points.add(this.points.get(i).copy());
@@ -72,6 +75,43 @@ class Polygon {
 	public void addPoint(float x, float y) {
 		this.points.add(new PolyPoint(x, y));
 		this.centerPoint = null;
+	}
+
+	public boolean containsPoint( float x, float y ) {
+		// Ray crossing algorithm, based on implementation described in
+		// Computation Geometry in C, 2nd Edition, J. O'Rourke
+		int i, j;
+
+		ArrayList<PolyPoint> originCentered = new ArrayList<PolyPoint>();
+		// shift so that the point in question is the origin
+		// done for algorithm clarity
+		for ( i = 0; i < this.points.size(); i++ ) {
+			originCentered.add( this.points.get(i).copy() );
+			originCentered.get( i ).move(
+					originCentered.get(i).x - x,
+					originCentered.get(i).y - y );
+		}
+
+		int crossings = 0;
+		for ( i = 0; i < originCentered.size(); i++ ) {
+			j = ( i + originCentered.size() - 1 ) % originCentered.size();
+			// if the edge straddles the x axis
+			if ( ( (originCentered.get(i).y > 0) &&
+						(originCentered.get(j).y <= 0) ) ||
+					( (originCentered.get(j).y > 0) &&
+					  (originCentered.get(i).y <= 0) )) {
+				// compute intersection with x axis
+				x = ((originCentered.get(i).x * originCentered.get(j).y -
+						originCentered.get(j).x * originCentered.get(i).y) /
+					(originCentered.get(j).y - originCentered.get(i).y));
+				if ( x > 0 ) {
+					crossings += 1;
+				}
+			}
+		}
+
+		// polygon contains point it an odd number of crossings found
+		return (( crossings % 2 ) == 1);
 	}
 
 	public void addHole(Polygon hole) {
@@ -147,7 +187,8 @@ class Polygon {
 
 			// draw shape onto pickbuffer
 			pickbuffer.beginShape();
-			pickbuffer.stroke(color(this.id));
+			//pickbuffer.stroke(color(this.id));
+			pickbuffer.noStroke();
 			pickbuffer.fill(color(this.id));
 			for (int i = 0; i < points.size(); i++) {
 				pickbuffer.vertex(points.get(i).x, points.get(i).y);
