@@ -16,7 +16,7 @@ class LayeredGraphView extends View {
 		this.layers = new ArrayList<ArrayList<Integer>>();
 		this.layerToDraw = 0;
 
-		this.yborder = 40;
+		this.yborder = 0;
 		this.ydiv = this.h - this.yborder;
 	}
 
@@ -113,7 +113,7 @@ class LayeredGraphView extends View {
 			new ArrayList<ArrayList<Integer>>();
 
 		// set layer count
-		this.ydiv = (h - yborder) / (this.mesh.layers.size());
+		this.ydiv = (h) / (this.mesh.layers.size());
 
 		// create flattened layer list and
 		// move polygons to final positions and scales in layered graph
@@ -132,7 +132,7 @@ class LayeredGraphView extends View {
 			}
 
 			// calculate vertical center position for polygons on this layer
-			ypos = (h - (yborder / 2.0)) - (ydiv * (i)) + (ydiv/2);
+			ypos = h - (ydiv * (i)) + (ydiv/2.0);
 			// calculate horizontal division for all polygons on this layer
 			int polyCount = 0;
 			for( j = 0; j < mesh.layers.get(i).subLayers.size(); j++ ) {
@@ -159,7 +159,7 @@ class LayeredGraphView extends View {
 					poly.move( xpos, ypos );
 
 					if ( minRatio == -1 || minRatio > ydiv / poly.getHeight()) {
-						minRatio = (ydiv) / poly.getHeight();
+						minRatio = (ydiv - ydiv/4.0) / poly.getHeight();
 					}
 					if ( minRatio == -1 || minRatio > xdiv / poly.getWidth() ) {
 						minRatio = (xdiv) / poly.getWidth();
@@ -185,14 +185,14 @@ class LayeredGraphView extends View {
 		// add final full outer triangle to flattenedMesh
 		subPolys =
 			mesh.getVisiblePolygonIdsByLayer(mesh.layers.size() - 1);
-		ypos = (h - (yborder / 2.0)) - (ydiv * mesh.layers.size()) + (ydiv/2);
+		ypos = (h - (ydiv * mesh.layers.size()) + (ydiv/2.0));
 		// calculate position in layer of graph for this polygon
 		xpos = x1 + (w / 2.0);
 
 		// setup future partial move on render
 		poly = mesh.polygons.get(subPolys.get(0));
 		poly.move( xpos, ypos );
-		poly.resizeToHeight( ydiv );
+		poly.resizeToHeight( ydiv - (ydiv/4.0) );
 
 		mesh.polygons.put( subPolys.get(0), poly );
 		flattenedMesh.add(subPolys);
