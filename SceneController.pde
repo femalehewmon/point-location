@@ -3,7 +3,7 @@ class SceneController {
 	float scenePercentageStep;
 	float scenePercentComplete;
 	float sceneRelativePercentComplete;
-	int SCENE_DURATION = 150;
+	int SCENE_DURATION = 100;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
@@ -92,6 +92,7 @@ class SceneController {
 				break;
 			case CREATE_KIRKPATRICK_DATA_STRUCT:
 				this.currScene = POINT_LOCATION;
+				SCENE_DURATION = 150;
 				break;
 			case POINT_LOCATION:
 				this.currScene = POINT_LOCATION;

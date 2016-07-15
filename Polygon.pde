@@ -35,7 +35,7 @@ class Polygon {
 		this.points = new ArrayList<PolyPoint>();
 		this.cFill = color(random(255), random(255), random(255));
 		this.cStroke = color(0);
-		this.cHighlight = color(255);//color(0, 0, 255);
+		this.cHighlight = color(255);
 		this.cAlpha = 255;
 		this.selected = false;
 		this.centerPoint = null;
@@ -176,9 +176,9 @@ class Polygon {
 			beginShape();
 			stroke(cStroke);
 			if (selected) {
-				fill(cHighlight);
+				fill(cHighlight, cAlpha);
 			} else {
-				fill(cFill);
+				fill(cFill, cAlpha);
 			}
 
 			for (int i = 0; i < points.size(); i++) {

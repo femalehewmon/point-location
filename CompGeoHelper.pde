@@ -88,7 +88,6 @@ class CompGeoHelper {
 					"and 1 face!");
 		}
 
-		console.log(layerColors.get(layerColors.size() - 1));
 		for ( j = 0; j < mesh.faces.size(); j++ ) {
 			mesh.polygons.get(faces.get(j).id).cFill = layerColors.get(
 					layerColors.size() - 1);

@@ -27,6 +27,7 @@ class LayeredGraphView extends View {
 		}
 
 		this.mesh = mesh.copy();
+		//this.layers = flattenMeshAddOnCreation();
 		this.layers = flattenMesh();
 	}
 
