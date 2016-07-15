@@ -183,11 +183,12 @@ class PointLocationView extends View {
 					connected.add(edge);
 				}
 				if ( recurse ) {
+					/*
 					connected.addAll( findConnectedEdges(
 								lgraphMesh.polygons.get(polyId), recurse ));
+					*/
 					// TODO: below prevents same edge being drawn over,
 					// but makes things are still very slow
-					/*
 					subConnected = findConnectedEdges(
 								lgraphMesh.polygons.get(polyId), recurse );
 					for ( i = 0; i < subConnected.size(); i++ ){
@@ -195,7 +196,6 @@ class PointLocationView extends View {
 							connected.add(subConnected.get(i));
 						}
 					}
-					*/
 				}
 			}
 		}
