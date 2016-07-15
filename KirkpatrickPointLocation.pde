@@ -28,8 +28,17 @@ POSITIVE_INFINITY = 9999999;
 NEGATIVE_INFINITY = -9999999;
 
 void setup() {
-	//size($(window).width() - 100, $(window).height() - 100); // get browser window size
-	size( 1024, 768 ); // get browser window size
+	float border = $("#title").height();
+
+	float aspectRatio = 16/9;
+	float wtmp = $(window).width() - border;
+	float htmp = wtmp / aspectRatio;
+	// extra multiplier added to prevent scroll down in browser
+	htmp = htmp - (border * 3);
+	wtmp = htmp * aspectRatio;
+
+	// set size of visualization area
+	size(wtmp, htmp);
 
 	sceneControl = new SceneController();
 	compGeoHelper = new CompGeoHelper();
@@ -38,10 +47,14 @@ void setup() {
 	pickbuffer = createGraphics(width, height);
 
 	// create views
-	pcreateView = new PolygonCreationView(0, 0, width, height);
-	kpView = new KirkpatrickMeshView(0, 0, width/2.0, height);
-	graphView = new LayeredGraphView(width/2.0, 0, width, height);
-	plocateView = new PointLocationView(0, 0, width/2.0, height);
+	float padding = border/2.0;
+	float yVis = (height-padding)*0.75;
+	float yText = (height-padding)*0.25;
+	pcreateView = new PolygonCreationView(padding, padding, width-padding, yVis);
+	kpView = new KirkpatrickMeshView(padding, padding, width/2.0, yVis);
+	graphView = new LayeredGraphView(width/2.0, padding, width-padding, yVis);
+	plocateView = new PointLocationView(padding, padding, width-padding, yVis);
+
 	pcreateView.visible = true;
 	kpView.visible = false;
 	graphView.visible = false;
@@ -156,14 +169,14 @@ void draw() {
 	if (plocateView.visible) {
 		plocateView.render();
 	}
-	if (pcreateView.visible) {
-		pcreateView.render();
-	}
 	if (kpView.visible) {
 		kpView.render();
 	}
 	if (graphView.visible) {
 		graphView.render();
+	}
+	if (pcreateView.visible) {
+		pcreateView.render();
 	}
 
 	messages.clear();
@@ -181,7 +194,6 @@ void draw() {
 }
 
 Polygon createPoly() {
-	console.log("creating poly");
 	unique_poly_id++;
 	return new Polygon(unique_poly_id);
 }
