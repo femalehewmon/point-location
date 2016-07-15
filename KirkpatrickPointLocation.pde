@@ -1,4 +1,4 @@
-final boolean DEMO = false;
+final boolean DEMO = true;
 final boolean DEBUG = false;
 
 // Global variables
