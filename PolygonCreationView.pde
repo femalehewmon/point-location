@@ -52,8 +52,6 @@ class PolygonCreationView extends View {
 
 	public void render() {
 		int i;
-		fill(this.cFill);
-		rect(this.x1, this.y1, this.w, this.h);
 
 		if ( this.finalized ) {
 			this.polygon.render( true );
