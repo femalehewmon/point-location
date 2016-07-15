@@ -1,36 +1,37 @@
 class PointLocationView extends View {
 
-	Polygon polygon;
-	LayeredMesh kpMesh;
-	LayeredMesh lgraphMesh;
-	ArrayList<ArrayList<Integer>> layers;
-	ArrayList<ArrayList<Polygon>> kpLayers;
-	ArrayList<ArrayList<Polygon>> graphLayers;
+	PolyPoint pointSelected;					// the user selected point
 
-	ArrayList<ArrayList<GraphEdge>> edges;
+	Polygon polygon;							// original polygon
+	// both meshes required because while the polygons hold mutual IDs,
+	// they are independent objects that are positioned and sized differently
+	LayeredMesh kpMesh;							// mesh of KP data structure
+	LayeredMesh lgraphMesh;						// mesh of layered graph
 
-	int layerToDraw;
+	int layerToDraw;							// current layer to draw
+	ArrayList<ArrayList<Polygon>> kpLayers;		// renderable layers
+	ArrayList<ArrayList<GraphEdge>> edges;		// renderable edges
+	// NOTE: graph layers drawn based off of kpLayers since IDs are shared
 
-	ArrayList<Integer> containingPolygons;
-	int containingPathToDraw = 0;
-
-	PolyPoint pointSelected;
+	// used to speed up graph edge drawing on mouse hover selection
+	// prevents re-recursive search on each render loop
+	int lastSelected = -1;
+	ArrayList<GraphEdge> selectedEdges;
 
 	public PointLocationView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
+
+		this.pointSelected = null;
 
 		this.polygon = null;
 		this.kpMesh = null;
 		this.lgraphMesh = null;
 
-		this.layers = new ArrayList<ArrayList<Integer>>();
+		this.layerToDraw = 0;
 		this.kpLayers = new ArrayList<ArrayList<Polygon>>();
 		this.edges = new ArrayList<ArrayList<GraphEdge>>();
 
-		this.containingPolygons = new ArrayList<Integer>();
-		this.layerToDraw = 0;
-
-		this.pointSelected = null;
+		this.selectedEdges = new ArrayList<GraphEdge>();
 	}
 
 	public void setPolygon( Polygon poly ) {
@@ -53,16 +54,12 @@ class PointLocationView extends View {
 
 	private void resetSearch() {
 		this.layerToDraw = 0;
-		this.layers.clear();
-		this.layers.add( kpMesh.getVisiblePolygonIdsByLayer(
-					kpMesh.layers.size() - 1) );
 		this.kpLayers.clear();
 		this.kpLayers.add(
 				kpMesh.getPolygonsById(
 				kpMesh.getVisiblePolygonIdsByLayer(kpMesh.layers.size() - 1)));
 		this.edges.clear();
 		this.edges.add( new ArrayList<ArrayList<GraphEdge>>() );
-		this.containingPolygons.clear();
 
 	}
 
@@ -75,7 +72,6 @@ class PointLocationView extends View {
 		this.pointSelected = new PolyPoint(x , y);
 
 		// clear layers from previously evaluated point
-		this.layers.clear();
 		this.kpLayers.clear();
 		this.edges.clear();
 
@@ -107,7 +103,6 @@ class PointLocationView extends View {
 				visiblePoly = visiblePolys.get(i);
 				if ( visiblePoly.containsPoint( x, y ) ) {
 
-					this.containingPolygons.add( visiblePoly.id );
 					if ( pathEdges.size() > 0 ) {
 						pathEdges.add(
 								new GraphEdge(
@@ -168,7 +163,7 @@ class PointLocationView extends View {
 		return true;
 	}
 
-	public ArrayList<GraphEdge> drawConnectedPolygons(
+	public ArrayList<GraphEdge> findConnectedEdges(
 			Polygon poly, boolean recurse ) {
 		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
 		GraphEdge edge;
@@ -184,7 +179,7 @@ class PointLocationView extends View {
 				}
 				if ( recurse ) {
 					connected.addAll(
-							drawConnectedPolygons(
+							findConnectedEdges(
 								lgraphMesh.polygons.get(polyId), recurse ));
 				}
 			}
@@ -201,27 +196,41 @@ class PointLocationView extends View {
 
 		// Get list of selected polygons and draw graph edges
 		ArrayList<Integer> selected = new ArrayList<Integer>();
+		boolean polySelected = false;
 		// no mouse hover effect during point location
-		if ( pointSelected == null ) {
-			ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
+		//if ( pointSelected == null ) {
 			for ( i = 0; i < messages.size(); i++) {
 				if (messages.get(i).k == MSG_TRIANGLE) {
-					connected.addAll(drawConnectedPolygons(
-							lgraphMesh.polygons.get(messages.get(i).v), true));
+					polySelected = true;
+					// should be made to handle multiple selected polys,
+					// but this view can only have one selected at a time,
+					// so leaving it for now
+					if ( messages.get(i).v != lastSelected ) {
+						lastSelected = messages.get(i).v;
+						selectedEdges.clear();
+						selectedEdges.addAll(
+								findConnectedEdges(
+								lgraphMesh.polygons.get(
+									messages.get(i).v), true));
+					}
 					selected.add(messages.get(i).v);
 				}
 			}
-			for ( i = 0; i < connected.size(); i++ ) {
-				connected.get(i).render();
-				if (connected.get(i).start != null) {
-					selected.add(connected.get(i).start.id);
+		//} else {
+	//		selected.add( kpLayers.get(0).get(0).id );
+	//	}
+
+		// draw edges visible due to mouse hover selection of nodes
+		if ( polySelected ) {
+			for ( i = 0; i < selectedEdges.size(); i++ ) {
+				selectedEdges.get(i).render();
+				if (selectedEdges.get(i).start != null) {
+					selected.add(selectedEdges.get(i).start.id);
 				}
-				if (connected.get(i).end != null) {
-					selected.add(connected.get(i).end.id);
+				if (selectedEdges.get(i).end != null) {
+					selected.add(selectedEdges.get(i).end.id);
 				}
 			}
-		} else {
-			selected.add( kpLayers.get(0).get(0).id );
 		}
 
 		// draw kpMesh polygons in current layer
@@ -269,7 +278,9 @@ class PointLocationView extends View {
 	}
 
 	public boolean inMeshBounds( float x, float y ) {
-		return kpMesh.polygons.get(layers.get(0).get(0)).containsPoint(x, y);
+		return kpLayers.get(0).get(0).containsPoint(x, y);
+		//color c = pickbuffer.get(mouseX, mouseY);
+		//return ( color( kpMesh.polygons.get(layers.get(0).get(0)).id ) == c);
 	}
 
 	public void mouseUpdate() {
