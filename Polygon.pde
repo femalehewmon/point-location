@@ -143,7 +143,9 @@ class Polygon {
 							hole.points.get(j).x,
 							hole.points.get(j).y));
 				}
+				if ( DEBUG) {
 				console.log("Added hole of size " + hole_contour.length);
+				}
 				swctx.addHole(hole_contour);
 			}
 		}

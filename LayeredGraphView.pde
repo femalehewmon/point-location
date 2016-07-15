@@ -210,9 +210,6 @@ class LayeredGraphView extends View {
 		//super.render(); // draw view background
 		int i, j, k;
 
-		if (!finalized) {
-			finalizeView();
-		}
 		// get list of selected polygons
 		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
 		for ( i = 0; i < messages.size(); i++) {
@@ -222,12 +219,14 @@ class LayeredGraphView extends View {
 		}
 
 		// draw layer backgrounds
+		/*
 		for ( i = 0; i < this.mesh.layers.size(); i++) {
 			noStroke();
 			fill(255);
 			//fill(mesh.layerColors.get(i), 50);
 			rect(x1, (h - yborder/2.0) - (ydiv*(i+1)), w, ydiv);
 		}
+		*/
 
 		// render polygons
 		for ( i = 0; i < layerToDraw; i++ ) {

@@ -4,7 +4,9 @@ class CompGeoHelper {
 
 	public LayeredMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
+		if(DEBUG){
 		console.log("Creating KP Data Structure");
+		}
 		int i, j;
 		ArrayList<color> layerColors = new ArrayList<color>();
 		layerColors.add(color(random(255), random(255), random(255)));
@@ -14,23 +16,31 @@ class CompGeoHelper {
 		int currLayer = mesh.createNewLayer();
 
 		// triangulate the main polygon
+		if(DEBUG){
 		console.log("triangulate and add poly to kp");
+		}
 		mesh.addTrianglesToLayer( currLayer, poly.triangulate() );
 
 		// triangulate the outer triangle with a hole in the middle for
 		// the original polygon
+		if(DEBUG){
 		console.log("triangulate and add outer tri to kp");
+		}
 		outerTri.addHole( poly );
 		//outerTri.cFill = layerColors.get( layerColors.size() - 1 );
 		mesh.addTrianglesToLayer( currLayer, outerTri.triangulate() );
 
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
 		do {
+			if(DEBUG){
 			console.log("Found set of " + ildv.size() + " ILDV");
+			}
 			layerColors.add(color(random(255), random(255), random(255)));
 			int currLayer = mesh.createNewLayer();
 			for ( i = 0; i < ildv.size(); i++ ) {
+				if(DEBUG){
 				console.log("Processing ILDV: " + ildv.get(i).description);
+				}
 				// Get faces (triangles) surrounding ildv
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
 				// set colors of polygons removed on this layer
@@ -68,7 +78,7 @@ class CompGeoHelper {
 					mesh.addTrianglesToLayer( currLayer,
 							hull.triangulate() );
 				} else {
-					console.log("Convex Hull was null");
+					console.log("WARNING! Hole hull was null");
 				}
 
 			}
@@ -84,8 +94,10 @@ class CompGeoHelper {
 			console.log("WARNING: mesh has more than 1 face");
 		}
 		else {
+			if(DEBUG){
 			console.log("CONGRATULATIONS: mesh has only 3 vertices " +
 					"and 1 face!");
+			}
 		}
 
 		for ( j = 0; j < mesh.faces.size(); j++ ) {

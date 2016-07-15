@@ -44,9 +44,11 @@ class LayeredMesh extends Mesh {
 
 	public void addTrianglesToLayer( int layer, ArrayList<Polygon> tris ) {
 		// TODO: validate that triangle ID has not already been added?
+		if (DEBUG) {
 		console.log("*************************");
 		console.log("Adding " + tris.size() + " triangles to layer " + layer);
 		console.log("*************************");
+		}
 
 		if ( layer >= layers.size() ) {
 			console.log( "ERROR: layer does not exist, cannot add tris");
