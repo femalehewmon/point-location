@@ -3,6 +3,7 @@ class PointLocationView extends View {
 	PolyPoint pointSelected;					// the user selected point
 
 	Polygon polygon;							// original polygon
+	Polygon root;								// top polygon in graph
 	// both meshes required because while the polygons hold mutual IDs,
 	// they are independent objects that are positioned and sized differently
 	LayeredMesh kpMesh;							// mesh of KP data structure
@@ -24,6 +25,7 @@ class PointLocationView extends View {
 		this.pointSelected = null;
 
 		this.polygon = null;
+		this.root = null;
 		this.kpMesh = null;
 		this.lgraphMesh = null;
 
@@ -48,6 +50,9 @@ class PointLocationView extends View {
 
 		this.kpMesh = kpMesh.copy();
 		this.lgraphMesh = lgraphMesh.copy();
+		this.root = kpMesh.polygons.get(
+				kpMesh.getVisiblePolygonIdsByLayer(
+					kpMesh.layers.size() - 1).get(0));
 
 		resetSearch();
 	}
@@ -55,12 +60,10 @@ class PointLocationView extends View {
 	private void resetSearch() {
 		this.layerToDraw = 0;
 		this.kpLayers.clear();
-		this.kpLayers.add(
-				kpMesh.getPolygonsById(
-				kpMesh.getVisiblePolygonIdsByLayer(kpMesh.layers.size() - 1)));
+		this.kpLayers.add( new ArrayList<Polygon>() );
+		this.kpLayers.get(this.kpLayers.size() - 1).add(root);
 		this.edges.clear();
-		this.edges.add( new ArrayList<ArrayList<GraphEdge>>() );
-
+		this.edges.add( new ArrayList<GraphEdge>() );
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
@@ -76,15 +79,10 @@ class PointLocationView extends View {
 		this.edges.clear();
 
 		// generate array of visible polygons per search layer
-		ArrayList<Polygon> visiblePolys =
-			kpMesh.getPolygonsById(
-				kpMesh.getVisiblePolygonIdsByLayer(kpMesh.layers.size() - 1));
+		ArrayList<Polygon> visiblePolys = new ArrayList<Polygon>();
+		visiblePolys.add( root );
 
 		ArrayList<GraphEdge> pathEdges = new ArrayList<GraphEdge>();
-		pathEdges.add(
-				new GraphEdge(
-					null,
-					lgraphMesh.polygons.get(visiblePolys.get(0).id)));
 		ArrayList<Polygon> nextLayer;
 		ArrayList<GraphEdge> nextEdges;
 
@@ -103,7 +101,12 @@ class PointLocationView extends View {
 				visiblePoly = visiblePolys.get(i);
 				if ( visiblePoly.containsPoint( x, y ) ) {
 
-					if ( pathEdges.size() > 0 ) {
+					if ( pathEdges.size() == 0 ) {
+						pathEdges.add(
+								new GraphEdge(
+									lgraphMesh.polygons.get(root.id),
+									lgraphMesh.polygons.get(visiblePoly.id)));
+					} else {
 						pathEdges.add(
 								new GraphEdge(
 									pathEdges.get(pathEdges.size() - 1).end,
@@ -165,7 +168,9 @@ class PointLocationView extends View {
 
 	public ArrayList<GraphEdge> findConnectedEdges(
 			Polygon poly, boolean recurse ) {
+		int i;
 		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
+		ArrayList<GraphEdge> subConnected;
 		GraphEdge edge;
 		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
 		while( iterator.hasNext() ) {
@@ -178,9 +183,19 @@ class PointLocationView extends View {
 					connected.add(edge);
 				}
 				if ( recurse ) {
-					connected.addAll(
-							findConnectedEdges(
+					connected.addAll( findConnectedEdges(
 								lgraphMesh.polygons.get(polyId), recurse ));
+					// TODO: below prevents same edge being drawn over,
+					// but makes things are still very slow
+					/*
+					subConnected = findConnectedEdges(
+								lgraphMesh.polygons.get(polyId), recurse );
+					for ( i = 0; i < subConnected.size(); i++ ){
+						if ( !connected.contains(subConnected.get(i)) ) {
+							connected.add(subConnected.get(i));
+						}
+					}
+					*/
 				}
 			}
 		}
@@ -257,7 +272,8 @@ class PointLocationView extends View {
 			polyId = iterator.next();
 			// true/false flipped on selected to fill polygons with color
 			// when in focus
-			if ( selected.contains(polyId) ){
+			if ( selected.contains(polyId) ||
+					lgraphMesh.polygons.get(polyId).parentId == polygon.id ){
 				lgraphMesh.polygons.get(polyId).selected = false;
 			} else {
 				lgraphMesh.polygons.get(polyId).selected = true;
@@ -278,7 +294,7 @@ class PointLocationView extends View {
 	}
 
 	public boolean inMeshBounds( float x, float y ) {
-		return kpLayers.get(0).get(0).containsPoint(x, y);
+		return root.containsPoint(x, y);
 		//color c = pickbuffer.get(mouseX, mouseY);
 		//return ( color( kpMesh.polygons.get(layers.get(0).get(0)).id ) == c);
 	}
@@ -316,6 +332,15 @@ class GraphEdge {
 			line( start.getCenter().x, start.getCenter().y,
 					end.getCenter().x, end.getCenter().y);
 		}
+	}
+
+	public boolean equals(Object obj) {
+		if ( obj instanceof GraphEdge ) {
+			GraphEdge other = (GraphEdge) obj;
+			return ((other.start.id == start.id && other.end.id == end.id) || (
+						other.start.id == end.id && other.end.id == start.id));
+		}
+		return false;
 	}
 
 }
