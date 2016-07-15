@@ -42,8 +42,8 @@ class KirkpatrickMeshView extends View {
 	    // to fit in this view
 		// values saved here and not directly applied for the sake of animation
 		this.ratioToScalePoly = 1.0; // set when polygon is added to view
-		this.xPosToMovePoly = this.xCenter;
-		this.yPosToMovePoly = this.yCenter + (this.h / 4.0);
+		this.xPosToMovePoly = this.outerTri.getCenter().x;
+		this.yPosToMovePoly = this.outerTri.getCenter().y;// + (this.h / 8.0);
 
 		this.finalized = false;
 		this.drawPoly = false;
@@ -54,9 +54,20 @@ class KirkpatrickMeshView extends View {
 
 	public void setPolygon( Polygon polygon ) {
 		this.polygon = polygon;
-		float wScale = (outerTri.getWidth() * 0.50 ) / polygon.getWidth();
-		float hScale = (outerTri.getHeight() * 0.50 ) / polygon.getHeight();
-		this.ratioToScalePoly = min(wScale, hScale);
+		// calculate amount to scale -- better way to do this?
+		// inner polygon should be able to be misshapen, so can't
+		// generalize entire width to specific scale
+		float totalScale = 1.0;
+		Polygon tmp = this.polygon.copy();
+		tmp.move( xPosToMovePoly, yPosToMovePoly );
+		while( !this.outerTri.containsPolygon( tmp ) ){
+			tmp.scale( 0.90 );
+			totalScale *= 0.90;
+		}
+		console.log(" final scale is " + totalScale);
+		console.log(" size of poly " + this.polygon.getWidth() + " " + this.polygon.getHeight());
+		console.log(" size of outerTri " + this.outerTri.getWidth() + " " + this.outerTri.getHeight());
+		this.ratioToScalePoly = totalScale;
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
