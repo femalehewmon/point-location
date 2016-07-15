@@ -65,13 +65,18 @@ void draw() {
 			break;
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
 			if ( !sceneControl.sceneReady ) {
+				/*
 				pcreateView.polygon.animateMove(
 						kpView.xPosToMovePoly, kpView.yPosToMovePoly,
 						sceneControl.SCENE_DURATION );
 				pcreateView.polygon.animateScale( kpView.ratioToScalePoly,
 						sceneControl.SCENE_DURATION );
+						*/
 			}
 			if ( sceneControl.update() ) {
+				pcreateView.polygon.move(
+						kpView.xPosToMovePoly, kpView.yPosToMovePoly);
+				pcreateView.polygon.scale( kpView.ratioToScalePoly );
 				sceneControl.nextScene();
 			}
 			break;
