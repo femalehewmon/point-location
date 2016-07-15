@@ -80,6 +80,18 @@ class Polygon {
 		this.centerPoint = null;
 	}
 
+	public boolean containsPolygon( Polygon poly ) {
+		boolean contained = true;
+		for ( int i = 0; i < poly.points.size(); i++ ) {
+			contained =
+				this.containsPoint(poly.points.get(i).x, poly.points.get(i).y);
+			if( !contained ) {
+				break;
+			}
+		}
+		return contained;
+	}
+
 	public boolean containsPoint( float x, float y ) {
 		// Ray crossing algorithm, based on implementation described in
 		// Computation Geometry in C, 2nd Edition, J. O'Rourke
