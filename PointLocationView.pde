@@ -58,6 +58,7 @@ class PointLocationView extends View {
 	}
 
 	private void resetSearch() {
+		this.pointSelected = null;
 		this.layerToDraw = 0;
 		this.kpLayers.clear();
 		this.kpLayers.add( new ArrayList<Polygon>() );
@@ -67,7 +68,7 @@ class PointLocationView extends View {
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
-		if( !inMeshBounds(x, y) ) {
+		if( !inMeshBounds(x, y) || this.pointSelected != null ) {
 			// only evaluate points placed inside the outer triangle
 			return false;
 		}
