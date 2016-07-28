@@ -425,15 +425,12 @@ class PolyPoint {
 		ellipse( this.x, this.y, this.size, this.size );
 	}
 
+	public String valueOf() {
+		return this.x + " " + this.y;
+	}
+
 	public boolean equals(Object obj) {
-		if ( obj instanceof PolyPoint) {
-			PolyPoint other = (PolyPoint) obj;
-			return (other.x == x && other.y == y);
-		} else if ( obj instanceof Vertex ) {
-			Polygon other = (Vertex) obj;
-			return (other.x == x && other.y == y);
-		}
-		return false;
+		return this.valueOf() == obj.valueOf();
 	}
 
 }

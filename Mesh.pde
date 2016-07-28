@@ -562,6 +562,10 @@ class Vertex {
         return (int)hash;
     }
 
+	public String valueOf() {
+		return this.x + " " + this.y;
+	}
+
     public boolean equals(Object obj) {
         Vertex other = (Vertex) obj;
         return (x == other.x && y == other.y);
