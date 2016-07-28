@@ -52,7 +52,7 @@ class PointLocationView extends View {
 		this.lgraphMesh = lgraphMesh.copy();
 		this.root = kpMesh.polygons.get(
 				kpMesh.getVisiblePolygonIdsByLayer(
-					kpMesh.layers.size() - 1).get(0));
+					kpMesh.layers.size() - 2).get(0));
 
 		resetSearch();
 	}
@@ -213,7 +213,7 @@ class PointLocationView extends View {
 		ArrayList<Integer> selected = new ArrayList<Integer>();
 		boolean polySelected = false;
 		// no mouse hover effect during point location
-		//if ( pointSelected == null ) {
+		if ( pointSelected == null ) {
 			for ( i = 0; i < messages.size(); i++) {
 				if (messages.get(i).k == MSG_TRIANGLE) {
 					polySelected = true;
@@ -231,9 +231,7 @@ class PointLocationView extends View {
 					selected.add(messages.get(i).v);
 				}
 			}
-		//} else {
-	//		selected.add( kpLayers.get(0).get(0).id );
-	//	}
+		}
 
 		// draw edges visible due to mouse hover selection of nodes
 		if ( polySelected ) {
@@ -252,8 +250,13 @@ class PointLocationView extends View {
 		Polygon poly;
 		for ( i = 0; i < this.kpLayers.get(layerToDraw).size(); i++ ) {
 			poly = this.kpLayers.get(layerToDraw).get(i);
+			if ( poly.id == root.id ) {
+				poly.selected = false;
+			}
 			poly.render();
 		}
+
+		// draw graph edges
 		GraphEdge edge;
 		for ( i = 0; i < this.edges.get(layerToDraw).size(); i++ ) {
 			edge = this.edges.get(layerToDraw).get(i);
