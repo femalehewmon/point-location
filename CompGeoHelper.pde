@@ -98,11 +98,15 @@ class CompGeoHelper {
 			console.log("CONGRATULATIONS: mesh has only 3 vertices " +
 					"and 1 face!");
 			}
+			// create new layer to force a frame on the final full triangle
+			int currLayer = mesh.createNewLayer();
+			mesh.removeFacesFromLayer(
+					currLayer, new ArrayList<Face>(mesh.faces));
 		}
 
 		for ( j = 0; j < mesh.faces.size(); j++ ) {
-			mesh.polygons.get(faces.get(j).id).cFill = layerColors.get(
-					layerColors.size() - 1);
+			mesh.polygons.get(faces.get(j).id).cFill =
+				layerColors.get(layerColors.size() - 1);
 		}
 
 		mesh.setLayerColors( layerColors );
