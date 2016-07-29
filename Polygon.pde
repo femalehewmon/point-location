@@ -165,7 +165,7 @@ class Polygon {
 		swctx.triangulate();
 		var p2t_tris = swctx.getTriangles();
 		for ( var i = 0; i < p2t_tris.length; i++ ) {
-			Polygon tri = createPoly();
+			Polygon tri = compGeoHelper.createPoly();
 			tri.addPoint(p2t_tris[i].getPoint(0).x, p2t_tris[i].getPoint(0).y);
 			tri.addPoint(p2t_tris[i].getPoint(1).x, p2t_tris[i].getPoint(1).y);
 			tri.addPoint(p2t_tris[i].getPoint(2).x, p2t_tris[i].getPoint(2).y);

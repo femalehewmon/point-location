@@ -2,6 +2,11 @@ class CompGeoHelper {
 
 	public CompGeoHelper() {}
 
+	Polygon createPoly() {
+		unique_poly_id++;
+		return new Polygon(unique_poly_id);
+	}
+
 	public LayeredMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
 		if(DEBUG){

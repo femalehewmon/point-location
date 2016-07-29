@@ -31,7 +31,7 @@ class KirkpatrickMeshView extends View {
 		this.mesh = null;
 		this.polygon = null;
 		// create outer triangle
-		this.outerTri = createPoly();
+		this.outerTri = compGeoHelper.createPoly();
 		this.outerTri.cHighlight = color(255);
 		this.outerTri.cFill = color(200, 200, 200);
 		// +10 to give a slight border

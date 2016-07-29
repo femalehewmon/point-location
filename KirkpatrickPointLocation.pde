@@ -194,11 +194,6 @@ void draw() {
 
 }
 
-Polygon createPoly() {
-	unique_poly_id++;
-	return new Polygon(unique_poly_id);
-}
-
 void mousePressed( ) {
 	if (mouseButton == LEFT) {
 		switch( sceneControl.currScene ) {
