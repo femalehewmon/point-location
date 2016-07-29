@@ -65,6 +65,14 @@ void setText(String text) {
 	$("#explanation-text").text(text);
 }
 
+void updateAnimationSpeed(String rate) {
+	sceneControl.updateSceneDuration(float(rate));
+}
+
+void resetAnimation() {
+	sceneControl.restart();
+}
+
 void draw() {
 	background(245, 245, 245);
 	pickbuffer.background(255);
@@ -92,37 +100,41 @@ void draw() {
 			break;
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
 			if ( !sceneControl.sceneReady ) {
-				setText(
-						"Let's center and resize it.");
+				setText(sceneControl.created);
 			}
 			if ( sceneControl.update() ) {
 				pcreateView.polygon.move(
 						kpView.xPosToMovePoly, kpView.yPosToMovePoly);
 				pcreateView.polygon.scale( kpView.ratioToScalePoly );
+				Mesh mesh = compGeoHelper.createKirkpatrickDataStructure(
+						pcreateView.polygon, kpView.outerTri);
+				kpView.setMesh( mesh );
+				graphView.setMesh( mesh );
 				sceneControl.nextScene();
 			}
 			break;
 		case sceneControl.CREATE_MESH:
 			if ( !sceneControl.sceneReady ) {
+				kpView.visible = false;
+				graphView.visible = false;
+				plocateView.visible = false;
+				pcreateView.visible = true;
 				setText(
 						"That's better. We are now ready to start creating " +
 						"our data structure");
-			}
-			if ( !sceneControl.sceneReady ) {
-				Mesh mesh = compGeoHelper.createKirkpatrickDataStructure(
-						pcreateView.polygon, kpView.outerTri);
-				kpView.setMesh( mesh );
-				graphView.setMesh( mesh );
+				sceneControl.updateOnKeyPress();
 			}
 
-			sceneControl.update(true);
 			break;
 		case sceneControl.TRIANGULATE_POLY:
 			if ( !sceneControl.sceneReady ) {
+				kpView.resetDisplay();
+				graphView.resetDisplay();
 				setText( "Let's start by triangulating our polygon" );
 				kpView.visible = true;
 				graphView.visible = true;
 				pcreateView.visible = false;
+				kpView.resetDisplay();
 
 				kpView.update();
 				kpView.update();
@@ -232,5 +244,9 @@ void mousePressed( ) {
 				break;
 		}
 	}
+}
+
+void browserKeyPressed() {
+	sceneControl.keyWasPressed();
 }
 

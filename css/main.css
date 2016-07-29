@@ -3,7 +3,7 @@ html, body {
     height: 100%;
     width: 100%;
     margin: auto;
-    position: relative;
+    position: absolute;
     font-family: 'Inconsolata';
     color: #000000;
 }
@@ -12,21 +12,27 @@ html, body {
 	width: 75%;
     height: 100%;
     float: left;
+    background-image: url(../images/stardust/stardust.png);
 }
 
 #explanation {
-    position: relative;
+    position: absolute;
     margin-left: 75%;
     height: 100%;
 }
 
+.about-icon {
+    display:block;
+    position: absolute;
+    width: 35px;
+    height: 35px;
+}
+
+
 #explanation-text {
     position: relative;
     height: 60%;
-}
-#controls-text {
-    position: relative;
-    height: 20%;
+    margin: 5%;
 }
 
 .explanation-text {

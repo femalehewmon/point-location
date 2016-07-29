@@ -71,9 +71,10 @@ class KirkpatrickMeshView extends View {
 
 	public void setMesh( LayeredMesh mesh ) {
 		int i, j, k, l;
+
+		resetDisplay();
+
 		// clear previously set mesh
-		this.polygonsToDraw.clear();
-		this.verticesToDraw.clear();
 		this.ildvToDraw = null;
 		if ( this.mesh != null ) {
 			this.mesh.clear();
@@ -101,6 +102,7 @@ class KirkpatrickMeshView extends View {
 		subLayerToDraw = 0;
 		layerToDraw = 0;
 		polygonsToDraw.clear();
+		verticesToDraw.clear();
 		layerInitialized = false;
 		drawOuterTriangle = false;
 		outerTri.selected = false;

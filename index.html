@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>A Short Look at Kirkpatrick's Point Location Data Structure</title>
@@ -7,12 +8,16 @@
     <script src="js/jquery-2.1.4.min.js"></script>
     <script src="js/processing.js"></script>
     <script src="js/poly2tri.js"></script>
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
 <body>
     <div id="visualization" class="parentbox">
         <div class="childbox">
             <div id="processing">
-            <canvas data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde"></canvas>
+            <canvas id="internal" data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde"></canvas>
             </div>
         </div>
     </div>
@@ -26,8 +31,62 @@
         <p id="controls-text" class="controls-text">
             <!-- Text to be filled in within processing code -->
         </p>
+
         <div id="playback-controls">
+            <!-- Default dropup button -->
+            <div class="btn-group dropup">
+              <button type="button" class="btn btn-secondary">
+                  Animation Speed
+              </button>
+              <button type="button" class="btn btn-secondary dropdown-toggle"
+                      data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="false">
+              <span class="caret"></span>
+              </button>
+                <!-- Dropdown menu links -->
+              <ul id="animation-speed" class="dropdown-menu">
+                  <li><a class="animation-speed">0.25</a></li>
+                  <li><a class="animation-speed">0.5</a></li>
+                  <li><a class="animation-speed">1.0</a></li>
+                  <li><a class="animation-speed">1.25</a></li>
+                  <li><a class="animation-speed">1.5</a></li>
+                  <li><a class="animation-speed">2.0</a></li>
+              </ul>
+            </div>
+            <input id="replay" class="replay-icon" type="image"
+                src="images/iconmonstr-media-control-37.svg"
+                alt="replay" >
 		</div>
+        <!--
+        <a href="https://github.com/meganvanwelie/point-location"
+            alt="Github" title="Github">
+            <img class="about-icon" src="images/github-icon.svg">
+        </a>
+        -->
+
     </div>
 </body>
+<script>
+
+    $("#animation-speed li > a").click(
+            function(e) {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.updateAnimationSpeed(this.innerHTML);
+            });
+
+    $("#replay").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.resetAnimation();
+            });
+
+    $(document).keypress(
+            function(e){
+                if(e.keyCode == 32){
+                    var pjs = Processing.getInstanceById('internal');
+                    pjs.browserKeyPressed();
+                }
+            });
+
+</script>
 </html>

@@ -19,7 +19,7 @@ class Mesh {
 	public void clear() {
 		this.vertices.clear();
 		this.edges.clear();
-		this.faces.clar();
+		this.faces.clear();
 	}
 
 	public void addTrianglesToMesh( ArrayList<Polygon> tris ) {

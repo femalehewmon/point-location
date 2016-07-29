@@ -31,6 +31,7 @@ class LayeredGraphView extends View {
 		this.currPosition.add(this.y2);
 		this.yDiv = 0;
 		this.xDiv = 0;
+		this.currScale = 1.0;
 
 		this.polygonsToDraw = new ArrayList<Polygon>();
 
@@ -44,11 +45,25 @@ class LayeredGraphView extends View {
 		}
 
 		this.mesh = mesh.copy();
-		this.yDiv = this.h / (this.mesh.layers.size() - 1);
+		// must be called after mesh is set so yDiv can be calculated
+		resetDisplay();
+
+		console.log("starting yPos = " + currPosition[1]);
+	}
+
+	public void resetDisplay() {
+		subLayerToDraw = 0;
+		layerToDraw = 0;
+
+		polygonsToDraw.clear();
+
 		// initialize y position outside of bounds of view
 		// this sets up positing correctly for first layer in graph
-		this.currPosition[1] = this.y2 + yDiv/2.0;
-		console.log("starting yPos = " + currPosition[1]);
+		this.yDiv = this.h / (this.mesh.layers.size() - 1);
+		currPosition[0] = this.x1;
+		currPosition[1] = this.y2 + yDiv/2.0;
+
+		layerInitialized = false;
 	}
 
 	private boolean nextLevel() {
