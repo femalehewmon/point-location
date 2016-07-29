@@ -28,22 +28,20 @@ POSITIVE_INFINITY = 9999999;
 NEGATIVE_INFINITY = -9999999;
 
 void setup() {
-	float border = $("#title").height();
 
-	float aspectRatio = 16/9;
+	// set size of visualization area with a fixed aspect ratio
+	float border = $("#visualization").height() * 0.05;
+	float aspectRatio = 16.0 / 9.0;
 	float wtmp = $("#visualization").width() - border;
-	//	float wtmp = $(window).width() - border;
 	float htmp = wtmp / aspectRatio;
-	// extra multiplier added to prevent scroll down in browser
-	htmp = htmp ;
 	wtmp = htmp * aspectRatio;
-
-	// set size of visualization area
 	size(wtmp, htmp);
 
+	// initialize global helper classes
 	sceneControl = new SceneController();
 	compGeoHelper = new CompGeoHelper();
 
+	// initialize mouse interaction helpers
 	messages = new ArrayList<Message>();
 	pickbuffer = createGraphics(width, height);
 
@@ -79,6 +77,11 @@ void draw() {
 			}
 			if ( DEMO ) {
 				pcreateView.demo();
+				pcreateView.polygon.move(
+						pcreateView.xCenter, pcreateView.yCenter);
+				pcreateView.polygon.scale( Math.min(
+						pcreateView.w / pcreateView.polygon.getWidth(),
+						pcreateView.h / pcreateView.polygon.getHeight()));
 			}
 			if ( pcreateView.finalized ) {
 				// set polygon to calculate movement required to center in view
@@ -110,18 +113,16 @@ void draw() {
 						pcreateView.polygon, kpView.outerTri);
 				kpView.setMesh( mesh );
 				graphView.setMesh( mesh );
-				plocateView.setPolygon( pcreateView.polygon );
-				plocateView.setMesh( kpView.mesh, graphView.mesh );
 			}
-			if ( sceneControl.update() ) {
-				sceneControl.nextScene();
-			}
+
+			sceneControl.update(true);
+			break;
 		case sceneControl.TRIANGULATE_POLY:
 			if ( !sceneControl.sceneReady ) {
-				pcreateView.visible = false;
+				setText( "Let's start by triangulating our polygon" );
 				kpView.visible = true;
 				graphView.visible = true;
-				graphView.nextLevel();
+				pcreateView.visible = false;
 
 				kpView.update();
 				kpView.update();
@@ -139,30 +140,27 @@ void draw() {
 					   " working in");
 			}
 
-			if ( sceneControl.update() ) {
-				sceneControl.nextScene();
-			}
+			sceneControl.update(true);
 			break;
 		case sceneControl.SURROUND_POLY_WITH_OUTER_TRI:
-			kpView.drawOuterTri = true;
-			if ( sceneControl.update() ) {
-				kpView.drawPoly = false;
-				kpView.drawPolyTris = false;
-				kpView.drawOuterTri = true;
-				kpView.outerTri.cFill = color(200, 200, 200);
-				graphView.nextLevel();
-				sceneControl.nextScene();
+			if ( !sceneControl.sceneReady ) {
+				kpView.displayOuterTriangle();
 			}
+
+			sceneControl.update(true);
 			break;
 		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
 			kpView.drawLayers = true;
 			if ( sceneControl.update() ) {
-				if ( kpView.nextLevel() ) {
-					graphView.nextLevel();
+				boolean finalLayer = !kpView.update();
+				finalLayer = !graphView.update() || finalLayer;
+				if ( !finalLayer ) {
 					// reset scene for next level
 					sceneControl.reset();
 				} else {
 					// if no levels remain in either view, go to next scene
+					plocateView.setPolygon( kpView.polygon );
+					plocateView.setMesh( kpView.mesh, graphView.mesh );
 					sceneControl.nextScene();
 				}
 			}
@@ -172,14 +170,20 @@ void draw() {
 				kpView.visible = false;
 				graphView.visible = false;
 				plocateView.visible = true;
+				setText(
+						"Place a point anywhere inside the colored triangle");
 			}
 
 			if ( plocateView.pointSelected != null ) {
+				setText(
+						"We can now traverse our graph to determine " +
+						"if the point is located inside our original polygon");
 				if ( sceneControl.update() ) {
 					if ( plocateView.nextLevel() ) {
 						sceneControl.reset();
 					} else {
 						sceneControl.nextScene();
+						sceneControl.sceneReady = false;
 					}
 				}
 			}
@@ -188,6 +192,9 @@ void draw() {
 			break;
 	}
 
+	if (pcreateView.visible) {
+		pcreateView.render();
+	}
 	if (plocateView.visible) {
 		plocateView.render();
 	}
@@ -196,9 +203,6 @@ void draw() {
 	}
 	if (graphView.visible) {
 		graphView.render();
-	}
-	if (pcreateView.visible) {
-		pcreateView.render();
 	}
 
 	messages.clear();

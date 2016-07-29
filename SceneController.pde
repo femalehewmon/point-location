@@ -3,7 +3,7 @@ class SceneController {
 	float scenePercentageStep;
 	float scenePercentComplete;
 	float sceneRelativePercentComplete;
-	int SCENE_DURATION = 100;
+	int SCENE_DURATION = 20;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
 	final String CENTER_AND_RESIZE_POLYGON = "CENTER AND RESIZE POLYGON";
@@ -29,7 +29,7 @@ class SceneController {
 		this.sceneReady = false;
 	}
 
-	public boolean update() {
+	public boolean update(boolean moveToNextScene) {
 		boolean next_scene = false;
 		sceneTimer += 1;
 		if ( sceneTimer >= SCENE_DURATION ) {
@@ -39,7 +39,14 @@ class SceneController {
 		sceneRelativePercentComplete =
 			1.0 / (sceneControl.SCENE_DURATION - sceneControl.sceneTimer);
 		sceneReady = true;
+		if ( moveToNextScene && next_scene ) {
+			nextScene();
+		}
 		return next_scene;
+	}
+
+	public boolean update() {
+		return update(false);
 	}
 
 	public void previousScene() {
