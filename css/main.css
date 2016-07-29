@@ -4,8 +4,6 @@ html, body {
     width: 100%;
     margin: auto;
     position: relative;
-    padding-left:10px;
-    padding-right:10px;
     font-family: 'Inconsolata';
     color: #000000;
 }
@@ -27,12 +25,6 @@ html, body {
     text-align: left;
 }
 
-#processing {
-    line-height: 100%;
-    width=100%;
-    height=100%;
-    white-space: nowrap;
-}
 
 /*http://jsfiddle.net/hashem/vsakd/8/*/
 .parentbox {
@@ -47,5 +39,4 @@ html, body {
 .childbox {
     display: inline-block;
     vertical-align: middle;
-    padding: 5px;
 }
