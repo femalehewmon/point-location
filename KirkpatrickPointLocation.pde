@@ -31,10 +31,11 @@ void setup() {
 	float border = $("#title").height();
 
 	float aspectRatio = 16/9;
-	float wtmp = $(window).width() - border;
+	float wtmp = $("#visualization").width() - border;
+	//	float wtmp = $(window).width() - border;
 	float htmp = wtmp / aspectRatio;
 	// extra multiplier added to prevent scroll down in browser
-	htmp = htmp - (border * 3);
+	htmp = htmp ;
 	wtmp = htmp * aspectRatio;
 
 	// set size of visualization area
@@ -48,12 +49,12 @@ void setup() {
 
 	// create views
 	float padding = border/2.0;
-	float yVis = (height-padding)*0.75;
-	float yText = (height-padding)*0.25;
-	pcreateView = new PolygonCreationView(padding, padding, width-padding, yVis);
-	kpView = new KirkpatrickMeshView(padding, padding, width/2.0, yVis);
-	graphView = new LayeredGraphView(width/2.0, padding, width-padding, yVis);
-	plocateView = new PointLocationView(padding, padding, width-padding, yVis);
+	float xPad = width-padding;
+	float yPad = height-padding;
+	pcreateView = new PolygonCreationView(padding, padding, xPad, yPad);
+	kpView = new KirkpatrickMeshView(padding, padding, width/2.0, yPad);
+	graphView = new LayeredGraphView(width/2.0, padding, width-padding, yPad);
+	plocateView = new PointLocationView(padding, padding, width-padding, yPad);
 
 	pcreateView.visible = true;
 	kpView.visible = false;

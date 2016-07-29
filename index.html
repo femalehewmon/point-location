@@ -1,14 +1,27 @@
 <html>
 <head>
     <title>A Short Look at Kirkpatrick's Point Location Data Structure</title>
+   <!-- CSS Begins -->
+   <link rel="stylesheet" type="text/css" href="css/main.css" />
+   <!-- CSS Ends -->
     <script src="js/processing.js"></script>
     <script src="js/jquery-2.1.4.min.js"></script>
     <script src="js/poly2tri.js"></script>
 </head>
 <body>
-    <h1 id="title" align="center">Kirkpatrick's Point Location Data Structure</h1>
-    <div id="processing" align="center">
+    <div id="visualization" class="parentbox">
+        <div id="processing" class="childbox">
         <canvas data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde TextView.pde"></canvas>
+        </div>
+    </div>
+    <div id="explanation">
+        <h1 id="title" align="center">
+            Kirkpatrick's Point Location Data Structure
+        </h1>
+        <p id="explanation-text" class="explanation-text">
+            Kirkpatrick's Point Location Data Structure
+        </p>
+        <!-- Text to be filled in within processing code -->
     </div>
 </body>
 </html>

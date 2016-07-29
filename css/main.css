@@ -1,90 +1,51 @@
-body { margin: 0; }
-canvas { width: 100%; height: 100% }
-
-#poly-create-container {
-	position: relative;
-	display: block;
-    margin: 0 auto;
-    width: 1000px;
-}
-
-#fdg-container,
-#kpt-container {
-	position: relative;
-	display: block;
-	width: 50%;
-}
-
-#fdg-container {
-	float: right;
-}
-
-#kpt-container {
-	float: left;
-}
-
-#KPTCanvas {
+html, body {
+    background-color: #ffffff;
+    height: 100%;
+    width: 100%;
+    margin: auto;
     position: relative;
-    display: block;
-    /*float: left;*/
-    margin: 0 auto;
-    //border: 2px solid black;
-    width: 500px;
-    /*height: 85%;*/
+    padding-left:10px;
+    padding-right:10px;
+    font-family: 'Inconsolata';
+    color: #000000;
 }
 
-#FDGCanvas {
-    position: relative;
-    display: block;
-    /*float: right;*/
-    margin: 0 auto;
-    //border: 2px solid black;
-    width: 500px;
-    /*height: 85%;*/
+#visualization {
+	width: 75%;
+    height: 100%;
+    float: left;
 }
 
-#FDGScroll {
+#explanation {
     position: relative;
-    display: block;
-    float: right;
-    margin: 0 auto;
-    width: 100px;
+    margin-left: 75%;
+    height: 100%;
 }
 
- #canvas-container:after {
-    content:".";
-    display:block;
-    height:0;
-    clear:both;
-    visibility:hidden;
-}	
+.explanation-text {
+    font-size: 24;
+    text-align: left;
+}
 
-#titlebox {
-    position: relative;
-    /*top: 610px;*/
-    display: block;
-    /*margin: 0 auto;*/
-    //border: 2px solid black;
-	width: 100%;
-    font-family: helvetica, sans-serif;
-    font-size: 32px;
-    text-align: center;
-    color: black;
-    font-weight: 600;
+#processing {
+    line-height: 100%;
+    width=100%;
+    height=100%;
+    white-space: nowrap;
+}
+
+/*http://jsfiddle.net/hashem/vsakd/8/*/
+.parentbox {
     text-align: center;
 }
-
-#textbox {
-    position: relative;
-    /*top: 610px;*/
-    display: block;
-    /*margin: 0 auto;*/
-    //border: 2px solid black;
-	width: 100%;
-    height: 150;
-    font-family: helvetica, sans-serif;
-    font-size: 18px;
-    color: black;
-    font-weight: 600;
-    text-align: center;
+.parentbox:before {
+    content: ' ';
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+}
+.childbox {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 5px;
 }
