@@ -56,18 +56,30 @@ class PolygonCreationView extends View {
 		if ( this.finalized ) {
 			this.polygon.render( true );
 		} else {
-			// draw black lines between points
 			fill(color(0));
-			for ( i = 0; i < this.polygon.points.size() - 1; i++ ) {
+			if ( this.polygon.points.size() > 0 ) {
+				// draw black lines between points
+				for ( i = 0; i < this.polygon.points.size() - 1; i++ ) {
+					line(   this.polygon.points.get(i).x,
+							this.polygon.points.get(i).y,
+							this.polygon.points.get(i + 1).x,
+							this.polygon.points.get(i + 1).y );
+				}
+				// draw final black line between last point
+				// and mouse position
 				line(   this.polygon.points.get(i).x,
 						this.polygon.points.get(i).y,
-						this.polygon.points.get(i + 1).x,
-						this.polygon.points.get(i + 1).y );
+						mouseX, mouseY);
+				// draw points
+				for ( i = 0; i < this.polygon.points.size(); i++ ) {
+					this.polygon.points.get(i).render();
+				}
 			}
-			// draw points
-			for ( i = 0; i < this.polygon.points.size(); i++ ) {
-				this.polygon.points.get(i).render();
-			}
+
+			// draw point at mouse position
+			stroke(color(0));
+			fill(color(0));
+			ellipse( mouseX, mouseY, 10, 10);
 		}
 	}
 
