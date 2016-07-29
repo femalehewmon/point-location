@@ -148,7 +148,6 @@ class KirkpatrickMeshView extends View {
 				PolyPoint ildv = new PolyPoint(
 							verticesRemoved.get(i).x,
 							verticesRemoved.get(i).y);
-				ildv.size = 20;
 				ildv.cFill = color(0);
 				verticesToDraw.add( ildv );
 			}
