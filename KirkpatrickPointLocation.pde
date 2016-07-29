@@ -62,12 +62,21 @@ void setup() {
 	plocateView.visible = false;
 }
 
+void setText(String text) {
+	// set directly to html
+	$("#explanation-text").text(text);
+}
+
 void draw() {
 	background(245, 245, 245);
 	pickbuffer.background(255);
 
 	switch( sceneControl.currScene ) {
 		case sceneControl.CREATE_POLYGON:
+			if ( !sceneControl.sceneReady ) {
+				setText(
+						"Click anywhere to create an non-overlapping polygon");
+			}
 			if ( DEMO ) {
 				pcreateView.demo();
 			}
@@ -75,17 +84,13 @@ void draw() {
 				// set polygon to calculate movement required to center in view
 				kpView.setPolygon( pcreateView.polygon );
 				sceneControl.nextScene();
+				setText( "Nice polygon!" );
 			}
 			break;
 		case sceneControl.CENTER_AND_RESIZE_POLYGON:
 			if ( !sceneControl.sceneReady ) {
-				/*
-				pcreateView.polygon.animateMove(
-						kpView.xPosToMovePoly, kpView.yPosToMovePoly,
-						sceneControl.SCENE_DURATION );
-				pcreateView.polygon.animateScale( kpView.ratioToScalePoly,
-						sceneControl.SCENE_DURATION );
-						*/
+				setText(
+						"Let's center and resize it.");
 			}
 			if ( sceneControl.update() ) {
 				pcreateView.polygon.move(
@@ -95,6 +100,11 @@ void draw() {
 			}
 			break;
 		case sceneControl.CREATE_MESH:
+			if ( !sceneControl.sceneReady ) {
+				setText(
+						"That's better. We are now ready to start creating " +
+						"our data structure");
+			}
 			if ( !sceneControl.sceneReady ) {
 				Mesh mesh = compGeoHelper.createKirkpatrickDataStructure(
 						pcreateView.polygon, kpView.outerTri);
@@ -113,9 +123,20 @@ void draw() {
 				graphView.visible = true;
 				graphView.nextLevel();
 
-				kpView.drawPoly = false;
-				kpView.drawPolyTris = true;
-				kpView.drawOuterTri = false;
+				kpView.update();
+				kpView.update();
+				graphView.update();
+				graphView.update();
+				setText( "That's a good start, but what about the " +
+					   "area surrounding the polygon?"	);
+				setText( "That's a good start, but what if a point " +
+						"is placed outside of the bounds " +
+					    "of the polygon itself? ");
+				setText(
+					   "What if we place a large outer triangle to completely " +
+					   "surround our polygon? The triangle can be arbitrarily " +
+					   "large to encompass the entire outer area that we are " +
+					   " working in");
 			}
 
 			if ( sceneControl.update() ) {
