@@ -20,6 +20,15 @@ html, body {
     height: 100%;
 }
 
+#explanation-text {
+    position: relative;
+    height: 60%;
+}
+#controls-text {
+    position: relative;
+    height: 20%;
+}
+
 .explanation-text {
     font-size: 24;
     text-align: left;
