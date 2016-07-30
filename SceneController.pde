@@ -27,7 +27,6 @@ class SceneController {
 	public void restart() {
 		reset();
 		this.currScene = SETUP_KIRKPATRICK_DATA_STRUCTURE;
-		console.log("Restarting animation");
 	}
 
 	public void reset() {
@@ -41,7 +40,6 @@ class SceneController {
 
 	public void updateSceneDuration(float scale) {
 		sceneDuration = DEFAULT_SCENE_DURATION / scale;
-		console.log("New sceneDruation: " + sceneDuration);
 	}
 
 	public boolean update() {
