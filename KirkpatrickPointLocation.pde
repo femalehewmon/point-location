@@ -73,6 +73,10 @@ void resetAnimation() {
 	sceneControl.restart();
 }
 
+void startDemo() {
+	pcreateView.demo();
+}
+
 void draw() {
 	background(245, 245, 245);
 	pickbuffer.background(255);
@@ -80,173 +84,118 @@ void draw() {
 	switch( sceneControl.currScene ) {
 		case sceneControl.CREATE_POLYGON:
 			if ( !sceneControl.sceneReady ) {
-				setText(
-						"Click anywhere to create an non-overlapping polygon");
-			}
-			if ( DEMO ) {
-				pcreateView.demo();
-				pcreateView.polygon.move(
-						pcreateView.xCenter, pcreateView.yCenter);
-				pcreateView.polygon.scale( Math.min(
-						pcreateView.w / pcreateView.polygon.getWidth(),
-						pcreateView.h / pcreateView.polygon.getHeight()));
-			}
-			if ( pcreateView.finalized ) {
-				// set polygon to calculate movement required to center in view
-				kpView.setPolygon( pcreateView.polygon );
-				sceneControl.nextScene();
-				setText( "Nice polygon!" );
-			}
-			break;
-		case sceneControl.CENTER_AND_RESIZE_POLYGON:
-			if ( !sceneControl.sceneReady ) {
-				setText(sceneControl.created);
-			}
-			if ( sceneControl.update() ) {
-				pcreateView.polygon.move(
-						kpView.xPosToMovePoly, kpView.yPosToMovePoly);
-				pcreateView.polygon.scale( kpView.ratioToScalePoly );
-				Mesh mesh = compGeoHelper.createKirkpatrickDataStructure(
-						pcreateView.polygon, kpView.outerTri);
-				kpView.setMesh( mesh );
-				graphView.setMesh( mesh );
-				sceneControl.nextScene();
-			}
-			break;
-		case sceneControl.CREATE_MESH:
-			if ( !sceneControl.sceneReady ) {
+				// reset poly creation view if first time entering scene
+				pcreateView.visible = true;
 				kpView.visible = false;
 				graphView.visible = false;
 				plocateView.visible = false;
-				pcreateView.visible = true;
-				setText(
-						"That's better. We are now ready to start creating " +
-						"our data structure");
-				sceneControl.updateOnKeyPress();
-			}
 
+				pcreateView.reset();
+
+				if ( DEMO ) {
+					pcreateView.demo();
+				}
+				sceneControl.update();
+			}
+			// do not update scene until polygon is finalized
+			if ( pcreateView.polygon.finalized ) {
+				// view will now show polygon centering and scaling as setup
+				if(!pcreateView.update() && sceneControl.update()) {
+					LayeredMesh kpDataStruct =
+						compGeoHelper.createKirkpatrickDataStructure(
+								pcreateView.polygon, pcreateView.outerTri);
+					kpView.setMesh(kpDataStruct,
+							pcreateView.polygon,
+							pcreateView.outerTri);
+					graphView.setMesh(kpDataStruct);
+					sceneControl.nextScene();
+				}
+			}
 			break;
-		case sceneControl.TRIANGULATE_POLY:
+		case sceneControl.SETUP_KIRKPATRICK_DATA_STRUCTURE:
 			if ( !sceneControl.sceneReady ) {
-				kpView.resetDisplay();
-				graphView.resetDisplay();
-				setText( "Let's start by triangulating our polygon" );
+				pcreateView.visible = false;
+				kpView.visible = true;
+				graphView.visible = false;
+				plocateView.visible = false;
+
+				kpView.reset();
+				sceneControl.updateOnKeyPress();
+				kpView.update();
+			}
+			if ( sceneControl.update() ) {
+				kpView.update();
+				if ( kpView.initialized ) {
+					sceneControl.nextScene();
+				} else {
+					sceneControl.updateOnKeyPress();
+				}
+			}
+			break;
+		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCTURE:
+			if ( !sceneControl.sceneReady ) {
+				pcreateView.visible = false;
 				kpView.visible = true;
 				graphView.visible = true;
-				pcreateView.visible = false;
-				kpView.resetDisplay();
-
-				kpView.update();
-				kpView.update();
-				graphView.update();
-				graphView.update();
-				setText( "That's a good start, but what about the " +
-					   "area surrounding the polygon?"	);
-				setText( "That's a good start, but what if a point " +
-						"is placed outside of the bounds " +
-					    "of the polygon itself? ");
-				setText(
-					   "What if we place a large outer triangle to completely " +
-					   "surround our polygon? The triangle can be arbitrarily " +
-					   "large to encompass the entire outer area that we are " +
-					   " working in");
+				plocateView.visible = false;
+				graphView.reset();
 			}
 
-			sceneControl.update(true);
-			break;
-		case sceneControl.SURROUND_POLY_WITH_OUTER_TRI:
-			if ( !sceneControl.sceneReady ) {
-				kpView.displayOuterTriangle();
-			}
-
-			sceneControl.update(true);
-			break;
-		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCT:
-			kpView.drawLayers = true;
 			if ( sceneControl.update() ) {
-				boolean finalLayer = !kpView.update();
-				finalLayer = !graphView.update() || finalLayer;
-				if ( !finalLayer ) {
-					// reset scene for next level
+				boolean finalized = kpView.update();
+				finalized = graphView.update() || finalized;
+				if ( finalized) {
 					sceneControl.reset();
 				} else {
-					// if no levels remain in either view, go to next scene
-					plocateView.setPolygon( kpView.polygon );
-					plocateView.setMesh( kpView.mesh, graphView.mesh );
 					sceneControl.nextScene();
 				}
 			}
 			break;
 		case sceneControl.POINT_LOCATION:
 			if ( !sceneControl.sceneReady ) {
+				pcreateView.visible = false;
 				kpView.visible = false;
 				graphView.visible = false;
 				plocateView.visible = true;
-				setText(
-						"Place a point anywhere inside the colored triangle");
+
+				plocateView.reset();
+				plocateView.setMesh( kpView.mesh, graphView.mesh,
+						pcreateView.polygon );
+				sceneControl.update();
 			}
 
-			if ( plocateView.pointSelected != null ) {
-				setText(
-						"We can now traverse our graph to determine " +
-						"if the point is located inside our original polygon");
+			if( plocateView.pointSelected != null ) {
 				if ( sceneControl.update() ) {
-					if ( plocateView.nextLevel() ) {
-						sceneControl.reset();
-					} else {
-						sceneControl.nextScene();
-						sceneControl.sceneReady = false;
+					if ( plocateView.finalized ) {
+						plocateView.reset();
 					}
+					plocateView.update();
+					sceneControl.reset();
 				}
 			}
 			break;
-		case sceneControl.DONE:
-			break;
 	}
 
-	if (pcreateView.visible) {
-		pcreateView.render();
-	}
-	if (plocateView.visible) {
-		plocateView.render();
-	}
-	if (kpView.visible) {
-		kpView.render();
-	}
-	if (graphView.visible) {
-		graphView.render();
-	}
+	pcreateView.render();
+	plocateView.render();
+	kpView.render();
+	graphView.render();
 
 	messages.clear();
 
-	if (graphView.visible) {
-		graphView.mouseUpdate();
-	}
-	if (kpView.visible) {
-		kpView.mouseUpdate();
-	}
-	if (plocateView.visible) {
-		plocateView.mouseUpdate();
-	}
-
+	graphView.mouseUpdate();
+	kpView.mouseUpdate();
+	plocateView.mouseUpdate();
 }
 
 void mousePressed( ) {
 	if (mouseButton == LEFT) {
-		switch( sceneControl.currScene ) {
-			case sceneControl.CREATE_POLYGON:
-				if ( !DEMO && !pcreateView.finalized ) {
-					pcreateView.addPoint( mouseX, mouseY );
-				}
-				break;
-			case sceneControl.POINT_LOCATION:
-				plocateView.evaluatePoint( mouseX, mouseY );
-				break;
-		}
+		pcreateView.onMousePress();
+		plocateView.onMousePress();
 	}
 }
 
 void browserKeyPressed() {
-	sceneControl.keyWasPressed();
+	sceneControl.onKeyPress();
 }
 

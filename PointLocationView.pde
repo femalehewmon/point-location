@@ -17,12 +17,14 @@ class PointLocationView extends View {
 	// used to speed up graph edge drawing on mouse hover selection
 	// prevents re-recursive search on each render loop
 	int lastSelected = -1;
+	boolean pointInside;
 	ArrayList<GraphEdge> selectedEdges;
 
 	public PointLocationView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
 		this.pointSelected = null;
+		this.pointInside = false;
 
 		this.polygon = null;
 		this.root = null;
@@ -36,11 +38,11 @@ class PointLocationView extends View {
 		this.selectedEdges = new ArrayList<GraphEdge>();
 	}
 
-	public void setPolygon( Polygon poly ) {
-		this.polygon = poly;
-	}
+	public void setMesh(
+			LayeredMesh kpMesh, LayeredMesh lgraphMesh, Polygon polygon ) {
 
-	public void setMesh( LayeredMesh kpMesh, LayeredMesh lgraphMesh ) {
+		this.polygon = polygon;
+
 		if ( this.kpMesh != null ) {
 			this.kpMesh.clear();
 		}
@@ -54,10 +56,15 @@ class PointLocationView extends View {
 				kpMesh.getVisiblePolygonIdsByLayer(
 					kpMesh.layers.size() - 2).get(0));
 
-		resetSearch();
+		reset();
 	}
 
-	private void resetSearch() {
+	private void reset() {
+		this.finalized = false;
+		setText(sceneControl.place_point);
+
+		this.pointSelected = null;
+
 		this.layerToDraw = 0;
 		this.kpLayers.clear();
 		this.kpLayers.add( new ArrayList<Polygon>() );
@@ -71,6 +78,11 @@ class PointLocationView extends View {
 			// only evaluate points placed inside the outer triangle
 			return false;
 		}
+
+		console.log("evaluate point");
+
+		setText(sceneControl.point_locating);
+		this.pointInside = false;
 
 		this.pointSelected = new PolyPoint(x , y);
 
@@ -101,6 +113,11 @@ class PointLocationView extends View {
 				visiblePoly = visiblePolys.get(i);
 				if ( visiblePoly.containsPoint( x, y ) ) {
 
+					// check if tri belongs to the original polygon
+					if ( visiblePoly.parentId == polygon.id ) {
+						this.pointInside = true;
+					}
+
 					if ( pathEdges.size() == 0 ) {
 						pathEdges.add(
 								new GraphEdge(
@@ -119,6 +136,7 @@ class PointLocationView extends View {
 						Integer polyId = iterator.next();
 						if ( kpMesh.polygons.get(polyId).childId ==
 								visiblePoly.parentId ) {
+
 							// add polygon to next layer
 							nextLayer.add( kpMesh.polygons.get(polyId) );
 							// add edge to next layer
@@ -139,11 +157,6 @@ class PointLocationView extends View {
 				this.edges.add( pathEdges );
 			}
 
-			// add layer containing true path polygons and next layer edges
-			//this.kpLayers.add( visiblePolys );
-			//this.edges.add( nextEdges );
-			//this.edges.get(this.edges.size() - 1).addAll(pathEdges);
-
 			// add layer containing next layer polygons and edges
 			this.kpLayers.add( nextLayer );
 			this.edges.add(nextEdges);
@@ -151,16 +164,28 @@ class PointLocationView extends View {
 
 			// set next layer as currently visible polygons
 			visiblePolys = nextLayer;
+
 		} while ( visiblePolys.size() > 0 )
-		console.log(this.kpLayers.size());
-		console.log(this.edges.size());
 	}
 
-	public boolean nextLevel() {
+	public boolean update() {
+		if ( pointSelected != null && !finalized ) {
+			if( !nextLevel() ) {
+				if ( pointInside ) {
+					setText(sceneControl.point_inside);
+				} else {
+					setText(sceneControl.point_outside);
+				}
+				finalized = true;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private boolean nextLevel() {
 		this.layerToDraw += 1;
-		if ( this.layerToDraw >= this.kpLayers.size() ) {
-			this.pointSelected = null;
-			resetSearch();
+		if ( this.layerToDraw >= this.kpLayers.size() - 1 ) {
 			return false;
 		}
 		return true;
@@ -203,6 +228,8 @@ class PointLocationView extends View {
 	}
 
 	public void render() {
+		if(!visible){return;}
+
 		int i, j;
 
 		if ( this.polygon != null ) {
@@ -302,7 +329,15 @@ class PointLocationView extends View {
 		//return ( color( kpMesh.polygons.get(layers.get(0).get(0)).id ) == c);
 	}
 
+	public void onMousePress() {
+		console.log("mouse press");
+		if ( visible && pointSelected == null ) {
+			evaluatePoint( mouseX, mouseY );
+		}
+	}
+
 	public void mouseUpdate() {
+		if(!visible){return;}
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i;
 		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();

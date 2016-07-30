@@ -22,7 +22,7 @@ class LayeredGraphView extends View {
 
 		this.mesh = null;
 
-		this.layerToDraw = 0;
+		this.layerToDraw = 1;
 		this.subLayerToDraw = 0;
 		this.layerInitialized = false;
 
@@ -36,7 +36,6 @@ class LayeredGraphView extends View {
 		this.polygonsToDraw = new ArrayList<Polygon>();
 
 		this.MODE = MODE_ON_REMOVE;
-		console.log("Graph ending position " + y2);
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
@@ -46,14 +45,13 @@ class LayeredGraphView extends View {
 
 		this.mesh = mesh.copy();
 		// must be called after mesh is set so yDiv can be calculated
-		resetDisplay();
-
-		console.log("starting yPos = " + currPosition[1]);
+		reset();
 	}
 
-	public void resetDisplay() {
+	public void reset() {
 		subLayerToDraw = 0;
-		layerToDraw = 0;
+		// skip rendering the first layer to align with update of kpMeshView
+		layerToDraw = 1;
 
 		polygonsToDraw.clear();
 
@@ -145,10 +143,10 @@ class LayeredGraphView extends View {
 
 			return nextLevel();
 		}
-
 	}
 
 	public void render() {
+		if(!visible){return;}
 		//noStroke();
 		//super.render(); // draw view background
 		int i, j, k;
@@ -174,6 +172,7 @@ class LayeredGraphView extends View {
 	}
 
 	public void mouseUpdate() {
+		if(!visible){return;}
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {

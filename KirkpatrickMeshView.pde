@@ -5,74 +5,53 @@ class KirkpatrickMeshView extends View {
 	Polygon polygon;
 	Polygon outerTri;
 
+	int subScene;
+	int EXPLAIN=1;
+	int TRIANGULATE_POLY=2;
+	int ADD_OUTER_TRI=3;
+	int TRIANGULATE_OUTER_TRI=4;
+	int MESH_TRAVERSAL=5;
+	int explanation;
+	boolean initialized;
+
 	ArrayList<Polygon> polygonsToDraw;
 	ArrayList<Vertex> verticesToDraw;
 	PolyPoint ildvToDraw;
-
-	float ratioToScalePoly;
-	float xPosToMovePoly;
-	float yPosToMovePoly;
 
 	int layerToDraw;
 	int subLayerToDraw;
 	boolean layerInitialized;
 	boolean drawOuterTriangle;
-	boolean drawPolygon;
 
 	public KirkpatrickMeshView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
-		this.layerToDraw = 0;
+		this.layerToDraw = 1;
 		this.subLayerToDraw = 0;
 		this.layerInitialized = false;
 		this.drawOuterTriangle = false;
-		this.drawPolygon = true;
 
 		this.mesh = null;
 		this.polygon = null;
-		// create outer triangle
-		this.outerTri = compGeoHelper.createPoly();
-		this.outerTri.cHighlight = color(255);
-		this.outerTri.cFill = color(200, 200, 200);
-		// +10 to give a slight border
-		this.outerTri.addPoint( xCenter, y1 + 10 );
-		this.outerTri.addPoint( x2 - 10, y2 - 10 );
-		this.outerTri.addPoint( x1 + 10, y2 - 10 );
+		this.outerTri = null;
 
 		this.polygonTris = new ArrayList<Integer>();
 		this.polygonsToDraw = new ArrayList<Polygon>();
 		this.verticesToDraw = new ArrayList<Vertex>();
 		this.ildvToDraw = null;
 
-		// ratio and position that the polygon will need to adjust to in order
-	    // to fit in this view
-		// values saved here and not directly applied for the sake of animation
-		this.ratioToScalePoly = 1.0; // set when polygon is added to view
-		this.xPosToMovePoly = this.outerTri.getCenter().x;
-		this.yPosToMovePoly = this.outerTri.getCenter().y;// + (this.h / 8.0);
-
+		this.initialized = true;
 		this.finalized = false;
 	}
 
-	public void setPolygon( Polygon polygon ) {
-		this.polygon = polygon;
-		// calculate amount to scale -- better way to do this?
-		// inner polygon should be able to be misshapen, so can't
-		// generalize entire width to specific scale
-		float totalScale = 1.0;
-		Polygon tmp = this.polygon.copy();
-		tmp.move( xPosToMovePoly, yPosToMovePoly );
-		while( !this.outerTri.containsPolygon( tmp ) ){
-			tmp.scale( 0.90 );
-			totalScale *= 0.90;
-		}
-		this.ratioToScalePoly = totalScale;
-	}
-
-	public void setMesh( LayeredMesh mesh ) {
+	public void setMesh( LayeredMesh mesh, Polygon polygon, Polygon outerTri ){
 		int i, j, k, l;
 
-		resetDisplay();
+		this.polygon = polygon;
+		this.outerTri = outerTri;
+
+		reset();
+		this.polygonsToDraw.add(this.polygon);
 
 		// clear previously set mesh
 		this.ildvToDraw = null;
@@ -92,20 +71,20 @@ class KirkpatrickMeshView extends View {
 		}
 	}
 
-	public void displayOuterTriangle() {
-		this.drawOuterTriangle = true;
-		this.drawPolygon = false;
-		this.outerTri.selected = true;
-	}
-
-	public void resetDisplay() {
+	public void reset() {
 		subLayerToDraw = 0;
-		layerToDraw = 0;
+		layerToDraw = 1;
 		polygonsToDraw.clear();
 		verticesToDraw.clear();
 		layerInitialized = false;
+
 		drawOuterTriangle = false;
 		outerTri.selected = false;
+
+		subScene = EXPLAIN;
+		explanation = 1;
+		initialized = false;
+		polygonsToDraw.add(polygon);
 	}
 
 	private boolean nextLevel() {
@@ -119,7 +98,65 @@ class KirkpatrickMeshView extends View {
 		return ( layerToDraw <= mesh.layers.size() - 1 );
 	}
 
+	private boolean nextSubScene() {
+		switch(subScene) {
+			case EXPLAIN:
+				if ( explanation < 4 ) {
+					subScene = EXPLAIN;
+				} else if ( explanation == 4) {
+					subScene = TRIANGULATE_POLY;
+				} else {
+					initialized = true;
+					subScene = MESH_TRAVERSAL;
+				}
+				break;
+			case TRIANGULATE_POLY:
+				subScene = ADD_OUTER_TRI;
+				break;
+			case ADD_OUTER_TRI:
+				subScene = TRIANGULATE_OUTER_TRI;
+				break;
+			case TRIANGULATE_OUTER_TRI:
+				subScene = EXPLAIN;
+				break;
+		}
+		return true;
+	}
+
 	public boolean update() {
+		// show polygon alone
+		switch(subScene) {
+			case EXPLAIN:
+				if ( explanation == 1 ) {
+					setText(sceneControl.explanation1);
+				} else if ( explanation == 2 ){
+					setText(sceneControl.explanation2);
+				} else if ( explanation == 3 ){
+					setText(sceneControl.explanation3);
+				} else {
+					setText(sceneControl.before_begin);
+				}
+				explanation++;
+				return nextSubScene();
+			case TRIANGULATE_POLY:
+				setText(sceneControl.triangulate_poly);
+				polygonsToDraw.clear();
+				polygonsToDraw.addAll(mesh.getPolygonsByParentId(polygon.id));
+				return nextSubScene();
+			case ADD_OUTER_TRI:
+				setText(sceneControl.add_outer_tri);
+				drawOuterTriangle = true;
+				return nextSubScene();
+			case TRIANGULATE_OUTER_TRI:
+				setText(sceneControl.triangulate_outer_tri);
+				polygonsToDraw.addAll(mesh.getPolygonsByParentId(outerTri.id));
+				return nextSubScene();
+			case MESH_TRAVERSAL:
+				return updateMeshTraversal();
+		}
+	}
+
+	private boolean updateMeshTraversal() {
 		int i;
 		// Visualization progression:
 		// - If first subLayer in layer, draw all previously visible polygons
@@ -132,6 +169,13 @@ class KirkpatrickMeshView extends View {
 		// so that each step, except the first, is on a different subLayer
 
 		if ( !layerInitialized ) {
+			setText(sceneControl.ildv_identified);
+
+			// add all polygons visible on previous layer
+			polygonsToDraw.clear();
+			polygonsToDraw.addAll(
+					mesh.getVisiblePolygonsByLayer(layerToDraw - 1));
+
 			// add all ildv vertices to be removed on this layer
 			layerInitialized = true;
 			// outerTri's selected color (dark gray) used to show hole
@@ -162,11 +206,15 @@ class KirkpatrickMeshView extends View {
 			// Should be either a list of added or removed,
 			// but check for and handle both
 			if ( subLayer != null ) {
-				polysAdded = subLayer.getPolygonsAddedToLayer();
-				polysRemoved = subLayer.getPolygonsRemovedFromLayer();
-				verticesRemoved = subLayer.getVerticesRemovedFromLayer();
+				ArrayList<Integer> polysAdded =
+					subLayer.getPolygonsAddedToLayer();
+				ArrayList<Integer> polysRemoved =
+					subLayer.getPolygonsRemovedFromLayer();
+				ArrayList<Integer> verticesRemoved =
+					subLayer.getVerticesRemovedFromLayer();
 
 				if ( verticesRemoved.size() > 0 ) {
+					setText(sceneControl.ildv_selected);
 					for ( i = 0; i < verticesRemoved.size(); i++ ) {
 						Vertex ildv = verticesRemoved.get(i);
 						if ( verticesToDraw.contains( ildv ) ) {
@@ -178,6 +226,7 @@ class KirkpatrickMeshView extends View {
 				}
 
 				if ( polysRemoved.size() > 0 ) {
+					setText(sceneControl.ildv_removed);
 					for ( i = 0; i < polysRemoved.size(); i++ ) {
 						polygonsToDraw.remove(
 								polygonsToDraw.indexOf(
@@ -186,6 +235,7 @@ class KirkpatrickMeshView extends View {
 				}
 
 				if ( polysAdded.size() > 0 ) {
+					setText(sceneControl.retriangulate);
 					for ( i = 0; i < polysAdded.size(); i++ ) {
 						polygonsToDraw.add( mesh.polygons.get(polysAdded.get(i)) );
 					}
@@ -197,6 +247,8 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void render() {
+		if(!visible){return;}
+
 		int i, j;
 
 		// select triangle under mouse hover
@@ -210,9 +262,6 @@ class KirkpatrickMeshView extends View {
 		if( drawOuterTriangle ) {
 			outerTri.render();
 		}
-		if ( drawPolygon ) {
-			polygon.render();
-		}
 
 		// draw polygons
 		for( i = 0; i < polygonsToDraw.size(); i++ ) {
@@ -222,6 +271,7 @@ class KirkpatrickMeshView extends View {
 			//  - is connected to the currently highlighted ILDV
 			//  - is selected by the user by mouse hover
 			if ( polygonsToDraw.get(i).parentId == polygon.id ||
+					polygonsToDraw.get(i).id == polygon.id ||
 					( ildvToDraw != null &&
 					polygonsToDraw.get(i).points.contains(ildvToDraw)) ||
 					selectedShapes.contains(polygonsToDraw.get(i).id) ) {
@@ -246,6 +296,7 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void mouseUpdate() {
+		if(!visible){return;}
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
