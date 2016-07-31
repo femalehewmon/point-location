@@ -104,9 +104,9 @@ class CompGeoHelper {
 					"and 1 face!");
 			}
 			// create new layer to force a frame on the final full triangle
-			int currLayer = mesh.createNewLayer();
-			mesh.removeFacesFromLayer(
-					currLayer, new ArrayList<Face>(mesh.faces));
+			//int currLayer = mesh.createNewLayer();
+			//mesh.removeFacesFromLayer(
+		//			currLayer, new ArrayList<Face>(mesh.faces));
 		}
 
 		for ( j = 0; j < mesh.faces.size(); j++ ) {

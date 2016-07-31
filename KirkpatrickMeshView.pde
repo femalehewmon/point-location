@@ -72,10 +72,12 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void reset() {
+		console.log("RESET Kp mesh");
 		subLayerToDraw = 0;
 		layerToDraw = 1;
 		polygonsToDraw.clear();
 		verticesToDraw.clear();
+		ildvToDraw = null;
 		layerInitialized = false;
 
 		drawOuterTriangle = false;
@@ -89,13 +91,19 @@ class KirkpatrickMeshView extends View {
 
 	private boolean nextLevel() {
 		if (subLayerToDraw >= mesh.layers.get(layerToDraw).subLayers.size()-1){
-			subLayerToDraw = 0;
-			layerToDraw++;
-			layerInitialized = false;
+			if ( layerToDraw < mesh.layers.size() - 1 ) {
+				subLayerToDraw = 0;
+				layerToDraw++;
+				layerInitialized = false;
+			} else {
+				// keep layer as it was and return false to indicate
+				// last layer exceeded
+				return false;
+			}
 		} else {
 			subLayerToDraw++;
 		}
-		return ( layerToDraw <= mesh.layers.size() - 1 );
+		return true;
 	}
 
 	private boolean nextSubScene() {
@@ -169,6 +177,8 @@ class KirkpatrickMeshView extends View {
 		// so that each step, except the first, is on a different subLayer
 
 		if ( !layerInitialized ) {
+
+			// if final layer, do not set ILDV text
 			setText(sceneControl.ildv_identified);
 
 			// add all polygons visible on previous layer
@@ -301,10 +311,10 @@ class KirkpatrickMeshView extends View {
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
 			for( int i; i < polygonsToDraw.size(); i++ ) {
-				if (color(polygonsToDraw.get(i)) == c) {
+				if (color(polygonsToDraw.get(i).id) == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
-					msg.v = polygonsToDraw.get(i);
+					msg.v = polygonsToDraw.get(i).id;
 					messages.add(msg);
 				}
 			}

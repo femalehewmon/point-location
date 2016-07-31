@@ -2,13 +2,10 @@ class LayeredGraphView extends View {
 
 	LayeredMesh mesh;
 
-	int MODE_ON_ADD = 1;
-	int MODE_ON_REMOVE = 2;
-	int MODE;
-
 	int layerToDraw;
 	int subLayerToDraw;
 	boolean layerInitialized;
+	boolean meshTraversalComplete;
 
 	float xDiv;
 	float yDiv;
@@ -25,6 +22,8 @@ class LayeredGraphView extends View {
 		this.layerToDraw = 1;
 		this.subLayerToDraw = 0;
 		this.layerInitialized = false;
+		this.meshTraversalComplete = false;
+		this.finalized = false;
 
 		this.currPosition = new ArrayList<Integer>();
 		this.currPosition.add(this.x1);
@@ -34,8 +33,6 @@ class LayeredGraphView extends View {
 		this.currScale = 1.0;
 
 		this.polygonsToDraw = new ArrayList<Polygon>();
-
-		this.MODE = MODE_ON_REMOVE;
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
@@ -57,11 +54,13 @@ class LayeredGraphView extends View {
 
 		// initialize y position outside of bounds of view
 		// this sets up positing correctly for first layer in graph
-		this.yDiv = this.h / (this.mesh.layers.size() - 1);
+		this.yDiv = this.h / (this.mesh.layers.size());
 		currPosition[0] = this.x1;
 		currPosition[1] = this.y2 + yDiv/2.0;
 
 		layerInitialized = false;
+		meshTraversalComplete = false;
+		finalized = false;
 	}
 
 	private boolean nextLevel() {
@@ -76,33 +75,48 @@ class LayeredGraphView extends View {
 	}
 
 	public void update() {
+		if ( !finalized ) {
+			if ( !meshTraversalComplete ) {
+				meshTraversalComplete = !updateMeshTraversal();
+			} else {
+				// one additional update round to add final polygon to top of graph
+				addRootPolygon();
+				finalized = true;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public void addRootPolygon() {
+		Polygon root =
+			mesh.getVisiblePolygonsByLayer(mesh.layers.size() - 1).get(0);
+		currPosition[0] = this.x1 + (w / 2.0);
+		currPosition[1] -= yDiv;
+		currScale = Math.min(xDiv / root.getWidth(), yDiv / root.getHeight());
+		root.animateMove( currPosition[0], currPosition[1] );
+		root.animateScale( currScale );
+		polygonsToDraw.add( root );
+	}
+
+	public void updateMeshTraversal() {
 		int i;
 		if ( !layerInitialized ) {
 			layerInitialized = true;
 
 			MeshLayer currLayer = mesh.layers.get( layerToDraw );
 			// calculate new x division based on number of triangles in layer
-			if ( MODE == MODE_ON_ADD ) {
-				xDiv = w / currLayer.getPolygonsAddedToLayer().size();
-			} else if ( MODE == MODE_ON_REMOVE ) {
-				xDiv = w / currLayer.getPolygonsRemovedFromLayer().size();
-			}
+			xDiv = w / currLayer.getPolygonsRemovedFromLayer().size();
 
 			// adjust starting position for new layer of triangles
 			currPosition[0] = this.x1 + (xDiv / 2);
 			currPosition[1] -= yDiv;
-			ArrayList<Polygon> layerPolys;
-			if ( MODE == MODE_ON_ADD ) {
-				layerPolys =
-					mesh.getPolygonsById(currLayer.getPolygonsAddedToLayer());
-			} else if ( MODE == MODE_ON_REMOVE ) {
-				layerPolys =
-					mesh.getPolygonsById(currLayer.getPolygonsRemovedFromLayer());
-				// no polygons removed from first layer, so do not increase
-				// the first visual layer in the graph unless not first layer
-				if ( layerToDraw == 0 ) {
-					currPosition[1] += yDiv;
-				}
+			ArrayList<Polygon> layerPolys =
+				mesh.getPolygonsById(currLayer.getPolygonsRemovedFromLayer());
+			// no polygons removed from first layer, so do not increase
+			// the first visual layer in the graph unless not first layer
+			if ( layerToDraw == 0 ) {
+				currPosition[1] += yDiv;
 			}
 			// calculate new scaling factor based on triangles in new layer
 			double maxWidth  = -1;
@@ -126,12 +140,7 @@ class LayeredGraphView extends View {
 			// get list of polygons added to current subLayer
 			// if new triangles added, add to graph
 			Polygon currPoly;
-			ArrayList<Integer> polysAdded;
-			if ( MODE == MODE_ON_ADD ) {
-				 polysAdded = subLayer.getPolygonsAddedToLayer();
-			} else if ( MODE == MODE_ON_REMOVE ) {
-				 polysAdded = subLayer.getPolygonsRemovedFromLayer();
-			}
+			ArrayList<Integer> polysAdded = subLayer.getPolygonsRemovedFromLayer();
 			for ( i = 0; i < polysAdded.size(); i++ ) {
 				currPoly = mesh.polygons.get( polysAdded.get(i) );
 				currPoly.move( currPosition[0], currPosition[1] );
@@ -168,7 +177,6 @@ class LayeredGraphView extends View {
 			}
 			polygonsToDraw.get(i).render(false);
 		}
-
 	}
 
 	public void mouseUpdate() {
@@ -177,10 +185,10 @@ class LayeredGraphView extends View {
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
 			for( int i; i < polygonsToDraw.size(); i++ ) {
-				if (color(polygonsToDraw.get(i)) == c) {
+				if (color(polygonsToDraw.get(i).id) == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
-					msg.v = polygonsToDraw.get(i);
+					msg.v = polygonsToDraw.get(i).id;
 					messages.add(msg);
 				}
 			}

@@ -54,8 +54,7 @@ class PointLocationView extends View {
 		this.lgraphMesh = lgraphMesh.copy();
 		this.root = kpMesh.polygons.get(
 				kpMesh.getVisiblePolygonIdsByLayer(
-					kpMesh.layers.size() - 2).get(0));
-
+					kpMesh.layers.size() - 1).get(0));
 		reset();
 	}
 
@@ -78,8 +77,6 @@ class PointLocationView extends View {
 			// only evaluate points placed inside the outer triangle
 			return false;
 		}
-
-		console.log("evaluate point");
 
 		setText(sceneControl.point_locating);
 		this.pointInside = false;
@@ -185,7 +182,7 @@ class PointLocationView extends View {
 
 	private boolean nextLevel() {
 		this.layerToDraw += 1;
-		if ( this.layerToDraw >= this.kpLayers.size() - 1 ) {
+		if ( this.layerToDraw >= this.kpLayers.size() - 2 ) {
 			return false;
 		}
 		return true;

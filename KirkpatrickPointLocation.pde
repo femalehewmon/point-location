@@ -143,9 +143,9 @@ void draw() {
 			}
 
 			if ( sceneControl.update() ) {
-				boolean finalized = kpView.update();
-				finalized = graphView.update() || finalized;
-				if ( finalized) {
+				boolean notFinalized = kpView.update();
+				notFinalized = graphView.update() || notFinalized;
+				if ( notFinalized) {
 					sceneControl.reset();
 				} else {
 					sceneControl.nextScene();
