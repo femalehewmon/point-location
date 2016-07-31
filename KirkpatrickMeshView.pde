@@ -72,7 +72,6 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void reset() {
-		console.log("RESET Kp mesh");
 		subLayerToDraw = 0;
 		layerToDraw = 1;
 		polygonsToDraw.clear();
