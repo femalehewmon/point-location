@@ -32,6 +32,7 @@ class PolygonCreationView extends View {
 
 
 	public void demo() {
+		this.polygon.points.clear();
 		this.polygon.addPoint( 253, 206 );
 		this.polygon.addPoint( 482, 146 );
 		this.polygon.addPoint( 535, 406 );
@@ -45,6 +46,7 @@ class PolygonCreationView extends View {
 	}
 
 	public void demoRect() {
+		this.polygon.points.clear();
 		this.polygon.addPoint(250, 200);
 		this.polygon.addPoint(500, 200);
 		this.polygon.addPoint(500, 400);
@@ -54,7 +56,6 @@ class PolygonCreationView extends View {
 
 	public void addPoint( float x, float y ) {
 		// TODO: validate that new point does not create non crossing polygon
-
 		// If user clicks within range of first point, try to complete the poly
 		if ( this.polygon.points.size() >= 2 ) {
 			float xDiff = Math.abs(this.polygon.points.get(0).x - x);
@@ -78,6 +79,7 @@ class PolygonCreationView extends View {
 	}
 
 	public void centerAndResizePolygon() {
+		// calculate percent to scale polygon to fit within the outer tri
 		float ratioToScalePoly = 1.0;
 		Polygon tmp = this.polygon.copy();
 		tmp.move( outerTri.getCenter().x, outerTri.getCenter().y );
@@ -85,9 +87,8 @@ class PolygonCreationView extends View {
 			tmp.scale( 0.90 );
 			ratioToScalePoly *= 0.90;
 		}
-
-		polygon.move( outerTri.getCenter().x, outerTri.getCenter().y );
-		polygon.scale( ratioToScalePoly );
+		polygon.animateMove( outerTri.getCenter().x, outerTri.getCenter().y );
+		polygon.animateScale( ratioToScalePoly );
 	}
 
 	public void update() {
@@ -95,7 +96,10 @@ class PolygonCreationView extends View {
 			if( !polygon.finalized ) {
 				return true;
 			} else {
-				// polygon is finalized, center and resize
+				// polygon is finalized
+				// hide demo div
+				$("#demo").hide();
+				// center and resize
 				setText(sceneControl.created);
 				centerAndResizePolygon();
 				this.finalized = true;

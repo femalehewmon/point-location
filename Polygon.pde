@@ -17,15 +17,7 @@ class Polygon {
 
 	ArrayList<Polygon> holes;
 
-	// used for animation
-	PolyPoint moveToAnimate;
-	boolean moveFinished;
-	int moveStep;
-	int moveDuration;
-	float scaleToAnimate;
-	boolean scaleFinished;
-	int scaleStep;
-	int scaleDuration;
+	ArrayList<Animation> animations;
 
 	public Polygon(int id) {
 		this.id = id;
@@ -47,6 +39,7 @@ class Polygon {
 		this.newScale = 1.0;
 
 		this.holes = new ArrayList<Polygon>();
+		this.animations = new ArrayList<Animation>();
 	}
 
 	public Polygon copy() {
@@ -229,24 +222,23 @@ class Polygon {
 	}
 
 	private void update() {
-		if ( !moveFinished ) {
-			move( this.moveToAnimate.x, this.moveToAnimate.y,
-					1 / (moveDuration - moveStep) );
-			moveStep += 1;
-			moveFinished = (moveStep >= moveDuration);
-		}
-		if ( !scaleFinished ) {
-			scale( this.scaleToAnimate, 1.0 / (float)scaleDuration);
-			scaleStep += 1;
-			scaleFinished = (scaleStep >= scaleDuration);
+		if ( animations.size() > 0 ) {
+			// apply all animations in order they were added
+			for ( int i = 0; i < animations.size(); i++ ) {
+				animations.get(i).apply(this);
+			}
+			// remove any animations that are now complete
+			for ( int i = animations.size() - 1; i >= 0; i-- ) {
+				if( animations.get(i).isComplete ) {
+					animations.remove(i);
+				}
+			}
 		}
 	}
 
-	public void animateMove( float x, float y, int duration ) {
-		this.moveToAnimate = new PolyPoint(x, y);
-		this.moveFinished = false;
-		this.moveStep = 0;
-		this.moveDuration = duration;
+	public void animateMove( float x, float y ) {
+		MoveAnimation animation = new MoveAnimation(x, y);
+		this.animations.add(animation);
 	}
 
 	public boolean move( float x, float y, float percentToMove ) {
@@ -271,13 +263,6 @@ class Polygon {
 		move( x, y, 1.0 ); // move instantly
 	}
 
-	public void animateScale( float scaleRatio, int duration ) {
-		this.scaleToAnimate = scaleRatio;
-		this.scaleFinished = false;
-		this.scaleStep = 0;
-		this.scaleDuration = duration;
-	}
-
 	public void resizeToHeight( float height ) {
 		if ( height < this.getHeight() ) {
 			// scale down
@@ -298,8 +283,12 @@ class Polygon {
 		}
 	}
 
+	public void animateScale( float scaleRatio, int duration ) {
+		ScaleAnimation animation = new ScaleAnimation(scaleRatio);
+		this.animations.add(animation);
+	}
+
 	public void scale( float scaleRatio, float percentToScale ) {
-		scaleRatio = 1.0 - ((1.0 - scaleRatio) * percentToScale);
 		PolyPoint center = getCenter();
 		float xnew;
 		float ynew;
@@ -434,4 +423,66 @@ class PolyPoint {
 	}
 
 }
+
+class Animation {
+
+	boolean isComplete;
+	float animationStep;
+	int animationDuration;
+
+	int animationFixedStep;
+	int animationRelativeStep;
+
+	Polygon polygon;
+
+	public Animation() {
+		this.isComplete = false;
+		this.animationStep = 0;
+		// minus steps to prevent jagged end to animation
+		this.animationDuration = sceneControl.sceneDuration-2;
+	}
+
+	public void apply() {
+		animationStep++;
+		if ( animationStep >= animationDuration ) {
+			isComplete = true;
+		}
+	}
+}
+
+class MoveAnimation extends Animation {
+
+	int x;
+	int y;
+
+	public MoveAnimation(int x, int y) {
+		super();
+		this.x = x;
+		this.y = y;
+	}
+
+	public void apply( Polygon poly ) {
+		super.apply();
+		poly.move(x, y, 1.0 / ( animationDuration - animationStep + 1) );
+		PolyPoint center = poly.getCenter();
+	}
+}
+
+class ScaleAnimation extends Animation {
+
+	float scale;
+
+	public ScaleAnimation(float scale) {
+		super();
+		this.scale = scale;
+	}
+
+	public void apply( Polygon poly ) {
+		super.apply();
+		float val1 = 1 - ((1.0 - scale)/animationDuration) * (animationStep+1);
+		float val2 = 1 - ((1.0 - scale)/animationDuration) * (animationStep);
+		poly.scale(val1 / val2);
+	}
+}
+
 
