@@ -330,7 +330,6 @@ class PointLocationView extends View {
 	}
 
 	public void onMousePress() {
-		console.log("mouse press");
 		if ( visible && pointSelected == null ) {
 			evaluatePoint( mouseX, mouseY );
 		}
