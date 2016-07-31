@@ -1,4 +1,4 @@
-final boolean DEMO = true;
+final boolean DEMO = false;
 final boolean DEBUG = false;
 
 // Global variables
@@ -100,7 +100,8 @@ void draw() {
 			// do not update scene until polygon is finalized
 			if ( pcreateView.polygon.finalized ) {
 				// view will now show polygon centering and scaling as setup
-				if(!pcreateView.update() && sceneControl.update()) {
+				if((!pcreateView.update() && sceneControl.update()) ||
+						pcreateView.isDemo) {
 					LayeredMesh kpDataStruct =
 						compGeoHelper.createKirkpatrickDataStructure(
 								pcreateView.polygon, pcreateView.outerTri);

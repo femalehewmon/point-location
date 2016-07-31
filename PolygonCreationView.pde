@@ -5,6 +5,8 @@ class PolygonCreationView extends View {
 	Polygon polygon;
 	Polygon outerTri;
 
+	boolean isDemo;
+
 	public PolygonCreationView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
 		this.cFill = color(255, 255, 255);
@@ -18,6 +20,7 @@ class PolygonCreationView extends View {
 		this.polygon.cFill = color(random(255), random(255), random(255));
 		this.polygon.finalized = false;
 		this.finalized = false;
+		this.isDemo = false;
 	}
 
 	private void createOuterTriangle() {
@@ -32,6 +35,7 @@ class PolygonCreationView extends View {
 
 
 	public void demo() {
+		this.isDemo = true;
 		this.polygon.points.clear();
 		this.polygon.addPoint( 253, 206 );
 		this.polygon.addPoint( 482, 146 );
@@ -43,15 +47,18 @@ class PolygonCreationView extends View {
 		this.polygon.addPoint( 224, 343 );
 		this.polygon.addPoint( 128, 104 );
 		this.polygon.finalized = true;
+		centerAndResizePolygon(false);
 	}
 
 	public void demoRect() {
+		this.isDemo = true;
 		this.polygon.points.clear();
 		this.polygon.addPoint(250, 200);
 		this.polygon.addPoint(500, 200);
 		this.polygon.addPoint(500, 400);
 		this.polygon.addPoint(250, 400);
 		this.polygon.finalized = true;
+		centerAndResizePolygon(false);
 	}
 
 	public void addPoint( float x, float y ) {
@@ -78,7 +85,7 @@ class PolygonCreationView extends View {
 		}
 	}
 
-	public void centerAndResizePolygon() {
+	public void centerAndResizePolygon(boolean animate) {
 		// calculate percent to scale polygon to fit within the outer tri
 		float ratioToScalePoly = 1.0;
 		Polygon tmp = this.polygon.copy();
@@ -87,8 +94,13 @@ class PolygonCreationView extends View {
 			tmp.scale( 0.90 );
 			ratioToScalePoly *= 0.90;
 		}
-		polygon.animateMove( outerTri.getCenter().x, outerTri.getCenter().y );
-		polygon.animateScale( ratioToScalePoly );
+		if ( animate ) {
+			polygon.animateMove( outerTri.getCenter().x, outerTri.getCenter().y );
+			polygon.animateScale( ratioToScalePoly );
+		} else {
+			polygon.move( outerTri.getCenter().x, outerTri.getCenter().y );
+			polygon.scale( ratioToScalePoly );
+		}
 	}
 
 	public void update() {
@@ -101,7 +113,7 @@ class PolygonCreationView extends View {
 				$("#demo").hide();
 				// center and resize
 				setText(sceneControl.created);
-				centerAndResizePolygon();
+				centerAndResizePolygon(true);
 				this.finalized = true;
 				return true;
 			}
