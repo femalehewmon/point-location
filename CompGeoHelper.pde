@@ -281,4 +281,44 @@ class CompGeoHelper {
 		return value > 0 ? -1 : 1;
 	}
 
+	boolean lineIntersectionCheck(
+			PolyPoint p1, PolyPoint q1, PolyPoint p2, PolyPoint q2) {
+	  float a1 = p1.y - q1.y;
+	  float b1 = q1.x - p1.x;
+	  float c1 = q1.x * p1.y - p1.x * q1.y;
+
+	  float a2 = p2.y - q2.y;
+	  float b2 = q2.x - p2.x;
+	  float c2 = q2.x * p2.y - p2.x * q2.y;
+
+	  float det = a1 * b2 - a2 * b1;
+
+	  if ( (Math.round(det * 1000) / 1000) == 0) {
+		return false;
+	  } else {
+		float isectx = (b2 * c1 - b1 * c2) / det;
+		float isecty = (a1 * c2 - a2 * c1) / det;
+		if ((isBetween(isecty, p1.y, q1.y) == true) &&
+		  (isBetween(isecty, p2.y, q2.y) == true) &&
+		  (isBetween(isectx, p1.x, q1.x) == true) &&
+		  (isBetween(isectx, p2.x, q2.x) == true)) {
+		  return true;
+		}
+	  }
+	  return false;
+	}
+
+	boolean isBetween(float val, float range1, float range2) {
+	  float largeNum = range1;
+	  float smallNum = range2;
+	  if (smallNum > largeNum) {
+		largeNum = range2;
+		smallNum = range1;
+	  }
+	  if ((val < largeNum) && (val > smallNum)) {
+		return true;
+	  }
+	  return false;
+	}
+
 }

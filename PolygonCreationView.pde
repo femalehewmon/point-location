@@ -6,6 +6,7 @@ class PolygonCreationView extends View {
 	Polygon outerTri;
 
 	boolean isDemo;
+	boolean isIntersecting;
 
 	public PolygonCreationView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
@@ -21,6 +22,7 @@ class PolygonCreationView extends View {
 		this.polygon.finalized = false;
 		this.finalized = false;
 		this.isDemo = false;
+		this.isIntersecting = false;
 	}
 
 	private void createOuterTriangle() {
@@ -70,11 +72,30 @@ class PolygonCreationView extends View {
 			if ( xDiff < finalClickThreshold && yDiff < finalClickThreshold ) {
 				this.polygon.finalized = true;
 			} else {
-				this.polygon.addPoint(x, y);
+				if ( !intersectingPoint( x, y ) ) {
+					this.polygon.addPoint(x, y);
+				} else {
+					isIntersecting = true;
+				}
 			}
 		} else {
 			this.polygon.addPoint(x, y);
 		}
+	}
+
+	public boolean intersectingPoint(float newX, float newY) {
+		PolyPoint lastAddedPoint = this.polygon.points.get(
+				this.polygon.points.size() - 1);
+		PolyPoint currentPoint = new PolyPoint(newX, newY);
+		for ( int i = 0; i < this.polygon.points.size() - 1; i++ ) {
+			if ( compGeoHelper.lineIntersectionCheck(
+						this.polygon.points.get(i),
+						this.polygon.points.get(i+1),
+						lastAddedPoint, currentPoint) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void onMousePress() {
@@ -82,6 +103,12 @@ class PolygonCreationView extends View {
 			if ( !polygon.finalized ) {
 				addPoint( mouseX, mouseY );
 			}
+		}
+	}
+
+	public void onMouseRelease() {
+		if ( visible && !finalized ) {
+			isIntersecting = false;
 		}
 	}
 
@@ -137,10 +164,15 @@ class PolygonCreationView extends View {
 							this.polygon.points.get(i + 1).y );
 				}
 				// draw final black line between last point and mouse position
-				line(this.polygon.points.get(i).x,
-						this.polygon.points.get(i).y,
+				if ( isIntersecting ) {
+					stroke(color(255, 0, 0));
+				} else {
+					stroke(color(0, 0, 0));
+				}
+				line(this.polygon.points.get(i).x, this.polygon.points.get(i).y,
 						mouseX, mouseY);
 				// draw points
+				fill(color(0));
 				for ( i = 0; i < this.polygon.points.size(); i++ ) {
 					this.polygon.points.get(i).render();
 				}
