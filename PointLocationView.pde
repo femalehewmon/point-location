@@ -336,11 +336,6 @@ class PointLocationView extends View {
 				lgraphMesh.polygons.get(polyId).selected = true;
 			}
 
-			// always 'highlight' the root triangle
-			if ( polyId == root.id ) {
-				lgraphMesh.polygons.get(polyId).selected = false;
-			}
-
 			lgraphMesh.polygons.get(polyId).render();
 		}
 
