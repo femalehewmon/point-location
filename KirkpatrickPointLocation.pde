@@ -201,11 +201,11 @@ void draw() {
 				plocateView.visible = true;
 
 				plocateView.reset();
-				plocateView.setMesh( kpView.mesh, graphView.mesh,
-						pcreateView.polygon );
-				sceneControl.update();
-				sceneControl.ready();
+				plocateView.setMesh(
+						kpView.mesh, graphView.mesh, pcreateView.polygon );
+
 				showPlaybackControls(false);
+				sceneControl.ready();
 			}
 
 			if( plocateView.pointSelected != null ) {
