@@ -231,6 +231,8 @@ class Polygon {
 			for ( int i = animations.size() - 1; i >= 0; i-- ) {
 				if( animations.get(i).isComplete ) {
 					animations.remove(i);
+					animatingPolygons.remove(
+							animatingPolygons.indexOf(this.id));
 				}
 			}
 		}
@@ -239,6 +241,7 @@ class Polygon {
 	public void animateMove( float x, float y ) {
 		MoveAnimation animation = new MoveAnimation(x, y);
 		this.animations.add(animation);
+		animatingPolygons.add(this.id);
 	}
 
 	public boolean move( float x, float y, float percentToMove ) {
@@ -286,6 +289,7 @@ class Polygon {
 	public void animateScale( float scaleRatio, int duration ) {
 		ScaleAnimation animation = new ScaleAnimation(scaleRatio);
 		this.animations.add(animation);
+		animatingPolygons.add(this.id);
 	}
 
 	public void scale( float scaleRatio, float percentToScale ) {

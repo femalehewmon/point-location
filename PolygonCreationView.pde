@@ -137,11 +137,10 @@ class PolygonCreationView extends View {
 			if( !polygon.finalized ) {
 				return true;
 			} else {
-				// polygon is finalized
-				// hide demo div
-				// center and resize
 				setText(sceneControl.created);
-				centerAndResizePolygon(true);
+				if (!isDemo) {
+					centerAndResizePolygon(true);
+				}
 				this.finalized = true;
 				return true;
 			}

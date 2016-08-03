@@ -4,6 +4,7 @@ final boolean DEBUG = false;
 // Global variables
 int unique_poly_id = 100;
 boolean animationPaused = true;
+ArrayList<Integer> animatingPolygons;
 
 // Helper global classes
 SceneController sceneControl;
@@ -45,6 +46,7 @@ void setup() {
 	// initialize mouse interaction helpers
 	messages = new ArrayList<Message>();
 	pickbuffer = createGraphics(width, height);
+	animatingPolygons = new ArrayList<Integer>();
 
 	// create views
 	float padding = border/2.0;
@@ -77,7 +79,6 @@ void resetAnimation() {
 
 void startDemo() {
 	pcreateView.demo();
-	kpView.update();
 }
 
 void playAnimation() {
@@ -99,7 +100,12 @@ void showPlaybackControls(boolean show) {
 }
 
 void browserKeyPressed() {
-	sceneControl.onKeyPress();
+	// block progressing scene if a polygon is still animating
+	if ( animatingPolygons.size() == 0 ) {
+		sceneControl.onKeyPress();
+	} else{
+		console.log("still animating..");
+	}
 }
 
 
