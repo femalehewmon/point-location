@@ -186,6 +186,36 @@ class PointLocationView extends View {
 		return true;
 	}
 
+	public ArrayList<GraphEdge> findConnectedParentEdges(
+			Polygon poly, boolean recurse){
+		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
+		ArrayList<GraphEdge> subConnected;
+		GraphEdge edge;
+		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if ( poly.childId == lgraphMesh.polygons.get(polyId).parentId ) {
+				edge = new GraphEdge(
+						poly,
+						lgraphMesh.polygons.get(polyId));
+				if ( !connected.contains(edge) ) {
+					connected.add(edge);
+				}
+				if ( recurse ) {
+					// prevents same edge being drawn over multiple times
+					subConnected = findConnectedParentEdges(
+								lgraphMesh.polygons.get(polyId), recurse );
+					for ( i = 0; i < subConnected.size(); i++ ){
+						if ( !connected.contains(subConnected.get(i)) ) {
+							connected.add(subConnected.get(i));
+						}
+					}
+				}
+			}
+		}
+		return connected;
+	}
+
 	public ArrayList<GraphEdge> findConnectedEdges(
 			Polygon poly, boolean recurse ) {
 		int i;
@@ -203,12 +233,7 @@ class PointLocationView extends View {
 					connected.add(edge);
 				}
 				if ( recurse ) {
-					/*
-					connected.addAll( findConnectedEdges(
-								lgraphMesh.polygons.get(polyId), recurse ));
-					*/
-					// TODO: below prevents same edge being drawn over,
-					// but makes things are still very slow
+					// prevents same edge being drawn over multiple times
 					subConnected = findConnectedEdges(
 								lgraphMesh.polygons.get(polyId), recurse );
 					for ( i = 0; i < subConnected.size(); i++ ){
@@ -249,6 +274,12 @@ class PointLocationView extends View {
 								findConnectedEdges(
 								lgraphMesh.polygons.get(
 									messages.get(i).v), true));
+						/*
+						selectedEdges.addAll(
+								findConnectedParentEdges(
+								lgraphMesh.polygons.get(
+									messages.get(i).v), true));
+						*/
 					}
 					selected.add(messages.get(i).v);
 				}
