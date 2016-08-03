@@ -3,6 +3,7 @@ final boolean DEBUG = false;
 
 // Global variables
 int unique_poly_id = 100;
+boolean animationPaused = true;
 
 // Helper global classes
 SceneController sceneControl;
@@ -66,6 +67,7 @@ void setText(String text) {
 }
 
 void updateAnimationSpeed(String rate) {
+	console.log(rate);
 	sceneControl.updateSceneDuration(float(rate));
 }
 
@@ -76,6 +78,35 @@ void resetAnimation() {
 void startDemo() {
 	pcreateView.demo();
 }
+
+void playAnimation() {
+	animationPaused = false;
+	sceneControl.updateOnSceneDuration();
+}
+
+void pauseAnimation() {
+	animationPaused = true;
+	sceneControl.updateOnKeyPress();
+}
+
+void showPlaybackControls(boolean show, boolean withButton) {
+	console.log("show playback controls");
+	if( show ) {
+		$("#playback-controls").show();
+		if ( withButton ) {
+			$("#play-button").show();
+		} else {
+			$("#play-button").hide();
+		}
+	} else {
+		$("#playback-controls").hide();
+	}
+}
+
+void browserKeyPressed() {
+	sceneControl.onKeyPress();
+}
+
 
 void draw() {
 	background(245, 245, 245);
@@ -95,11 +126,13 @@ void draw() {
 				if ( DEMO ) {
 					pcreateView.demo();
 				}
-				sceneControl.update();
+
+				sceneControl.ready();
 			}
 			// do not update scene until polygon is finalized
 			if ( pcreateView.polygon.finalized ) {
-				// view will now show polygon centering and scaling as setup
+				showPlaybackControls(true, false);
+				// show polygon centering and scaling, create mesh
 				if((!pcreateView.update() && sceneControl.update()) ||
 						pcreateView.isDemo) {
 					LayeredMesh kpDataStruct =
@@ -121,15 +154,15 @@ void draw() {
 				plocateView.visible = false;
 
 				kpView.reset();
-				sceneControl.updateOnKeyPress();
-				kpView.update();
+				sceneControl.ready();
 			}
+
 			if ( sceneControl.update() ) {
 				kpView.update();
 				if ( kpView.initialized ) {
 					sceneControl.nextScene();
 				} else {
-					sceneControl.updateOnKeyPress();
+					sceneControl.reset();
 				}
 			}
 			break;
@@ -140,6 +173,7 @@ void draw() {
 				graphView.visible = true;
 				plocateView.visible = false;
 				graphView.reset();
+				sceneControl.ready();
 			}
 
 			if ( sceneControl.update() ) {
@@ -163,12 +197,16 @@ void draw() {
 				plocateView.setMesh( kpView.mesh, graphView.mesh,
 						pcreateView.polygon );
 				sceneControl.update();
+				sceneControl.ready();
+				showPlaybackControls(false);
 			}
 
 			if( plocateView.pointSelected != null ) {
+				showPlaybackControls(true);
 				if ( sceneControl.update() ) {
 					if ( plocateView.finalized ) {
 						plocateView.reset();
+						showPlaybackControls(false);
 					}
 					plocateView.update();
 					sceneControl.reset();
@@ -187,6 +225,10 @@ void draw() {
 	graphView.mouseUpdate();
 	kpView.mouseUpdate();
 	plocateView.mouseUpdate();
+
+	if ( animationPaused ) {
+		sceneControl.updateOnKeyPress();
+	}
 }
 
 void mousePressed( ) {
@@ -196,7 +238,7 @@ void mousePressed( ) {
 	}
 }
 
-void browserKeyPressed() {
-	sceneControl.onKeyPress();
+void mouseReleased() {
+	pcreateView.onMouseRelease();
 }
 

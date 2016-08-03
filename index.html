@@ -20,59 +20,100 @@
             <canvas id="internal" data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde"></canvas>
             </div>
         </div>
-    </div>
-    <div id="explanation">
-        <h1 id="title" align="center">
-            Kirkpatrick's Point Location Data Structure
-        </h1>
-        <p id="explanation-text" class="explanation-text">
-            <!-- Text to be filled in within processing code -->
-        </p>
-        <p id="controls-text" class="controls-text">
-            <!-- Text to be filled in within processing code -->
-        </p>
-
-        <div id="playback-controls">
-            <!-- Default dropup button -->
-            <div class="btn-group dropup">
-              <button type="button" class="btn btn-secondary">
-                  Animation Speed
-              </button>
-              <button type="button" class="btn btn-secondary dropdown-toggle"
-                      data-toggle="dropdown" aria-haspopup="true"
-                      aria-expanded="false">
-              <span class="caret"></span>
-              </button>
-                <!-- Dropdown menu links -->
-              <ul id="animation-speed" class="dropdown-menu">
-                  <li><a class="animation-speed">0.25</a></li>
-                  <li><a class="animation-speed">0.5</a></li>
-                  <li><a class="animation-speed">1.0</a></li>
-                  <li><a class="animation-speed">1.25</a></li>
-                  <li><a class="animation-speed">1.5</a></li>
-                  <li><a class="animation-speed">2.0</a></li>
-              </ul>
-            </div>
-            <input id="replay" class="replay-icon" type="image"
-                src="images/iconmonstr-media-control-37.svg"
-                alt="replay" >
-		</div>
-        <!--
-        <a href="https://github.com/meganvanwelie/point-location"
+        <a id="github-icon"
+           href="https://github.com/meganvanwelie/point-location"
             alt="Github" title="Github">
             <img class="about-icon" src="images/github-icon.svg">
         </a>
-        -->
+    </div>
+    <div id="sidebar">
+        <h1 id="title" align="center">
+            Kirkpatrick's Point Location Data Structure
+        </h1>
 
+        <div id="sidebar-body">
+            <div id="explanation">
+                <p id="explanation-text" class="explanation-text">
+                    <!-- Text to be filled in within processing code -->
+                </p>
+            </div>
+
+            <div id="demo" >
+                <p id="demo-text" class="demo-text ">
+                    Alternatively, click the demo button below
+                    <button id="demo-button" type="button">
+                        DEMO
+                    </button>
+                </p>
+            </div>
+
+            <div id="playback-controls">
+                <div id="play-controls" class="sidebar-bottom">
+                    <!-- play/pause controls-->
+                    <input id="play-button" class="playback-button" type="image"
+                        src="images/iconmonstr-video-13.svg" alt="play" >
+                    <span class="playback-helper">
+                        Press the space bar to continue.
+                    </span>
+
+                </div>
+
+                <div id="pause-controls" class="sidebar-bottom">
+                    <!-- play/pause controls-->
+                    <input id="pause-button" class="playback-button" type="image"
+                        src="images/iconmonstr-media-control-7.svg" alt="pause" >
+                    <div class="playback-helper">
+                        <input id="speed-slider" type="range"
+                                min="1" max="5" step="1" value="3"/>
+                        <span>Animation Speed:</span>
+                        <span id="current-speed">Normal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 <script>
 
-    $("#animation-speed li > a").click(
-            function(e) {
+    $("#pause-controls").hide();
+    $("#playback-controls").hide();
+
+    $("#pause-button").click(
+            function() {
                 var pjs = Processing.getInstanceById('internal');
-                pjs.updateAnimationSpeed(this.innerHTML);
+                pjs.pauseAnimation();
+                $("#play-controls").show();
+                $("#pause-controls").hide();
             });
+
+    $("#play-button").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.playAnimation();
+                $("#play-controls").hide();
+                $("#pause-controls").show();
+            });
+
+    $("#demo-button").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.startDemo();
+                $("#demo").hide();
+            });
+
+    var rangeValues = {
+        "1": ["Slowest", 0.25],
+        "2": ["Slow", 0.5],
+        "3": ["Normal", 1.0],
+        "4": ["Fast", 2.0],
+        "5": ["Fastest", 4.0]
+    };
+    $('#speed-slider').on('input change',
+            function() {
+                $('#current-speed').text(rangeValues[$(this).val()][0]);
+                var pjs = Processing.getInstanceById('internal');
+                pjs.updateAnimationSpeed(rangeValues[$(this).val()][1]);
+    });
 
     $("#replay").click(
             function() {
@@ -86,7 +127,7 @@
                     var pjs = Processing.getInstanceById('internal');
                     pjs.browserKeyPressed();
                 }
-            });
+    });
 
 </script>
 </html>

@@ -4,7 +4,7 @@ class SceneController {
 	float scenePercentComplete;
 	float sceneRelativePercentComplete;
 
-	int DEFAULT_SCENE_DURATION = 85;
+	int DEFAULT_SCENE_DURATION = 100;
 	int sceneDuration;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
@@ -39,6 +39,10 @@ class SceneController {
 		this.keyPressed = false;
 	}
 
+	public void ready() {
+		this.sceneReady = true;
+	}
+
 	public void updateSceneDuration(float scale) {
 		sceneDuration = DEFAULT_SCENE_DURATION / scale;
 	}
@@ -53,7 +57,6 @@ class SceneController {
 			scenePercentComplete = (float)sceneTimer / (float)sceneDuration;
 			sceneRelativePercentComplete =
 				1.0 / (sceneControl.sceneDuration - sceneControl.sceneTimer);
-			sceneReady = true;
 			return next_scene;
 		} else {
 			if ( keyPressed ) {
@@ -63,11 +66,14 @@ class SceneController {
 		}
 	}
 
+	public void updateOnSceneDuration() {
+		keyPressed = true;
+		updateSceneOnKeyPress = false;
+	}
+
 	public void updateOnKeyPress() {
-		sceneReady = true;
-		console.log("updating on key press only ");
-		updateSceneOnKeyPress = true;
 		keyPressed = false;
+		updateSceneOnKeyPress = true;
 	}
 
 	public void onKeyPress() {
@@ -88,7 +94,9 @@ class SceneController {
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCTURE;
 				break;
 		}
-		console.log("Next scene " + this.currScene);
+		if(DEBUG){
+		console.log("Previous scene " + this.currScene);
+		}
 		reset();
 		this.sceneReady = false;
 	}
@@ -108,12 +116,15 @@ class SceneController {
 				this.currScene = POINT_LOCATION;
 				break;
 		}
+		if(DEBUG){
 		console.log("Next scene " + this.currScene);
+		}
 		reset();
 		this.sceneReady = false;
 	}
 
-String create = "Click anywhere within the bounds of the visualization to create a polygon with non-overlapping edges. Alternatively, click the DEMO button below to use a polygon that we have predefined.";
+String newline = "\r\n";
+String create = "Click anywhere within the bounds of the visualization to create a polygon with non-overlapping edges.";
 
 String created = "Nice polygon! Let's resize and move it over a bit so that it is easier to work with.";
 
@@ -123,7 +134,7 @@ String explanation1 = "We are going to step through the creation of a data struc
 
 String explanation2 = "The data structure is created by triangulating the polygon and its surrounding area. Once triangulated, independent low degree vertices, that is, vertices that are connected to <= 7 edges, are identified and their connecting triangles are removed. The hole that is left after the triangles are removed is once again triangulated. This process is repeated until there is a single triangle remaining that encompasses the area of the original outer triangle.";
 
-String explanation3 = "Ok? Let's begin!";
+String explanation3 = "Ok? Let's begin! You'll notice that a play button has appeared at the bottom of the screen. Press it at any time to begin auto-playing the animation. Otherwise, continue to step through manually by pressing the space bar.";
 
 String triangulate_poly = "First, we triangulate the original polygon.";
 String add_outer_tri = "Next, we surround the outer area of the polygon with a large triangle. This outer triangle can be arbitarily large to cover as much potential space as you point location needs to cover.";
@@ -134,6 +145,7 @@ String ildv_identified = "Identify a set of independent low degree vertices";
 String ildv_selected = "Select one of those vertices";
 String ildv_removed = "Remove the independent low degree vertex and its surrounding triangles";
 String retriangulate = "Retriangulate the hole";
+String graph_complete = "Finally, we add the root triangle to the hierarchy, and our directed-acyclic graph is complete!";
 
 String place_point = "Place a point anywhere inside the colored triangle.";
 String point_locating = "We can now traverse our directed acyclic graph to efficiently determine whether the point is located inside our original polygon.";

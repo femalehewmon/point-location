@@ -81,6 +81,7 @@ class LayeredGraphView extends View {
 			} else {
 				// one additional update round to add final polygon to top of graph
 				addRootPolygon();
+				setText(sceneControl.graph_complete);
 				finalized = true;
 			}
 			return true;
