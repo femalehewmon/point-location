@@ -108,7 +108,6 @@ void browserKeyPressed() {
 	}
 }
 
-
 void draw() {
 	background(245, 245, 245);
 	pickbuffer.background(255);
@@ -133,13 +132,15 @@ void draw() {
 			}
 			// do not update scene until polygon is finalized
 			if ( pcreateView.polygon.finalized ) {
+				// reconfigure view to show playback controls
+				$("#demo-controls").hide();
+				$("#play-controls").show();
 				$("#play-button").hide();
 				showPlaybackControls(true);
+
 				// show polygon centering and scaling, create mesh
 				if( pcreateView.isDemo ||
 						(!pcreateView.update() && sceneControl.update()) ){
-					$("#demo-controls").hide();
-					$("#play-controls").show();
 					LayeredMesh kpDataStruct =
 						compGeoHelper.createKirkpatrickDataStructure(
 								pcreateView.polygon, pcreateView.outerTri);

@@ -14,7 +14,7 @@ class SceneController {
 
 	boolean sceneReady;
 	boolean updateSceneOnKeyPress;
-	boolean keyPressed;
+	boolean controllerKeyPressed;
 
 	public SceneController() {
 		this.currScene = CREATE_POLYGON;
@@ -36,7 +36,7 @@ class SceneController {
 		this.scenePercentComplete = 0.0;
 		this.sceneRelativePercentComplete = 0.0;
 		this.updateSceneOnKeyPress = false;
-		this.keyPressed = false;
+		this.controllerKeyPressed = false;
 	}
 
 	public void ready() {
@@ -59,25 +59,24 @@ class SceneController {
 				1.0 / (sceneControl.sceneDuration - sceneControl.sceneTimer);
 			return next_scene;
 		} else {
-			if ( keyPressed ) {
+			if ( controllerKeyPressed ) {
 				updateSceneOnKeyPress = false;
-				return keyPressed;
+				return controllerKeyPressed;
 			}
 		}
 	}
 
 	public void updateOnSceneDuration() {
-		keyPressed = true;
 		updateSceneOnKeyPress = false;
 	}
 
 	public void updateOnKeyPress() {
-		keyPressed = false;
+		controllerKeyPressed = false;
 		updateSceneOnKeyPress = true;
 	}
 
 	public void onKeyPress() {
-		keyPressed = true;
+		controllerKeyPressed = true;
 	}
 
 	public void previousScene() {

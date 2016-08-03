@@ -239,9 +239,9 @@ class Polygon {
 	}
 
 	public void animateMove( float x, float y ) {
+		animatingPolygons.add(this.id);
 		MoveAnimation animation = new MoveAnimation(x, y);
 		this.animations.add(animation);
-		animatingPolygons.add(this.id);
 	}
 
 	public boolean move( float x, float y, float percentToMove ) {
@@ -287,9 +287,9 @@ class Polygon {
 	}
 
 	public void animateScale( float scaleRatio, int duration ) {
+		animatingPolygons.add(this.id);
 		ScaleAnimation animation = new ScaleAnimation(scaleRatio);
 		this.animations.add(animation);
-		animatingPolygons.add(this.id);
 	}
 
 	public void scale( float scaleRatio, float percentToScale ) {
