@@ -38,16 +38,17 @@
                 </p>
             </div>
 
-            <div id="demo" >
-                <p id="demo-text" class="demo-text ">
-                    Alternatively, click the demo button below
-                    <button id="demo-button" type="button">
-                        DEMO
-                    </button>
-                </p>
-            </div>
 
             <div id="playback-controls">
+
+                <div id="demo-controls" class="sidebar-bottom" >
+                    <input id="demo-button" class="playback-button" type="image"
+                    src="images/iconmonstr-video-8.svg" alt="demo" >
+                    <span class="playback-helper">
+                        Alternatively, click the demo button to the left to load a pre-made polygon.
+                    </span>
+                </div>
+
                 <div id="play-controls" class="sidebar-bottom">
                     <!-- play/pause controls-->
                     <input id="play-button" class="playback-button" type="image"
@@ -69,14 +70,16 @@
                         <span id="current-speed">Normal</span>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </body>
 <script>
 
+    $("#demo-controls").show();
+    $("#play-controls").hide();
     $("#pause-controls").hide();
-    $("#playback-controls").hide();
 
     $("#pause-button").click(
             function() {
@@ -98,7 +101,7 @@
             function() {
                 var pjs = Processing.getInstanceById('internal');
                 pjs.startDemo();
-                $("#demo").hide();
+                $("#demo-controls").hide();
             });
 
     var rangeValues = {
