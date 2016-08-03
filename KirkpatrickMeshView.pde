@@ -11,6 +11,7 @@ class KirkpatrickMeshView extends View {
 	int ADD_OUTER_TRI=3;
 	int TRIANGULATE_OUTER_TRI=4;
 	int MESH_TRAVERSAL=5;
+	int ADD_ROOT_TRI=6;
 	int explanation;
 	boolean initialized;
 
@@ -126,6 +127,9 @@ class KirkpatrickMeshView extends View {
 			case TRIANGULATE_OUTER_TRI:
 				subScene = EXPLAIN;
 				break;
+			case MESH_TRAVERSAL:
+				subScene = ADD_ROOT_TRI;
+				break;
 		}
 		return true;
 	}
@@ -160,7 +164,13 @@ class KirkpatrickMeshView extends View {
 				polygonsToDraw.addAll(mesh.getPolygonsByParentId(outerTri.id));
 				return nextSubScene();
 			case MESH_TRAVERSAL:
-				return updateMeshTraversal();
+				if( updateMeshTraversal() ){
+					return true;
+				}
+				return nextSubScene();
+			case ADD_ROOT_TRI:
+				this.finalized = true;
+				return false;
 		}
 	}
 
@@ -278,10 +288,12 @@ class KirkpatrickMeshView extends View {
 			// reverse highlight so triangles are white by default
 			// highlight triangle with color if it:
 			//  - belongs to the original polygon
+			//  - the view is finalized and displaying the root triangle
 			//  - is connected to the currently highlighted ILDV
 			//  - is selected by the user by mouse hover
 			if ( polygonsToDraw.get(i).parentId == polygon.id ||
 					polygonsToDraw.get(i).id == polygon.id ||
+					this.finalized ||
 					( ildvToDraw != null &&
 					polygonsToDraw.get(i).points.contains(ildvToDraw)) ||
 					selectedShapes.contains(polygonsToDraw.get(i).id) ) {
@@ -306,7 +318,7 @@ class KirkpatrickMeshView extends View {
 	}
 
 	public void mouseUpdate() {
-		if(!visible){return;}
+		if(!visible || finalized){return;}
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
