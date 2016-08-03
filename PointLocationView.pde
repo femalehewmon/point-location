@@ -149,10 +149,8 @@ class PointLocationView extends View {
 			}
 
 			// add layer containing only true path polygons and edges
-			if ( this.kpLayers.size() > 0 ) {
-				this.kpLayers.add( visiblePolys );
-				this.edges.add( pathEdges );
-			}
+			this.kpLayers.add( visiblePolys );
+			this.edges.add( pathEdges );
 
 			// add layer containing next layer polygons and edges
 			this.kpLayers.add( nextLayer );
@@ -182,7 +180,7 @@ class PointLocationView extends View {
 
 	private boolean nextLevel() {
 		this.layerToDraw += 1;
-		if ( this.layerToDraw >= this.kpLayers.size() - 2 ) {
+		if ( this.layerToDraw >= this.kpLayers.size() - 1 ) {
 			return false;
 		}
 		return true;
@@ -274,6 +272,7 @@ class PointLocationView extends View {
 		Polygon poly;
 		for ( i = 0; i < this.kpLayers.get(layerToDraw).size(); i++ ) {
 			poly = this.kpLayers.get(layerToDraw).get(i);
+			// always 'highlight' the root triangle
 			if ( poly.id == root.id ) {
 				poly.selected = false;
 			}
@@ -304,6 +303,11 @@ class PointLocationView extends View {
 				lgraphMesh.polygons.get(polyId).selected = false;
 			} else {
 				lgraphMesh.polygons.get(polyId).selected = true;
+			}
+
+			// always 'highlight' the root triangle
+			if ( polyId == root.id ) {
+				lgraphMesh.polygons.get(polyId).selected = false;
 			}
 
 			lgraphMesh.polygons.get(polyId).render();

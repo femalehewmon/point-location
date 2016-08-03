@@ -139,7 +139,7 @@ class KirkpatrickMeshView extends View {
 				} else if ( explanation == 2 ){
 					setText(sceneControl.explanation2);
 				} else if ( explanation == 3 ){
-					showPlaybackControls(true, true);
+					$("#play-button").show();
 					setText(sceneControl.explanation3);
 				} else {
 					setText(sceneControl.before_begin);

@@ -77,6 +77,7 @@ void resetAnimation() {
 
 void startDemo() {
 	pcreateView.demo();
+	kpView.update();
 }
 
 void playAnimation() {
@@ -84,20 +85,14 @@ void playAnimation() {
 	sceneControl.updateOnSceneDuration();
 }
 
-void pauseAnimation() {
+void pauseAnimation(boolean hideButton) {
 	animationPaused = true;
 	sceneControl.updateOnKeyPress();
 }
 
-void showPlaybackControls(boolean show, boolean withButton) {
-	console.log("show playback controls");
+void showPlaybackControls(boolean show) {
 	if( show ) {
 		$("#playback-controls").show();
-		if ( withButton ) {
-			$("#play-button").show();
-		} else {
-			$("#play-button").hide();
-		}
 	} else {
 		$("#playback-controls").hide();
 	}
@@ -125,16 +120,20 @@ void draw() {
 
 				if ( DEMO ) {
 					pcreateView.demo();
+					pcreateView.update();
 				}
 
 				sceneControl.ready();
 			}
 			// do not update scene until polygon is finalized
 			if ( pcreateView.polygon.finalized ) {
-				showPlaybackControls(true, false);
+				$("#play-button").hide();
+				showPlaybackControls(true);
 				// show polygon centering and scaling, create mesh
-				if((!pcreateView.update() && sceneControl.update()) ||
-						pcreateView.isDemo) {
+				if( pcreateView.isDemo ||
+						(!pcreateView.update() && sceneControl.update()) ){
+					$("#demo-controls").hide();
+					$("#play-controls").show();
 					LayeredMesh kpDataStruct =
 						compGeoHelper.createKirkpatrickDataStructure(
 								pcreateView.polygon, pcreateView.outerTri);
@@ -154,6 +153,7 @@ void draw() {
 				plocateView.visible = false;
 
 				kpView.reset();
+				kpView.update();
 				sceneControl.ready();
 			}
 

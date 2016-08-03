@@ -50,6 +50,7 @@ class PolygonCreationView extends View {
 		this.polygon.addPoint( 128, 104 );
 		this.polygon.finalized = true;
 		centerAndResizePolygon(false);
+		update();
 	}
 
 	public void demoRect() {
@@ -61,6 +62,7 @@ class PolygonCreationView extends View {
 		this.polygon.addPoint(250, 400);
 		this.polygon.finalized = true;
 		centerAndResizePolygon(false);
+		update();
 	}
 
 	public void addPoint( float x, float y ) {
@@ -137,7 +139,6 @@ class PolygonCreationView extends View {
 			} else {
 				// polygon is finalized
 				// hide demo div
-				$("#demo").hide();
 				// center and resize
 				setText(sceneControl.created);
 				centerAndResizePolygon(true);
