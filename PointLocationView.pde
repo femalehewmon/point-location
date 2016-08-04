@@ -352,8 +352,6 @@ class PointLocationView extends View {
 
 	public boolean inMeshBounds( float x, float y ) {
 		return root.containsPoint(x, y);
-		//color c = pickbuffer.get(mouseX, mouseY);
-		//return ( color( kpMesh.polygons.get(layers.get(0).get(0)).id ) == c);
 	}
 
 	public void onMousePress() {
@@ -369,7 +367,7 @@ class PointLocationView extends View {
 		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
 		while( iterator.hasNext() ) {
 			Integer polyId = iterator.next();
-			if (color(polyId) == c) {
+			if (lgraphMesh.polygons.get(polyId).pickColor == c) {
 				Message msg = new Message();
 				msg.k = MSG_TRIANGLE;
 				msg.v = polyId;

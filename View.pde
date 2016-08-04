@@ -30,14 +30,6 @@ class View {
 		// draw background of view
 		fill(cFill);
 		rect(x1, y1, w, h);
-
-		// clear pickbuffer
-		/*
-		pickbuffer.beginDraw();
-		pickbuffer.fill(0);
-		pickbuffer.rect(x1, y1, w, h);
-		pickbuffer.endDraw();
-		*/
 	}
 
 	public void setBackgroundColor(color cFill) {

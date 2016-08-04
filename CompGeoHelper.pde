@@ -2,9 +2,22 @@ class CompGeoHelper {
 
 	public CompGeoHelper() {}
 
+	int unique_poly_id = 1;
+	int poly_r_id = 1;
+	int poly_g_id = 1;
+	int poly_b_id = 1;
+
 	Polygon createPoly() {
 		unique_poly_id++;
-		return new Polygon(unique_poly_id);
+		if ( poly_r_id < 255 ) {
+			poly_r_id++;
+		} else if ( poly_g_id < 255 ) {
+			poly_g_id++;
+		} else if ( poly_b_id < 255 ) {
+			poly_b_id++;
+		}
+		return new Polygon(unique_poly_id,
+				color(poly_r_id, poly_g_id, poly_b_id));
 	}
 
 	public LayeredMesh createKirkpatrickDataStructure(

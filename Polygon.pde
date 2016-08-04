@@ -2,6 +2,7 @@
 class Polygon {
 
 	int id;
+	color pickColor;
 	int parentId;
 	int childId;
 
@@ -19,8 +20,12 @@ class Polygon {
 
 	ArrayList<Animation> animations;
 
-	public Polygon(int id) {
+	public Polygon(int id, color pickColor) {
 		this.id = id;
+		// ids used for pickbuffer rendering
+		// using all three channels to allow for many more objects
+		this.pickColor = pickColor;
+
 		this.parentId = -1;
 		this.childId = -1;
 
@@ -45,7 +50,7 @@ class Polygon {
 	public Polygon copy() {
 		// TODO: unable to do a non awkward constructor copy and
 		// unsure of overriding clone in processing.js, thus copy
-		Polygon copy = new Polygon(this.id);
+		Polygon copy = new Polygon(this.id, this.pickColor);
 		copy.id = this.id;
 		copy.parentId = this.parentId;
 		copy.childId = this.childId;
@@ -199,7 +204,7 @@ class Polygon {
 			pickbuffer.beginShape();
 			//pickbuffer.stroke(color(this.id));
 			pickbuffer.noStroke();
-			pickbuffer.fill(color(this.id));
+			pickbuffer.fill(pickColor);
 			for (int i = 0; i < points.size(); i++) {
 				pickbuffer.vertex(points.get(i).x, points.get(i).y);
 			}

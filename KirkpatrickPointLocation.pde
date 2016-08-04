@@ -2,7 +2,6 @@ final boolean DEMO = false;
 final boolean DEBUG = false;
 
 // Global variables
-int unique_poly_id = 100;
 boolean animationPaused = true;
 ArrayList<Integer> animatingPolygons;
 

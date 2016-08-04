@@ -186,7 +186,7 @@ class LayeredGraphView extends View {
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
 			for( int i; i < polygonsToDraw.size(); i++ ) {
-				if (color(polygonsToDraw.get(i).id) == c) {
+				if (polygonsToDraw.get(i).pickColor == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
 					msg.v = polygonsToDraw.get(i).id;
