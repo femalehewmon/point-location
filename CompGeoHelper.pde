@@ -39,13 +39,18 @@ class CompGeoHelper {
 		}
 		mesh.addTrianglesToLayer( currLayer, poly.triangulate() );
 
+		// triangulate holes between convex hull and polygon
+		Polygon convexHull = getConvexHull( poly );
+		ArrayList<Polygon> convexHullHoleTris =
+			getPolygonsRemovedFromConvexHull(poly, convexHull, true);
+		mesh.addTrianglesToLayer( currLayer, convexHullHoleTris );
+
 		// triangulate the outer triangle with a hole in the middle for
 		// the original polygon
 		if(DEBUG){
 		console.log("triangulate and add outer tri to kp");
 		}
-		outerTri.addHole( poly );
-		//outerTri.cFill = layerColors.get( layerColors.size() - 1 );
+		outerTri.addHole( convexHull );
 		mesh.addTrianglesToLayer( currLayer, outerTri.triangulate() );
 
 		ArrayList<Vertex> ildv = independentLowDegreeVertices( mesh, outerTri );
@@ -116,10 +121,6 @@ class CompGeoHelper {
 			console.log("CONGRATULATIONS: mesh has only 3 vertices " +
 					"and 1 face!");
 			}
-			// create new layer to force a frame on the final full triangle
-			//int currLayer = mesh.createNewLayer();
-			//mesh.removeFacesFromLayer(
-		//			currLayer, new ArrayList<Face>(mesh.faces));
 		}
 
 		for ( j = 0; j < mesh.faces.size(); j++ ) {
@@ -156,13 +157,72 @@ class CompGeoHelper {
 		return ildv;
 	}
 
-	// Graham Scan!
-	public Polygon getConvexHull( ArrayList<Vertex> vs ) {
-		console.log(vs.size());
-		for ( int i = 0; i < vs.size(); i++ ) {
-			console.log(vs.get(i));
+	public ArrayList<Polygon> getPolygonsRemovedFromConvexHull(
+			Polygon poly, Polygon convexHull, boolean triangulate ) {
+
+		ArrayList<Polygon> holes = new ArrayList<Polygon>();
+		Polygon hole;
+		boolean foundHole = false;
+		boolean firstHoleIncomplete = false;
+		for( int i = 0; i < poly.points.size(); i++ ) {
+			if ( !convexHull.points.contains(poly.points.get(i)) ) {
+				if ( !foundHole ) {
+					foundHole = true;
+					hole = createPoly();
+					if ( i > 0 ){
+						hole.addPoint(
+								poly.points.get(i - 1).x,
+								poly.points.get(i - 1).y);
+					} else {
+						firstHoleIncomplete = true;
+					}
+				}
+				hole.addPoint(
+						poly.points.get(i).x,
+						poly.points.get(i).y);
+			} else {
+				if ( foundHole ) {
+					hole.addPoint(
+							poly.points.get(i).x,
+							poly.points.get(i).y);
+					holes.add(hole);
+					foundHole = false;
+				}
+			}
 		}
-		if ( vs.size() <= 2 ) {
+
+		// first hold polygon should now be completed
+		if ( firstHoleIncomplete ){
+			if ( foundHole ) {
+				// first point in the middle of an interior section
+				// so add incomplete final hole to initial hole
+				for ( int i = 0; i < hole.points.size(); i++ ) {
+					holes.get(0).addPoint(
+							hole.points.get(i).x,
+							hole.points.get(i).y);
+				}
+			} else {
+				// first point was the first point in interior section
+				holes.get(0).addPoint(
+						poly.points.get(poly.points.size() - 1).x,
+						poly.points.get(poly.points.size() - 1).y);
+			}
+		}
+
+		if ( triangulate ) {
+			ArrayList<Polygon> convexHullHoleTris = new ArrayList<Polygon>();
+			for ( i = 0; i < holes.size(); i++ ) {
+				convexHullHoleTris.addAll( holes.get(i).triangulate() );
+			}
+			holes = convexHullHoleTris;
+		}
+
+		return holes;
+	}
+
+	// Graham Scan!
+	public Polygon getConvexHull( Polygon poly ) {
+		if ( poly.points.size() <= 2 ) {
 			console.log("ERROR: Cannot create convex hull of < 3 vertices!");
 			return null;
 		}
@@ -173,11 +233,10 @@ class CompGeoHelper {
 
 		// convert input ArrayList to Javascript array
 		var vertices = new Array();
-		for ( i = 0; i < vs.size(); i++ ) {
-			vertices.push(vs.get(i));
+		for ( i = 0; i < poly.points.size(); i++ ) {
+			vertices.push(
+					new Vertex(poly.points.get(i).x, poly.points.get(i).y));
 		}
-		console.log(vs);
-		console.log(vertices);
 
 		Vertex p = getLowestPoint( vertices );
 		vertices = sortByRadialAngle( p, vertices );
@@ -226,7 +285,6 @@ class CompGeoHelper {
 			hullStack.push(vertices[i]);
 			m += 1;
 		}
-		console.log(hullStack);
 
 		Polygon chull = createPoly();
 		for ( i = 0; i <= m; i++ ) {
@@ -253,6 +311,7 @@ class CompGeoHelper {
 		vertices.sort(
 				function(x, y) {
 					if ( x.angle == y.angle ) {
+						console.log(x);
 						return x.getDistance(p) < y.getLength(p);
 					} else {
 						return x.angle < y.angle;
