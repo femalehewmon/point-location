@@ -135,7 +135,7 @@ String explanation2 = "The data structure is created by triangulating the polygo
 
 String explanation3 = "Ok? Let's begin! You'll notice that a play button has appeared at the bottom of the screen. Press it at any time to begin auto-playing the animation. Otherwise, continue to step through manually by pressing the space bar.";
 
-String triangulate_poly = "First, we triangulate the original polygon.";
+String triangulate_poly = "First, we triangulate the original polygon and its convex hull.";
 String add_outer_tri = "Next, we surround the outer area of the polygon with a large triangle. This outer triangle can be arbitarily large to cover as much potential space as you point location needs to cover.";
 String triangulate_outer_tri = "Now, we triangulate the space between the triangulated polygon and the edges of the outer triangle.";
 String before_begin = "Looking good. We can now begin to build our DAG by identifying, removing, and retriangulating sets of independent low degree vertices";

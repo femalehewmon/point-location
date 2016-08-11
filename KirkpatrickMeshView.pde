@@ -153,7 +153,11 @@ class KirkpatrickMeshView extends View {
 			case TRIANGULATE_POLY:
 				setText(sceneControl.triangulate_poly);
 				polygonsToDraw.clear();
-				polygonsToDraw.addAll(mesh.getPolygonsByParentId(polygon.id));
+				polygonsToDraw.addAll(
+						mesh.getPolygonsByParentId(polygon.id));
+				polygonsToDraw.addAll(mesh.getPolygonsById(
+							mesh.layers.get(0).subLayers.get(1).
+							getPolygonsAddedToLayer()));
 				return nextSubScene();
 			case ADD_OUTER_TRI:
 				setText(sceneControl.add_outer_tri);
