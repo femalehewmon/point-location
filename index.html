@@ -1,14 +1,137 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>A Short Look at Kirkpatrick's Point Location Data Structure</title>
-    <script src="js/processing.js"></script>
+   <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+   <!-- JS -->
     <script src="js/jquery-2.1.4.min.js"></script>
+    <script src="js/processing.js"></script>
     <script src="js/poly2tri.js"></script>
+    <script src="js/graham_scan.min.js"></script>
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <h1 id="title" align="center">Kirkpatrick's Point Location Data Structure</h1>
-    <div id="processing" align="center">
-        <canvas data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde TextView.pde"></canvas>
+    <div id="visualization" class="parentbox">
+        <div class="childbox">
+            <div id="processing">
+            <canvas id="internal" data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde"></canvas>
+            </div>
+        </div>
+        <a id="github-icon"
+           href="https://github.com/meganvanwelie/point-location"
+            alt="Github" title="Github">
+            <img class="about-icon" src="images/github-icon.svg">
+        </a>
+    </div>
+    <div id="sidebar">
+        <h1 id="title" align="center">
+            Kirkpatrick's Point Location Data Structure
+        </h1>
+
+        <div id="sidebar-body">
+            <div id="explanation">
+                <p id="explanation-text" class="explanation-text">
+                    <!-- Text to be filled in within processing code -->
+                </p>
+            </div>
+
+
+            <div id="playback-controls">
+
+                <div id="demo-controls" class="sidebar-bottom" >
+                    <input id="demo-button" class="playback-button" type="image"
+                    src="images/iconmonstr-video-8.svg" alt="demo" >
+                    <span class="playback-helper">
+                        Alternatively, click the demo button to the left to load a pre-made polygon.
+                    </span>
+                </div>
+
+                <div id="play-controls" class="sidebar-bottom">
+                    <!-- play/pause controls-->
+                    <input id="play-button" class="playback-button" type="image"
+                        src="images/iconmonstr-video-13.svg" alt="play" >
+                    <span class="playback-helper">
+                        Press the space bar to continue.
+                    </span>
+
+                </div>
+
+                <div id="pause-controls" class="sidebar-bottom">
+                    <!-- play/pause controls-->
+                    <input id="pause-button" class="playback-button" type="image"
+                        src="images/iconmonstr-media-control-7.svg" alt="pause" >
+                    <div class="playback-helper">
+                        <input id="speed-slider" type="range"
+                                min="1" max="5" step="1" value="3"/>
+                        <span>Animation Speed:</span>
+                        <span id="current-speed">Normal</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 </body>
+<script>
+
+    $("#demo-controls").show();
+    $("#play-controls").hide();
+    $("#pause-controls").hide();
+
+    $("#pause-button").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.pauseAnimation();
+                $("#play-controls").show();
+                $("#pause-controls").hide();
+            });
+
+    $("#play-button").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.playAnimation();
+                $("#play-controls").hide();
+                $("#pause-controls").show();
+            });
+
+    $("#demo-button").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.startDemo();
+                $("#demo-controls").hide();
+            });
+
+    var rangeValues = {
+        "1": ["Slowest", 0.25],
+        "2": ["Slow", 0.5],
+        "3": ["Normal", 1.0],
+        "4": ["Fast", 2.0],
+        "5": ["Fastest", 4.0]
+    };
+    $('#speed-slider').on('input change',
+            function() {
+                $('#current-speed').text(rangeValues[$(this).val()][0]);
+                var pjs = Processing.getInstanceById('internal');
+                pjs.updateAnimationSpeed(rangeValues[$(this).val()][1]);
+    });
+
+    $("#replay").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.resetAnimation();
+            });
+
+    $(document).keypress(
+            function(e){
+                if(e.keyCode == 32){
+                    var pjs = Processing.getInstanceById('internal');
+                    pjs.browserKeyPressed();
+                }
+    });
+
+</script>
 </html>

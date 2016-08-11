@@ -104,7 +104,7 @@ class LayeredMesh extends Mesh {
 		return polyIds;
 	}
 
-	public ArrayList<Integer> getVisiblePolygonsByLayer( int layer ) {
+	public ArrayList<Polygon> getVisiblePolygonsByLayer( int layer ) {
 		return getPolygonsById( getVisiblePolygonIdsByLayer( layer ) );
 	}
 
@@ -124,7 +124,7 @@ class LayeredMesh extends Mesh {
 		return polyIds;
 	}
 
-	public ArrayList<Integer> getPolygonsAddedBySubLayer( int layer ) {
+	public ArrayList<Polygon> getPolygonsAddedBySubLayer( int layer ) {
 		return getPolygonsById( getPolygonIdsAddedBySubLayer( layer ) );
 	}
 
@@ -144,8 +144,24 @@ class LayeredMesh extends Mesh {
 		return polyIds;
 	}
 
-	public ArrayList<Integer> getPolygonsRemovedBySubLayer( int layer ) {
+	public ArrayList<Polygon> getPolygonsRemovedBySubLayer( int layer ) {
 		return getPolygonsById( getPolygonIdsRemovedBySubLayer( layer ) );
+	}
+
+	public ArrayList<Polygon> getPolygonIdsByParentId( int parentId ) {
+		ArrayList<Integer> polyIds = new ArrayList<Integer>();
+		Iterator<Integer> iterator = polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if( polygons.get(polyId).parentId == parentId ) {
+				polyIds.add(polyId);
+			}
+		}
+		return polyIds;
+	}
+
+	public ArrayList<Polygon> getPolygonsByParentId( int parentId ) {
+		return getPolygonsById( getPolygonIdsByParentId( parentId ) );
 	}
 
 	public ArrayList<Polygon> getPolygonsById( ArrayList<Integer> polyIds ) {

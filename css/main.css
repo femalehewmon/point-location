@@ -1,90 +1,75 @@
-body { margin: 0; }
-canvas { width: 100%; height: 100% }
-
-#poly-create-container {
-	position: relative;
-	display: block;
-    margin: 0 auto;
-    width: 1000px;
+html, body {
+    background-color: #ffffff;
+    height: 100%;
+    width: 100%;
+    margin: auto;
+    position: absolute;
+    font-family: 'Inconsolata';
+    color: #000000;
 }
 
-#fdg-container,
-#kpt-container {
-	position: relative;
-	display: block;
-	width: 50%;
+
+#visualization {
+	width: 75%;
+    height: 100%;
+    float: left;
+    background-image: url(../images/stardust/stardust.png);
+}
+.about-icon {
+    position: absolute;
+    bottom:0;
+    left:10px;
+    width: 35px;
+    height: 35px;
 }
 
-#fdg-container {
-	float: right;
+
+#sidebar {
+    position: absolute;
+    margin-left: 75%;
+    height: 95%;
+}
+#sidebar-body {
+    padding: 10px;
+}
+.explanation-text {
+    font-size: 24;
+    text-align: left;
 }
 
-#kpt-container {
-	float: left;
+.sidebar-bottom {
+    position: absolute;
+    bottom: 0;
+    width: 90%;
+    height: 100px;
+    line-height: 100px;
+}
+.playback-button {
+    float: left;
+    width: 15%;
+    height: 100%;
+    margin: 5px;
+}
+.playback-helper {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+    margin-top:7px;
+    margin-left:7px;
+    width: 75%;
 }
 
-#KPTCanvas {
-    position: relative;
-    display: block;
-    /*float: left;*/
-    margin: 0 auto;
-    //border: 2px solid black;
-    width: 500px;
-    /*height: 85%;*/
-}
-
-#FDGCanvas {
-    position: relative;
-    display: block;
-    /*float: right;*/
-    margin: 0 auto;
-    //border: 2px solid black;
-    width: 500px;
-    /*height: 85%;*/
-}
-
-#FDGScroll {
-    position: relative;
-    display: block;
-    float: right;
-    margin: 0 auto;
-    width: 100px;
-}
-
- #canvas-container:after {
-    content:".";
-    display:block;
-    height:0;
-    clear:both;
-    visibility:hidden;
-}	
-
-#titlebox {
-    position: relative;
-    /*top: 610px;*/
-    display: block;
-    /*margin: 0 auto;*/
-    //border: 2px solid black;
-	width: 100%;
-    font-family: helvetica, sans-serif;
-    font-size: 32px;
-    text-align: center;
-    color: black;
-    font-weight: 600;
+/*http://jsfiddle.net/hashem/vsakd/8/*/
+.parentbox {
     text-align: center;
 }
-
-#textbox {
-    position: relative;
-    /*top: 610px;*/
-    display: block;
-    /*margin: 0 auto;*/
-    //border: 2px solid black;
-	width: 100%;
-    height: 150;
-    font-family: helvetica, sans-serif;
-    font-size: 18px;
-    color: black;
-    font-weight: 600;
-    text-align: center;
+.parentbox:before {
+    content: ' ';
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+}
+.childbox {
+    display: inline-block;
+    vertical-align: middle;
 }

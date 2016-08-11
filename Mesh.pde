@@ -19,7 +19,7 @@ class Mesh {
 	public void clear() {
 		this.vertices.clear();
 		this.edges.clear();
-		this.faces.clar();
+		this.faces.clear();
 	}
 
 	public void addTrianglesToMesh( ArrayList<Polygon> tris ) {
@@ -561,6 +561,10 @@ class Vertex {
         hash = ((hash + y) << 5) - (hash + y);
         return (int)hash;
     }
+
+	public String valueOf() {
+		return this.x + " " + this.y;
+	}
 
     public boolean equals(Object obj) {
         Vertex other = (Vertex) obj;

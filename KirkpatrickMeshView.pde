@@ -4,84 +4,63 @@ class KirkpatrickMeshView extends View {
 
 	Polygon polygon;
 	Polygon outerTri;
-	ArrayList<Integer> polygonTris;
-	ArrayList<ArrayList<Integer>> layerTris;
-	ArrayList<ArrayList<PolyPoint>> layerVertices;
 
-	float ratioToScalePoly;
-	float xPosToMovePoly;
-	float yPosToMovePoly;
+	int subScene;
+	int EXPLAIN=1;
+	int TRIANGULATE_POLY=2;
+	int ADD_OUTER_TRI=3;
+	int TRIANGULATE_OUTER_TRI=4;
+	int MESH_TRAVERSAL=5;
+	int ADD_ROOT_TRI=6;
+	int explanation;
+	boolean initialized;
+
+	ArrayList<Polygon> polygonsToDraw;
+	ArrayList<Vertex> verticesToDraw;
+	PolyPoint ildvToDraw;
 
 	int layerToDraw;
-	boolean drawPoly;
-	boolean drawPolyTris;
-	boolean drawOuterTri;
-	boolean drawLayers;
+	int subLayerToDraw;
+	boolean layerInitialized;
+	boolean drawOuterTriangle;
 
 	public KirkpatrickMeshView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
-		this.layerToDraw = 0;
+		this.layerToDraw = 1;
+		this.subLayerToDraw = 0;
+		this.layerInitialized = false;
+		this.drawOuterTriangle = false;
 
 		this.mesh = null;
 		this.polygon = null;
-		// create outer triangle
-		this.outerTri = createPoly();
-		this.outerTri.cFill = color(255);
-		// +10 to give a slight border
-		this.outerTri.addPoint( xCenter, y1 + 10 );
-		this.outerTri.addPoint( x2 - 10, y2 - 10 );
-		this.outerTri.addPoint( x1 + 10, y2 - 10 );
+		this.outerTri = null;
 
 		this.polygonTris = new ArrayList<Integer>();
-		this.outerTris = new ArrayList<Integer>();
-		this.layerTris = new ArrayList<ArrayList<Integer>>();
-		this.layerVertices = new ArrayList<ArrayList<PolyPoint>>();
+		this.polygonsToDraw = new ArrayList<Polygon>();
+		this.verticesToDraw = new ArrayList<Vertex>();
+		this.ildvToDraw = null;
 
-		// ratio and position that the polygon will need to adjust to in order
-	    // to fit in this view
-		// values saved here and not directly applied for the sake of animation
-		this.ratioToScalePoly = 1.0; // set when polygon is added to view
-		this.xPosToMovePoly = this.outerTri.getCenter().x;
-		this.yPosToMovePoly = this.outerTri.getCenter().y;// + (this.h / 8.0);
-
+		this.initialized = true;
 		this.finalized = false;
-		this.drawPoly = false;
-		this.drawPolyTris = false;
-		this.drawOuterTri = false;
-		this.drawLayers = false;
 	}
 
-	public void setPolygon( Polygon polygon ) {
-		this.polygon = polygon;
-		// calculate amount to scale -- better way to do this?
-		// inner polygon should be able to be misshapen, so can't
-		// generalize entire width to specific scale
-		float totalScale = 1.0;
-		Polygon tmp = this.polygon.copy();
-		tmp.move( xPosToMovePoly, yPosToMovePoly );
-		while( !this.outerTri.containsPolygon( tmp ) ){
-			tmp.scale( 0.90 );
-			totalScale *= 0.90;
-		}
-		console.log(" final scale is " + totalScale);
-		console.log(" size of poly " + this.polygon.getWidth() + " " + this.polygon.getHeight());
-		console.log(" size of outerTri " + this.outerTri.getWidth() + " " + this.outerTri.getHeight());
-		this.ratioToScalePoly = totalScale;
-	}
-
-	public void setMesh( LayeredMesh mesh ) {
+	public void setMesh( LayeredMesh mesh, Polygon polygon, Polygon outerTri ){
 		int i, j, k, l;
+
+		this.polygon = polygon;
+		this.outerTri = outerTri;
+
+		reset();
+		this.polygonsToDraw.add(this.polygon);
+
 		// clear previously set mesh
-		this.outerTris.clear();
-		this.polygonTris.clear();
+		this.ildvToDraw = null;
 		if ( this.mesh != null ) {
 			this.mesh.clear();
 		}
 
 		this.mesh = mesh.copy();
-		this.layerTris.add( new ArrayList<Integer>() );
-		this.layerVertices.add( new ArrayList<PolyPoint>() );
 
 		// set polygon and outer triangle tris
 		Iterator<Integer> iterator = mesh.polygons.keySet().iterator();
@@ -89,87 +68,214 @@ class KirkpatrickMeshView extends View {
 			Integer polyId = iterator.next();
 			if ( mesh.polygons.get(polyId).parentId == polygon.id ) {
 				this.polygonTris.add(polyId);
-				this.layerTris.get(0).add( polyId );
-			} else if ( mesh.polygons.get(polyId).parentId == outerTri.id ) {
-				this.layerTris.get(0).add( polyId );
-			}
-		}
-
-		flattenMesh();
-	}
-
-	private void flattenMesh() {
-		// set per layer tris, split into sublayers
-		ArrayList<MeshLayer> subLayers;
-		ArrayList<Integer> polysAdded;
-		ArrayList<Integer> polysRemoved;
-		ArrayList<Vertex> verticesRemoved;
-		for( i = 1; i < this.mesh.layers.size(); i++ ) {
-			subLayers = mesh.layers.get(i).subLayers;
-			// add buffer layers for frame with all ildv in layer marked
-			this.layerTris.add(new ArrayList<Integer>(
-						layerTris.get( layerTris.size() - 1 )));
-			this.layerVertices.add(new ArrayList<PolyPoint>( ));
-			for( j = 0; j < subLayers.size(); j++ ) {
-
-				// initialize new layer with same polygons as last layer
-				this.layerTris.add(new ArrayList<Integer>(
-							layerTris.get( layerTris.size() - 1 )));
-				// initialize new layer with same vertices as last layer
-				//this.layerVertices.add(new ArrayList<PolyPoint>(
-			    //			layerVertices.get(layerVertices.size() - 1)));
-				this.layerVertices.add(new ArrayList<PolyPoint>( ));
-
-				// get list of polygons added and removed from current layer
-				// for KP data structure, should be either a list of added
-				// or removed, but check for and handle both
-				polysAdded = subLayers.get(j).getPolygonsAddedToLayer();
-				polysRemoved = subLayers.get(j).getPolygonsRemovedFromLayer();
-				verticesRemoved = subLayers.get(j).getVerticesRemovedFromLayer();
-				for ( k = 0; k < verticesRemoved.size(); k++ ) {
-					PolyPoint ildv = new PolyPoint(
-							verticesRemoved.get(k).x,
-							verticesRemoved.get(k).y);
-					ildv.size = 20;
-					ildv.cFill = color(0);
-					this.layerVertices.get(layerVertices.size() - 1).add(ildv);
-					// add this vertex to all previous subLayers before
-					// the current subLayer since it is to be removed in
-					// the next layer
-					for ( l = 0; l <= j ; l++ ) {
-						ildv = ildv.copy();
-						ildv.size = 20;
-						ildv.cFill = color(255);
-						this.layerVertices.get(layerVertices.size() - l - 2).add(
-								ildv);
-					}
-				}
-				for ( k = 0; k < polysRemoved.size(); k++ ) {
-					this.layerTris.get( layerTris.size() - 1 ).remove(
-							this.layerTris.get( layerTris.size() - 1).indexOf(
-								polysRemoved.get(k)) );
-				}
-				for ( k = 0; k < polysAdded.size(); k++ ) {
-					this.layerTris.get( layerTris.size() - 1 ).add(
-							polysAdded.get(k) );
-				}
 			}
 		}
 	}
 
+	public void reset() {
+		subLayerToDraw = 0;
+		layerToDraw = 1;
+		polygonsToDraw.clear();
+		verticesToDraw.clear();
+		ildvToDraw = null;
+		layerInitialized = false;
 
-	public boolean nextLevel() {
-		this.layerToDraw += 1;
-		if ( this.layerToDraw >= this.layerTris.size() ) {
-			this.layerToDraw -= 1;
-			return false;
+		drawOuterTriangle = false;
+		outerTri.selected = false;
+
+		subScene = EXPLAIN;
+		explanation = 1;
+		initialized = false;
+		polygonsToDraw.add(polygon);
+	}
+
+	private boolean nextLevel() {
+		if (subLayerToDraw >= mesh.layers.get(layerToDraw).subLayers.size()-1){
+			if ( layerToDraw < mesh.layers.size() - 1 ) {
+				subLayerToDraw = 0;
+				layerToDraw++;
+				layerInitialized = false;
+			} else {
+				// keep layer as it was and return false to indicate
+				// last layer exceeded
+				return false;
+			}
+		} else {
+			subLayerToDraw++;
 		}
 		return true;
 	}
 
-	public void render( boolean drawHoles ) {
+	private boolean nextSubScene() {
+		switch(subScene) {
+			case EXPLAIN:
+				if ( explanation < 4 ) {
+					subScene = EXPLAIN;
+				} else if ( explanation == 4) {
+					subScene = TRIANGULATE_POLY;
+				} else {
+					initialized = true;
+					subScene = MESH_TRAVERSAL;
+				}
+				break;
+			case TRIANGULATE_POLY:
+				subScene = ADD_OUTER_TRI;
+				break;
+			case ADD_OUTER_TRI:
+				subScene = TRIANGULATE_OUTER_TRI;
+				break;
+			case TRIANGULATE_OUTER_TRI:
+				subScene = EXPLAIN;
+				break;
+			case MESH_TRAVERSAL:
+				subScene = ADD_ROOT_TRI;
+				break;
+		}
+		return true;
+	}
+
+	public boolean update() {
+		// show polygon alone
+		switch(subScene) {
+			case EXPLAIN:
+				if ( explanation == 1 ) {
+					setText(sceneControl.explanation1);
+				} else if ( explanation == 2 ){
+					setText(sceneControl.explanation2);
+				} else if ( explanation == 3 ){
+					$("#play-button").show();
+					setText(sceneControl.explanation3);
+				} else {
+					setText(sceneControl.before_begin);
+				}
+				explanation++;
+				return nextSubScene();
+			case TRIANGULATE_POLY:
+				setText(sceneControl.triangulate_poly);
+				polygonsToDraw.clear();
+				polygonsToDraw.addAll(
+						mesh.getPolygonsByParentId(polygon.id));
+				polygonsToDraw.addAll(mesh.getPolygonsById(
+							mesh.layers.get(0).subLayers.get(1).
+							getPolygonsAddedToLayer()));
+				return nextSubScene();
+			case ADD_OUTER_TRI:
+				setText(sceneControl.add_outer_tri);
+				drawOuterTriangle = true;
+				return nextSubScene();
+			case TRIANGULATE_OUTER_TRI:
+				setText(sceneControl.triangulate_outer_tri);
+				polygonsToDraw.addAll(mesh.getPolygonsByParentId(outerTri.id));
+				return nextSubScene();
+			case MESH_TRAVERSAL:
+				if( updateMeshTraversal() ){
+					return true;
+				}
+				return nextSubScene();
+			case ADD_ROOT_TRI:
+				this.finalized = true;
+				return false;
+		}
+	}
+
+	private boolean updateMeshTraversal() {
+		int i;
+		// Visualization progression:
+		// - If first subLayer in layer, draw all previously visible polygons
+		// and all ILDV to be removed in this layer (not highlighted)
+		// - Draw sublayer with current ildv to be removed highlighted
+		// - Draw sublayer with polygons attached to ildv removed (has hole)
+		// - Draw sublayer with polygons created to fill hole
+		// Repeat
+		// This progression is made easier because layeredMesh was built
+		// so that each step, except the first, is on a different subLayer
+
+		if ( !layerInitialized ) {
+
+			// if final layer, do not set ILDV text
+			setText(sceneControl.ildv_identified);
+
+			// add all polygons visible on previous layer
+			polygonsToDraw.clear();
+			polygonsToDraw.addAll(
+					mesh.getVisiblePolygonsByLayer(layerToDraw - 1));
+
+			// add all ildv vertices to be removed on this layer
+			layerInitialized = true;
+			// outerTri's selected color (dark gray) used to show hole
+			outerTri.selected = false;
+
+			// verticesToDraw should be empty, verify
+			if ( verticesToDraw.size() > 0 ) {
+				console.log( "WARNING: vertices to draw should be empty " +
+						"on first subLayer");
+			}
+			verticesToDraw.clear();
+
+			ArrayList<Vertex> verticesRemoved =
+				mesh.layers.get( layerToDraw ).getVerticesRemovedFromLayer();
+			for( i = 0; i < verticesRemoved.size(); i++ ) {
+				PolyPoint ildv = new PolyPoint(
+							verticesRemoved.get(i).x,
+							verticesRemoved.get(i).y);
+				ildv.cFill = color(0);
+				verticesToDraw.add( ildv );
+			}
+			return true;
+		} else {
+			ildvToDraw = null;
+			MeshLayer subLayer =
+				mesh.layers.get( layerToDraw ).subLayers.get( subLayerToDraw );
+			// get list of polygons added and removed from current layer
+			// Should be either a list of added or removed,
+			// but check for and handle both
+			if ( subLayer != null ) {
+				ArrayList<Integer> polysAdded =
+					subLayer.getPolygonsAddedToLayer();
+				ArrayList<Integer> polysRemoved =
+					subLayer.getPolygonsRemovedFromLayer();
+				ArrayList<Integer> verticesRemoved =
+					subLayer.getVerticesRemovedFromLayer();
+
+				if ( verticesRemoved.size() > 0 ) {
+					setText(sceneControl.ildv_selected);
+					for ( i = 0; i < verticesRemoved.size(); i++ ) {
+						Vertex ildv = verticesRemoved.get(i);
+						if ( verticesToDraw.contains( ildv ) ) {
+							ildvToDraw = verticesToDraw.get(
+									verticesToDraw.indexOf(ildv));
+							verticesToDraw.remove(ildvToDraw);
+						}
+					}
+				}
+
+				if ( polysRemoved.size() > 0 ) {
+					setText(sceneControl.ildv_removed);
+					for ( i = 0; i < polysRemoved.size(); i++ ) {
+						polygonsToDraw.remove(
+								polygonsToDraw.indexOf(
+									mesh.polygons.get(polysRemoved.get(i))));
+					}
+				}
+
+				if ( polysAdded.size() > 0 ) {
+					setText(sceneControl.retriangulate);
+					for ( i = 0; i < polysAdded.size(); i++ ) {
+						polygonsToDraw.add( mesh.polygons.get(polysAdded.get(i)) );
+					}
+				}
+			}
+
+			return nextLevel();
+		}
+	}
+
+	public void render() {
+		if(!visible){return;}
+
 		int i, j;
-		//super.render(); // draw view background
+
+		// select triangle under mouse hover
 		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
 		for ( i = 0; i < messages.size(); i++) {
 			if (messages.get(i).k == MSG_TRIANGLE) {
@@ -177,70 +283,57 @@ class KirkpatrickMeshView extends View {
 			}
 		}
 
-		ArrayList<Polygon> polysToDraw = new ArrayList<Polygon>();
-		ArrayList<PolyPoint> verticesToDraw = new ArrayList<PolyPoint>();
-		if ( drawPoly ) {
-			this.polygon.render();
-		}
-		if ( drawPolyTris ) {
-			polysToDraw = this.mesh.getPolygonsById(this.polygonTris);
-		}
-		if ( drawOuterTri || drawLayers ) {
-			this.outerTri.render();
-		}
-		if ( drawLayers ) {
-			// draw polygons up to requested layer
-			polysToDraw = this.mesh.getPolygonsById(
-					this.layerTris.get(this.layerToDraw));
-			// draw vertices up to requested layer
-			verticesToDraw = this.layerVertices.get(layerToDraw);
+		if( drawOuterTriangle ) {
+			outerTri.render();
 		}
 
-		// render polygons to draw
-		for( i = 0; i < polysToDraw.size(); i++ ) {
-			if ( this.layerToDraw < layerTris.size() - 2 ) {
-				if ( this.polygonTris.contains(polysToDraw.get(i).id) ||
-				  (!this.layerTris.get(this.layerToDraw + 1).contains(
-					 polysToDraw.get(i).id) )) {
-					polysToDraw.get(i).selected = false;
-				} else {
-					polysToDraw.get(i).selected = true;
-				}
+		// draw polygons
+		for( i = 0; i < polygonsToDraw.size(); i++ ) {
+			// reverse highlight so triangles are white by default
+			// highlight triangle with color if it:
+			//  - belongs to the original polygon
+			//  - the view is finalized and displaying the root triangle
+			//  - is connected to the currently highlighted ILDV
+			//  - is selected by the user by mouse hover
+			if ( polygonsToDraw.get(i).parentId == polygon.id ||
+					polygonsToDraw.get(i).id == polygon.id ||
+					this.finalized ||
+					( ildvToDraw != null &&
+					polygonsToDraw.get(i).points.contains(ildvToDraw)) ||
+					selectedShapes.contains(polygonsToDraw.get(i).id) ) {
+				polygonsToDraw.get(i).selected = false;
 			} else {
-				polysToDraw.get(i).selected = false;
+				polygonsToDraw.get(i).selected = true;
 			}
-			polysToDraw.get(i).render(false);
+			polygonsToDraw.get(i).render(false);
 		}
 
-		// render vertices to draw
+		// draw vertices
 		for( i = 0; i < verticesToDraw.size(); i++ ) {
 			verticesToDraw.get(i).render();
 		}
-	}
 
-	public void render() {
-		// draw polygon only by default
-		render( false );
+		// draw ildv vertex
+		if( ildvToDraw != null ) {
+			ildvToDraw.selected = true;
+			ildvToDraw.render();
+		}
+
 	}
 
 	public void mouseUpdate() {
+		if(!visible || finalized){return;}
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i;
-		if ( layerToDraw < this.layerTris.size() ) {
-			ArrayList<Integer> polysToDraw =
-				this.layerTris.get( this.layerToDraw );
-			for( int i; i < polysToDraw.size(); i++ ) {
-				if (color(polysToDraw.get(i)) == c) {
+		if ( layerToDraw < this.mesh.layers.size() ) {
+			for( int i; i < polygonsToDraw.size(); i++ ) {
+				if (polygonsToDraw.get(i).pickColor == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
-					msg.v = polysToDraw.get(i);
+					msg.v = polygonsToDraw.get(i).id;
 					messages.add(msg);
 				}
 			}
-			// show pick buffer on button press
-			//if (keyPressed) {
-			//	image(pickbuffer, 0, 0);
-			//}
 		}
 	}
 

@@ -17,12 +17,14 @@ class PointLocationView extends View {
 	// used to speed up graph edge drawing on mouse hover selection
 	// prevents re-recursive search on each render loop
 	int lastSelected = -1;
+	boolean pointInside;
 	ArrayList<GraphEdge> selectedEdges;
 
 	public PointLocationView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
 
 		this.pointSelected = null;
+		this.pointInside = false;
 
 		this.polygon = null;
 		this.root = null;
@@ -36,11 +38,11 @@ class PointLocationView extends View {
 		this.selectedEdges = new ArrayList<GraphEdge>();
 	}
 
-	public void setPolygon( Polygon poly ) {
-		this.polygon = poly;
-	}
+	public void setMesh(
+			LayeredMesh kpMesh, LayeredMesh lgraphMesh, Polygon polygon ) {
 
-	public void setMesh( LayeredMesh kpMesh, LayeredMesh lgraphMesh ) {
+		this.polygon = polygon;
+
 		if ( this.kpMesh != null ) {
 			this.kpMesh.clear();
 		}
@@ -53,12 +55,15 @@ class PointLocationView extends View {
 		this.root = kpMesh.polygons.get(
 				kpMesh.getVisiblePolygonIdsByLayer(
 					kpMesh.layers.size() - 1).get(0));
-
-		resetSearch();
+		reset();
 	}
 
-	private void resetSearch() {
+	private void reset() {
+		this.finalized = false;
+		setText(sceneControl.place_point);
+
 		this.pointSelected = null;
+
 		this.layerToDraw = 0;
 		this.kpLayers.clear();
 		this.kpLayers.add( new ArrayList<Polygon>() );
@@ -72,6 +77,9 @@ class PointLocationView extends View {
 			// only evaluate points placed inside the outer triangle
 			return false;
 		}
+
+		setText(sceneControl.point_locating);
+		this.pointInside = false;
 
 		this.pointSelected = new PolyPoint(x , y);
 
@@ -102,6 +110,11 @@ class PointLocationView extends View {
 				visiblePoly = visiblePolys.get(i);
 				if ( visiblePoly.containsPoint( x, y ) ) {
 
+					// check if tri belongs to the original polygon
+					if ( visiblePoly.parentId == polygon.id ) {
+						this.pointInside = true;
+					}
+
 					if ( pathEdges.size() == 0 ) {
 						pathEdges.add(
 								new GraphEdge(
@@ -120,6 +133,7 @@ class PointLocationView extends View {
 						Integer polyId = iterator.next();
 						if ( kpMesh.polygons.get(polyId).childId ==
 								visiblePoly.parentId ) {
+
 							// add polygon to next layer
 							nextLayer.add( kpMesh.polygons.get(polyId) );
 							// add edge to next layer
@@ -135,15 +149,8 @@ class PointLocationView extends View {
 			}
 
 			// add layer containing only true path polygons and edges
-			if ( this.kpLayers.size() > 0 ) {
-				this.kpLayers.add( visiblePolys );
-				this.edges.add( pathEdges );
-			}
-
-			// add layer containing true path polygons and next layer edges
-			//this.kpLayers.add( visiblePolys );
-			//this.edges.add( nextEdges );
-			//this.edges.get(this.edges.size() - 1).addAll(pathEdges);
+			this.kpLayers.add( visiblePolys );
+			this.edges.add( pathEdges );
 
 			// add layer containing next layer polygons and edges
 			this.kpLayers.add( nextLayer );
@@ -152,19 +159,61 @@ class PointLocationView extends View {
 
 			// set next layer as currently visible polygons
 			visiblePolys = nextLayer;
+
 		} while ( visiblePolys.size() > 0 )
-		console.log(this.kpLayers.size());
-		console.log(this.edges.size());
 	}
 
-	public boolean nextLevel() {
+	public boolean update() {
+		if ( pointSelected != null && !finalized ) {
+			if( !nextLevel() ) {
+				if ( pointInside ) {
+					setText(sceneControl.point_inside);
+				} else {
+					setText(sceneControl.point_outside);
+				}
+				finalized = true;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private boolean nextLevel() {
 		this.layerToDraw += 1;
-		if ( this.layerToDraw >= this.kpLayers.size() ) {
-			this.pointSelected = null;
-			resetSearch();
+		if ( this.layerToDraw >= this.kpLayers.size() - 1 ) {
 			return false;
 		}
 		return true;
+	}
+
+	public ArrayList<GraphEdge> findConnectedParentEdges(
+			Polygon poly, boolean recurse){
+		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
+		ArrayList<GraphEdge> subConnected;
+		GraphEdge edge;
+		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if ( poly.childId == lgraphMesh.polygons.get(polyId).parentId ) {
+				edge = new GraphEdge(
+						poly,
+						lgraphMesh.polygons.get(polyId));
+				if ( !connected.contains(edge) ) {
+					connected.add(edge);
+				}
+				if ( recurse ) {
+					// prevents same edge being drawn over multiple times
+					subConnected = findConnectedParentEdges(
+								lgraphMesh.polygons.get(polyId), recurse );
+					for ( i = 0; i < subConnected.size(); i++ ){
+						if ( !connected.contains(subConnected.get(i)) ) {
+							connected.add(subConnected.get(i));
+						}
+					}
+				}
+			}
+		}
+		return connected;
 	}
 
 	public ArrayList<GraphEdge> findConnectedEdges(
@@ -184,12 +233,7 @@ class PointLocationView extends View {
 					connected.add(edge);
 				}
 				if ( recurse ) {
-					/*
-					connected.addAll( findConnectedEdges(
-								lgraphMesh.polygons.get(polyId), recurse ));
-					*/
-					// TODO: below prevents same edge being drawn over,
-					// but makes things are still very slow
+					// prevents same edge being drawn over multiple times
 					subConnected = findConnectedEdges(
 								lgraphMesh.polygons.get(polyId), recurse );
 					for ( i = 0; i < subConnected.size(); i++ ){
@@ -204,6 +248,8 @@ class PointLocationView extends View {
 	}
 
 	public void render() {
+		if(!visible){return;}
+
 		int i, j;
 
 		if ( this.polygon != null ) {
@@ -214,7 +260,7 @@ class PointLocationView extends View {
 		ArrayList<Integer> selected = new ArrayList<Integer>();
 		boolean polySelected = false;
 		// no mouse hover effect during point location
-		//if ( pointSelected == null ) {
+		if ( pointSelected == null ) {
 			for ( i = 0; i < messages.size(); i++) {
 				if (messages.get(i).k == MSG_TRIANGLE) {
 					polySelected = true;
@@ -228,13 +274,17 @@ class PointLocationView extends View {
 								findConnectedEdges(
 								lgraphMesh.polygons.get(
 									messages.get(i).v), true));
+						/*
+						selectedEdges.addAll(
+								findConnectedParentEdges(
+								lgraphMesh.polygons.get(
+									messages.get(i).v), true));
+						*/
 					}
 					selected.add(messages.get(i).v);
 				}
 			}
-		//} else {
-	//		selected.add( kpLayers.get(0).get(0).id );
-	//	}
+		}
 
 		// draw edges visible due to mouse hover selection of nodes
 		if ( polySelected ) {
@@ -253,8 +303,14 @@ class PointLocationView extends View {
 		Polygon poly;
 		for ( i = 0; i < this.kpLayers.get(layerToDraw).size(); i++ ) {
 			poly = this.kpLayers.get(layerToDraw).get(i);
+			// always 'highlight' the root triangle
+			if ( poly.id == root.id ) {
+				poly.selected = false;
+			}
 			poly.render();
 		}
+
+		// draw graph edges
 		GraphEdge edge;
 		for ( i = 0; i < this.edges.get(layerToDraw).size(); i++ ) {
 			edge = this.edges.get(layerToDraw).get(i);
@@ -296,17 +352,22 @@ class PointLocationView extends View {
 
 	public boolean inMeshBounds( float x, float y ) {
 		return root.containsPoint(x, y);
-		//color c = pickbuffer.get(mouseX, mouseY);
-		//return ( color( kpMesh.polygons.get(layers.get(0).get(0)).id ) == c);
+	}
+
+	public void onMousePress() {
+		if ( visible && pointSelected == null ) {
+			evaluatePoint( mouseX, mouseY );
+		}
 	}
 
 	public void mouseUpdate() {
+		if(!visible){return;}
 		color c = pickbuffer.get(mouseX, mouseY);
 		int i;
 		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
 		while( iterator.hasNext() ) {
 			Integer polyId = iterator.next();
-			if (color(polyId) == c) {
+			if (lgraphMesh.polygons.get(polyId).pickColor == c) {
 				Message msg = new Message();
 				msg.k = MSG_TRIANGLE;
 				msg.v = polyId;
