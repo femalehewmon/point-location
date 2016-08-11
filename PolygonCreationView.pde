@@ -123,6 +123,7 @@ class PolygonCreationView extends View {
 			tmp.scale( 0.90 );
 			ratioToScalePoly *= 0.90;
 		}
+		ratioToScalePoly *= 0.90;
 		if ( animate ) {
 			polygon.animateMove( outerTri.getCenter().x, outerTri.getCenter().y );
 			polygon.animateScale( ratioToScalePoly );
