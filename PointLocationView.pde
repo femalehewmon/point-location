@@ -61,11 +61,18 @@ class PointLocationView extends View {
 		// create adjacency list of graph
 		this.adjList.clear();
 		// first, populate temporary hashmap to associate ids with parent ids
-		HashMap<Integer, Integer> parentToPoly = new HashMap<Integer, Integer>();
+		HashMap<Integer, ArrayList<Integer>> parentToPoly =
+			new HashMap<Integer, ArrayList<Integer>>();
 		Iterator<Integer> iterator = kpMesh.polygons.keySet().iterator();
 		while( iterator.hasNext() ) {
 			Integer polyId = iterator.next();
-			parentToPoly.put( kpMesh.polygons.get(polyId).parentId, polyId );
+			if (!parentToPoly.containsKey(
+						kpMesh.polygons.get(polyId).parentId)){
+				parentToPoly.put(
+						kpMesh.polygons.get(polyId).parentId,
+						new ArrayList<Integer>());
+			}
+			parentToPoly.get(kpMesh.polygons.get(polyId).parentId).add(polyId);
 			adjList.put(polyId, new ArrayList<Integer>());
 		}
 		iterator = kpMesh.polygons.keySet().iterator();
@@ -73,7 +80,10 @@ class PointLocationView extends View {
 			Integer polyId = iterator.next();
 			Polygon currPoly = kpMesh.polygons.get(polyId);
 			if ( currPoly.childId != -1 ) {
-				adjList.get(parentToPoly.get(currPoly.childId)).add(polyId);
+				for(int i = 0; i < parentToPoly.get(currPoly.childId).size(); i++){
+					adjList.get(parentToPoly.get(currPoly.childId).get(i)).add(
+							polyId);
+				}
 			}
 		}
 
@@ -235,8 +245,12 @@ class PointLocationView extends View {
 	}
 
 	public ArrayList<GraphEdge> findConnectedEdges(
-			Polygon poly, boolean recurse ) {
+			Polygon poly, boolean recurse, ArrayList<Integer> evaluated ) {
 		int i, j;
+		if ( evaluated == null ) {
+			evaluated = new ArrayList<Integer>();
+		}
+		evaluated.add(poly.id);
 		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
 		ArrayList<GraphEdge> subConnected;
 		GraphEdge edge;
@@ -244,11 +258,15 @@ class PointLocationView extends View {
 		for ( i = 0; i < childIds.size(); i++ ) {
 			edge = new GraphEdge(
 					poly, lgraphMesh.polygons.get(childIds.get(i)));
+			if ( !connected.contains(edge) ) {
+
+			}
 			connected.add(edge);
-			if ( recurse ) {
+			if ( recurse && !(evaluated.contains(childIds.get(i)))) {
 				// prevents same edge being drawn over multiple times
 				subConnected = findConnectedEdges(
-							lgraphMesh.polygons.get(childIds.get(i)), recurse );
+							lgraphMesh.polygons.get(childIds.get(i)), recurse,
+							evaluated);
 				for ( j = 0; j < subConnected.size(); j++ ) {
 					connected.add(subConnected.get(j));
 				}
@@ -284,7 +302,7 @@ class PointLocationView extends View {
 						selectedEdges.addAll(
 								findConnectedEdges(
 								lgraphMesh.polygons.get(
-									messages.get(i).v), true));
+									messages.get(i).v), true, null));
 						/*
 						selectedEdges.addAll(
 								findConnectedParentEdges(
