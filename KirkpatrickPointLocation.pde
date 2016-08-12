@@ -82,7 +82,7 @@ void startDemo() {
 
 void playAnimation() {
 	animationPaused = false;
-	sceneControl.updateOnSceneDuration();
+	sceneControl.updateOnSceneDuration(true);
 }
 
 void pauseAnimation(boolean hideButton) {

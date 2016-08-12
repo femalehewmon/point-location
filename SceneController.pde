@@ -66,7 +66,10 @@ class SceneController {
 		}
 	}
 
-	public void updateOnSceneDuration() {
+	public void updateOnSceneDuration(boolean forceUpdate) {
+		if ( forceUpdate ) {
+			sceneTimer = sceneDuration;
+		}
 		updateSceneOnKeyPress = false;
 	}
 
