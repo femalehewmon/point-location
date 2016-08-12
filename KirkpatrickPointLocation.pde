@@ -83,11 +83,15 @@ void startDemo() {
 void playAnimation() {
 	animationPaused = false;
 	sceneControl.updateOnSceneDuration(true);
+	$("#play-controls").hide();
+	$("#pause-controls").show();
 }
 
-void pauseAnimation(boolean hideButton) {
+void pauseAnimation() {
 	animationPaused = true;
 	sceneControl.updateOnKeyPress();
+	$("#play-controls").show();
+	$("#pause-controls").hide();
 }
 
 void showPlaybackControls(boolean show) {
@@ -101,7 +105,11 @@ void showPlaybackControls(boolean show) {
 void browserKeyPressed() {
 	// block progressing scene if a polygon is still animating
 	if ( animatingPolygons.size() == 0 ) {
-		sceneControl.onKeyPress();
+		if ( !animationPaused ) {
+			pauseAnimation();
+		} else {
+			sceneControl.onKeyPress();
+		}
 	} else{
 		console.log("still animating..");
 	}
