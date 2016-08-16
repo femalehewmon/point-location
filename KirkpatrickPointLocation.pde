@@ -96,9 +96,9 @@ void pauseAnimation() {
 
 void showPlaybackControls(boolean show) {
 	if( show ) {
-		$("#playback-controls").show();
+		$("#sidebar-bottom").show();
 	} else {
-		$("#playback-controls").hide();
+		$("#sidebar-bottom").hide();
 	}
 }
 
