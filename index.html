@@ -107,12 +107,6 @@
                 pjs.updateAnimationSpeed(rangeValues[$(this).val()][1]);
     });
 
-    $("#replay").click(
-            function() {
-                var pjs = Processing.getInstanceById('internal');
-                pjs.resetAnimation();
-            });
-
     $(document).keydown(
             function(e){
                 if(e.keyCode == 32){
