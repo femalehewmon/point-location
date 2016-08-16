@@ -78,16 +78,12 @@
             function() {
                 var pjs = Processing.getInstanceById('internal');
                 pjs.pauseAnimation();
-                $("#play-controls").show();
-                $("#pause-controls").hide();
             });
 
     $("#play-button").click(
             function() {
                 var pjs = Processing.getInstanceById('internal');
                 pjs.playAnimation();
-                $("#play-controls").hide();
-                $("#pause-controls").show();
             });
 
     $("#demo-button").click(
