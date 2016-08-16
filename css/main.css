@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,800,300);
+@import url(https://fonts.googleapis.com/css?family=Roboto);
 
 html, body {
     background-color: #ffffff;
@@ -6,14 +6,14 @@ html, body {
     width: 100%;
     margin: auto;
     position: absolute;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 14px;
     line-height: 18px;
     color: #000000;
 }
 
 h1 {
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
     line-height: 28px;
     font-size: 24px;
 }
@@ -55,19 +55,14 @@ h1 {
     display:block;
     height: auto;
 }
-.explanation-text {
-}
-#playback-controls {
+#sidebar-bottom {
     position: absolute;
-    bottom: 15px;
-    width: 100%;
-    height: auto;
-}
-.sidebar-bottom {
-    position: relative;
     display: block;
     height: 100px;
+    width: 100%;
+    bottom: 15px;
 }
+
 .playback-button {
     position:relative;
     display:inline-block;
@@ -75,7 +70,7 @@ h1 {
     height: auto;
     margin-right: 5%;
 }
-.playback-helper {
+.playback-control {
     position:relative;
     display: inline-block;
     line-height: normal;
@@ -111,6 +106,6 @@ h1 {
         width: 100%;
         margin-left: 0;
         right: initial;
-       } 
+       }
 
 }

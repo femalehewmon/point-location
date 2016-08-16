@@ -9,16 +9,14 @@
     <script src="js/processing.js"></script>
     <script src="js/poly2tri.js"></script>
     <script src="js/graham_scan.min.js"></script>
-
+    <!-- Compatibility -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
     <div id="visualization" class="parentbox">
-        <div class="childbox">
-            <div id="processing">
-            <canvas id="internal" data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde"></canvas>
-            </div>
-        </div>
+        <canvas id="internal" class="childbox"
+                data-processing-sources="KirkpatrickPointLocation.pde SceneController.pde CompGeoHelper.pde Polygon.pde Mesh.pde LayeredMesh.pde View.pde PolygonCreationView.pde KirkpatrickMeshView.pde LayeredGraphView.pde PointLocationView.pde">
+        </canvas>
         <a id="github-icon"
            href="https://github.com/meganvanwelie/point-location"
             alt="Github" title="Github">
@@ -32,37 +30,34 @@
             </h1>
 
             <div id="sidebar-body">
-                <div id="explanation">
-                    <p id="explanation-text" class="explanation-text">
-                        <!-- Text to be filled in within processing code -->
-                    </p>
-                </div>
+                <p id="explanation-text">
+                    <!-- Text to be filled in within processing code -->
+                </p>
             </div>
-            <div id="playback-controls">
 
-                <div id="demo-controls" class="sidebar-bottom" >
+            <div id="sidebar-bottom">
+                <div id="demo-controls" >
                     <input id="demo-button" class="playback-button" type="image"
                     src="images/iconmonstr-video-8.svg" alt="demo" >
-                    <span class="playback-helper">
+                    <span class="playback-control">
                         Alternatively, click the demo button to the left to load a pre-made polygon.
                     </span>
                 </div>
 
-                <div id="play-controls" class="sidebar-bottom">
+                <div id="play-controls" >
                     <!-- play/pause controls-->
                     <input id="play-button" class="playback-button" type="image"
                         src="images/iconmonstr-video-13.svg" alt="play" >
-                    <span class="playback-helper">
+                    <span class="playback-control">
                         Press the space bar to continue.
                     </span>
-
                 </div>
 
-                <div id="pause-controls" class="sidebar-bottom">
+                <div id="pause-controls" >
                     <!-- play/pause controls-->
                     <input id="pause-button" class="playback-button" type="image"
                         src="images/iconmonstr-media-control-7.svg" alt="pause" >
-                    <div class="playback-helper">
+                    <div class="playback-control">
                         <input id="speed-slider" type="range"
                                 min="1" max="5" step="1" value="3"/>
                         <span>Animation Speed:</span>
