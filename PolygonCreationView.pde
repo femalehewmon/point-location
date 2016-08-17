@@ -72,7 +72,7 @@ class PolygonCreationView extends View {
 			float xDiff = Math.abs(this.polygon.points.get(0).x - x);
 			float yDiff = Math.abs(this.polygon.points.get(0).y - y);
 			if ( xDiff < finalClickThreshold && yDiff < finalClickThreshold ) {
-				this.polygon.finalized = true;
+				finishPolygon();
 			} else {
 				if ( !intersectingPoint( x, y ) ) {
 					this.polygon.addPoint(x, y);
@@ -133,18 +133,16 @@ class PolygonCreationView extends View {
 		}
 	}
 
+	public void finishPolygon() {
+		centerAndResizePolygon(true);
+		this.polygon.finalized = true;
+		setText(sceneControl.created);
+	}
+
 	public void update() {
 		if ( !this.finalized ) {
-			if( !polygon.finalized ) {
-				return true;
-			} else {
-				setText(sceneControl.created);
-				if (!isDemo) {
-					centerAndResizePolygon(true);
-				}
-				this.finalized = true;
-				return true;
-			}
+			this.finalized = true;
+			return true;
 		}
 		return false;
 	}

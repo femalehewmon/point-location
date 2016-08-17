@@ -141,7 +141,6 @@ class KirkpatrickMeshView extends View {
 		switch(subScene) {
 			case EXPLAIN:
 				if ( explanation == 1 ) {
-					showPlaybackButton(false);
 					setText(sceneControl.explanation1);
 				} else if ( explanation == 2 ){
 					setText(sceneControl.explanation2);

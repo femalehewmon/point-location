@@ -2,7 +2,7 @@ final boolean DEMO = false;
 final boolean DEBUG = false;
 
 // Global variables
-boolean animationPaused = true;
+boolean animationPaused;
 ArrayList<Integer> animatingPolygons;
 
 // Helper global classes
@@ -60,6 +60,8 @@ void setup() {
 	kpView.visible = false;
 	graphView.visible = false;
 	plocateView.visible = false;
+
+	animationPaused = false;
 }
 
 void setText(String text) {
@@ -159,9 +161,9 @@ void draw() {
 			}
 			// do not update scene until polygon is finalized
 			if ( pcreateView.polygon.finalized ) {
+				$("#demo-controls").hide();
 				// show polygon centering and scaling
-				if( pcreateView.isDemo ||
-						(!pcreateView.update() && sceneControl.update()) ){
+				if( pcreateView.isDemo || sceneControl.update() ) {
 					sceneControl.nextScene();
 				}
 			}
@@ -169,8 +171,8 @@ void draw() {
 		case sceneControl.SETUP_KIRKPATRICK_DATA_STRUCTURE:
 			if ( !sceneControl.sceneReady ) {
 				// reconfigure view to show playback controls
-				$("#demo-controls").hide();
 				showPlaybackControls(true);
+				showPlaybackButton(false);
 				pauseAnimation(true);
 
 				// create kirkpatrick data structure
