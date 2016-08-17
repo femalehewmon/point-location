@@ -15,11 +15,13 @@ class SceneController {
 	boolean sceneReady;
 	boolean updateSceneOnKeyPress;
 	boolean controllerKeyPressed;
+	boolean autoUpdate;
 
 	public SceneController() {
 		this.currScene = CREATE_POLYGON;
 		this.sceneDuration = DEFAULT_SCENE_DURATION;
 		this.sceneReady = false;
+		this.autoUpdate = false;
 
 		reset();
 	}
@@ -41,6 +43,11 @@ class SceneController {
 
 	public void ready() {
 		this.sceneReady = true;
+	}
+
+	public void enableAutoUpdate() {
+		updateOnSceneDuration(false);
+		this.autoUpdate = true;
 	}
 
 	public void updateSceneDuration(float scale) {
@@ -74,8 +81,10 @@ class SceneController {
 	}
 
 	public void updateOnKeyPress() {
-		controllerKeyPressed = false;
-		updateSceneOnKeyPress = true;
+		if (!this.autoUpdate) {
+			controllerKeyPressed = false;
+			updateSceneOnKeyPress = true;
+		}
 	}
 
 	public void onKeyPress() {
@@ -123,6 +132,7 @@ class SceneController {
 		}
 		reset();
 		this.sceneReady = false;
+		this.autoUpdate = false;
 	}
 
 String newline = "\r\n";

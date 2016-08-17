@@ -92,7 +92,7 @@ class PointLocationView extends View {
 
 	private void reset() {
 		this.finalized = false;
-		setText(sceneControl.place_point);
+		this.initialized = false;
 
 		this.pointSelected = null;
 
@@ -105,7 +105,8 @@ class PointLocationView extends View {
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
-		if( !inMeshBounds(x, y) || this.pointSelected != null ) {
+		if( this.initialized &&
+				(!inMeshBounds(x, y) || this.pointSelected != null)) {
 			// only evaluate points placed inside the outer triangle
 			return false;
 		}
@@ -202,6 +203,11 @@ class PointLocationView extends View {
 				finalized = true;
 			}
 			return true;
+		} else {
+			if ( !this.initialized ) {
+				this.initialized = true;
+				setText(sceneControl.place_point);
+			}
 		}
 		return false;
 	}
@@ -283,6 +289,14 @@ class PointLocationView extends View {
 
 		if ( this.polygon != null ) {
 			this.polygon.render();
+		}
+
+		// show full graph if view not initialized
+		if ( !this.initialized ) {
+			Message msg = new Message();
+			msg.k = MSG_TRIANGLE;
+			msg.v = root.id;
+			messages.add(msg);
 		}
 
 		// Get list of selected polygons and draw graph edges
@@ -371,7 +385,7 @@ class PointLocationView extends View {
 		// draw selected point that is currently being evaluated
 		if ( pointSelected != null ) {
 			pointSelected.render();
-		} else if( inMeshBounds( mouseX, mouseY ) ) {
+		} else if( this.initialized && inMeshBounds( mouseX, mouseY ) ) {
 			// if no point selected, draw ellipse at mouse tip
 			stroke(color(0));
 			fill(color(0));

@@ -11,6 +11,7 @@ class View {
 	color cFill;
 	boolean visible;
 	boolean finalized;
+	boolean initialized;
 
 	public View(float x1, float y1, float x2, float y2) {
 		this.x1 = x1;
@@ -24,6 +25,7 @@ class View {
 		this.cFill = color(0);
 		this.visible = true;
 		this.finalized = true;
+		this.initialized = true;
 	}
 
 	public void render() {

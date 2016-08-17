@@ -118,6 +118,14 @@ void showPlaybackControls(boolean show) {
 	}
 }
 
+void showPlaybackButton(boolean show) {
+	if( show ) {
+		$(".playback-button").show();
+	} else {
+		$(".playback-button").hide();
+	}
+}
+
 void browserKeyPressed() {
 	// block progressing scene if a polygon is still animating
 	if ( animatingPolygons.size() == 0 ) {
@@ -208,7 +216,14 @@ void draw() {
 				notFinalized = graphView.update() || notFinalized;
 				if ( notFinalized) {
 					sceneControl.reset();
+					if ( kpView.finalized ) {
+						showPlaybackControls(false);
+						sceneControl.enableAutoUpdate();
+					}
 				} else {
+					showPlaybackControls(true);
+					showPlaybackButton(false);
+					pauseAnimation();
 					sceneControl.nextScene();
 				}
 			}
@@ -224,7 +239,6 @@ void draw() {
 				plocateView.setMesh(
 						kpView.mesh, graphView.mesh, pcreateView.polygon );
 
-				showPlaybackControls(false);
 				sceneControl.ready();
 			}
 
@@ -245,6 +259,13 @@ void draw() {
 							sceneControl.updateOnKeyPress();
 						}
 					}
+				}
+			} else if ( !plocateView.initialized ) {
+				// full graph hierarchy shown for one scene
+				if ( sceneControl.update() ) {
+					plocateView.update();
+					showPlaybackButton(true);
+					showPlaybackControls(false);
 				}
 			}
 			break;
