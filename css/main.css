@@ -57,7 +57,7 @@ h1 {
 }
 #sidebar-bottom {
     position: absolute;
-    display: block;
+    display: table;
     height: 100px;
     width: 100%;
     bottom: 15px;
@@ -65,14 +65,16 @@ h1 {
 
 .playback-button {
     position:relative;
-    display:inline-block;
+    display:table-cell;
+    vertical-align:middle;
     width: 40px;
     height: auto;
     margin-right: 5%;
 }
 .playback-control {
-    position:relative;
     display: inline-block;
+    vertical-align:middle;
+    position:relative;
     line-height: normal;
     width: 75%;
 }
