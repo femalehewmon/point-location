@@ -60,9 +60,20 @@
                     <div class="playback-control">
                         <input id="speed-slider" type="range"
                                 min="1" max="5" step="1" value="3"/>
-                        <span>Animation Speed:</span>
-                        <span id="current-speed">Normal</span>
+                        <div id="speed-text">
+                            <span>Animation Speed:</span>
+                            <span id="current-speed">Normal</span>
+                        </div>
                     </div>
+                </div>
+
+                <div id="replay-controls" >
+                    <!-- play/pause controls-->
+                    <input id="replay-button" class="playback-button" type="image"
+                        src="images/iconmonstr-media-control-40.svg" alt="replay" >
+                    <span class="playback-control">
+                        Press the space bar to place a new point, or click the button to the left to replay the creation of the data structure.
+                    </span>
                 </div>
             </div>
         </div>
@@ -73,6 +84,7 @@
     $("#demo-controls").show();
     $("#play-controls").hide();
     $("#pause-controls").hide();
+    $("#replay-controls").hide();
 
     $("#pause-button").click(
             function() {
@@ -91,6 +103,11 @@
                 var pjs = Processing.getInstanceById('internal');
                 pjs.startDemo();
                 $("#demo-controls").hide();
+            });
+    $("#replay-button").click(
+            function() {
+                var pjs = Processing.getInstanceById('internal');
+                pjs.replayAnimation();
             });
 
     var rangeValues = {

@@ -72,10 +72,6 @@ void updateAnimationSpeed(String rate) {
 	sceneControl.updateSceneDuration(float(rate));
 }
 
-void resetAnimation() {
-	sceneControl.restart();
-}
-
 void startDemo() {
 	pcreateView.demo();
 }
@@ -94,6 +90,26 @@ void pauseAnimation() {
 	$("#pause-controls").hide();
 }
 
+void replayAnimation() {
+	sceneControl.restart();
+	showReplayControls(false);
+}
+
+void showReplayControls(boolean show) {
+	if ( show ) {
+		$("#replay-controls").show();
+		$("#pause-controls").hide();
+		$("#play-controls").hide();
+	} else {
+		$("#replay-controls").hide();
+		if ( animationPaused ) {
+			$("#play-controls").show();
+		} else {
+			$("#pause-controls").show();
+		}
+	}
+}
+
 void showPlaybackControls(boolean show) {
 	if( show ) {
 		$("#sidebar-bottom").show();
@@ -105,11 +121,7 @@ void showPlaybackControls(boolean show) {
 void browserKeyPressed() {
 	// block progressing scene if a polygon is still animating
 	if ( animatingPolygons.size() == 0 ) {
-		if ( !animationPaused ) {
-			pauseAnimation();
-		} else {
-			sceneControl.onKeyPress();
-		}
+		sceneControl.onKeyPress();
 	} else{
 		console.log("still animating..");
 	}
@@ -139,28 +151,29 @@ void draw() {
 			}
 			// do not update scene until polygon is finalized
 			if ( pcreateView.polygon.finalized ) {
-				// reconfigure view to show playback controls
-				$("#demo-controls").hide();
-				$("#play-controls").show();
-				$("#play-button").hide();
-				showPlaybackControls(true);
-
-				// show polygon centering and scaling, create mesh
+				// show polygon centering and scaling
 				if( pcreateView.isDemo ||
 						(!pcreateView.update() && sceneControl.update()) ){
-					LayeredMesh kpDataStruct =
-						compGeoHelper.createKirkpatrickDataStructure(
-								pcreateView.polygon, pcreateView.outerTri);
-					kpView.setMesh(kpDataStruct,
-							pcreateView.polygon,
-							pcreateView.outerTri);
-					graphView.setMesh(kpDataStruct);
 					sceneControl.nextScene();
 				}
 			}
 			break;
 		case sceneControl.SETUP_KIRKPATRICK_DATA_STRUCTURE:
 			if ( !sceneControl.sceneReady ) {
+				// reconfigure view to show playback controls
+				$("#demo-controls").hide();
+				showPlaybackControls(true);
+				pauseAnimation(true);
+
+				// create kirkpatrick data structure
+				LayeredMesh kpDataStruct =
+					compGeoHelper.createKirkpatrickDataStructure(
+							pcreateView.polygon, pcreateView.outerTri);
+				kpView.setMesh(kpDataStruct,
+						pcreateView.polygon,
+						pcreateView.outerTri);
+				graphView.setMesh(kpDataStruct);
+
 				pcreateView.visible = false;
 				kpView.visible = true;
 				graphView.visible = false;
@@ -219,11 +232,19 @@ void draw() {
 				showPlaybackControls(true);
 				if ( sceneControl.update() ) {
 					if ( plocateView.finalized ) {
-						plocateView.reset();
+						showReplayControls(false);
 						showPlaybackControls(false);
+						plocateView.reset();
+						sceneControl.reset();
+					} else {
+						plocateView.update();
+						sceneControl.reset();
+						if ( plocateView.finalized ) {
+							// final scene
+							showReplayControls(true);
+							sceneControl.updateOnKeyPress();
+						}
 					}
-					plocateView.update();
-					sceneControl.reset();
 				}
 			}
 			break;

@@ -26,8 +26,8 @@ class SceneController {
 
 	public void restart() {
 		reset();
-		this.currScene = CREATE_POLYGON;
-		nextScene();
+		this.sceneReady = false;
+		this.currScene = SETUP_KIRKPATRICK_DATA_STRUCTURE;
 	}
 
 	public void reset() {

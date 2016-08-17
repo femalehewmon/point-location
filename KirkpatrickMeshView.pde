@@ -48,8 +48,8 @@ class KirkpatrickMeshView extends View {
 	public void setMesh( LayeredMesh mesh, Polygon polygon, Polygon outerTri ){
 		int i, j, k, l;
 
-		this.polygon = polygon;
-		this.outerTri = outerTri;
+		this.polygon = polygon.copy();
+		this.outerTri = outerTri.copy();
 
 		reset();
 		this.polygonsToDraw.add(this.polygon);
@@ -87,6 +87,8 @@ class KirkpatrickMeshView extends View {
 		explanation = 1;
 		initialized = false;
 		polygonsToDraw.add(polygon);
+
+		this.finalized = false;
 	}
 
 	private boolean nextLevel() {

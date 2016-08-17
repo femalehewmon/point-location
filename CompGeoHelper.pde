@@ -22,6 +22,8 @@ class CompGeoHelper {
 
 	public LayeredMesh createKirkpatrickDataStructure(
 			Polygon poly, Polygon outerTri ){
+		poly = poly.copy();
+		outerTri = outerTri.copy();
 		if(DEBUG){
 		console.log("Creating KP Data Structure");
 		}
