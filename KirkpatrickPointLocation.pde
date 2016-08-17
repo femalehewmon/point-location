@@ -252,6 +252,8 @@ void draw() {
 						showPlaybackControls(false);
 						plocateView.reset();
 						sceneControl.reset();
+						// update once to avoid showing full hierarchy on reset
+						plocateView.update();
 					} else {
 						plocateView.update();
 						sceneControl.reset();
