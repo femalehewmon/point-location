@@ -219,7 +219,6 @@ class CompGeoHelper {
 				holes.add(hole);
 			}
 		}
-		}
 
 		if ( triangulate ) {
 			ArrayList<Polygon> convexHullHoleTris = new ArrayList<Polygon>();
@@ -287,6 +286,7 @@ class CompGeoHelper {
 		for( int j = 0; j < deque.size() - 1; j++ ) {
 			convexHull.addPoint(deque.get(j).x, deque.get(j).y);
 		}
+
 		return convexHull;
 	}
 
