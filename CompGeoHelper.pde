@@ -233,21 +233,75 @@ class CompGeoHelper {
 	}
 
 	public Polygon getConvexHull( Polygon poly ) {
-		// Graham Scan using Brian Barnett's javascript implementation
-		// https://github.com/brian3kb/graham_scan_js
-		var convexHull = new ConvexHullGrahamScan();
-		for ( int i = 0; i < poly.points.size(); i++ ) {
-			convexHull.addPoint(poly.points.get(i).x, poly.points.get(i).y);
+		// Melkman's Convex Hull algorithm
+		// see 1987 "On-line Construction of the Convex Hull of a
+		// Simple Polyline" by A. Melkman for details
+		//
+		ArrayList<PolyPoint> deque = new ArrayList<PolyPoint>();
+		if ( poly.points.size() <= 2 ) {
+			console.log("WARNING: cannot get convex hull of < 3 point poly");
+			return null;
 		}
-		var hullPoints = convexHull.getHull();
 
-		// convert hull points to our Polygon
+		// setup first three points
+		PolyPoint v1 = poly.points.get(0);
+		PolyPoint v2 = poly.points.get(1);
+		PolyPoint v3 = poly.points.get(2);
+		deque.add(v3);
+		if ( rightTurn(v1, v2, v3) ) {
+			deque.add(v2);
+			deque.add(v1);
+		} else {
+			deque.add(v1);
+			deque.add(v2);
+		}
+		deque.add(v3);
+
+		PolyPoint v;
+		int b = 0;
+		int t = deque.size() - 1;
+		for ( int i = 3; i < poly.points.size(); i++ ) {
+			v = poly.points.get(i);
+			if ( !leftTurn(deque.get(b), deque.get(b+1), v) ||
+				 !leftTurn(deque.get(t-1), deque.get(t), v)) {
+				while( !leftTurn(deque.get(t-1), deque.get(t), v)) {
+					// pop d_t
+					deque.remove(t);
+					t -= 1;
+				}
+				// push v_i
+				deque.add(v);
+				t += 1;
+				while( !leftTurn(v, deque.get(b), deque.get(b+1))) {
+					// remove d_b
+					deque.remove(0);
+					t -= 1;
+				}
+				// insert v_i
+				deque.add(0, v);
+				t += 1;
+			}
+		}
+
 		Polygon convexHull = createPoly();
-		for ( int i = 0; i < hullPoints.length; i++ ) {
-			convexHull.addPoint(hullPoints[i].x, hullPoints[i].y);
+		for( int j = 0; j < deque.size() - 1; j++ ) {
+			convexHull.addPoint(deque.get(j).x, deque.get(j).y);
 		}
-
 		return convexHull;
+	}
+
+	public int rightTurn(PolyPoint v1, PolyPoint v2, PolyPoint v3){
+		return rightCollinearOrLeft(v1,v2,v3) < 0;
+	}
+	public int leftTurn(PolyPoint v1, PolyPoint v2, PolyPoint v3){
+		return rightCollinearOrLeft(v1,v2,v3) > 0;
+	}
+	private int rightCollinearOrLeft(PolyPoint a, PolyPoint b, PolyPoint c){
+		// 1, left turn, counter-clockwise
+		// 0,  collinear
+		// -1,  right turn, clockwise
+		int turn = (b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y);
+		return turn;
 	}
 
 	boolean lineIntersectionCheck(
