@@ -66,9 +66,8 @@ class PolygonCreationView extends View {
 	}
 
 	public void addPoint( float x, float y ) {
-		// TODO: validate that new point does not create non crossing polygon
 		// If user clicks within range of first point, try to complete the poly
-		if ( this.polygon.points.size() >= 2 ) {
+		if ( this.polygon.points.size() > 2 ) {
 			float xDiff = Math.abs(this.polygon.points.get(0).x - x);
 			float yDiff = Math.abs(this.polygon.points.get(0).y - y);
 			if ( xDiff < finalClickThreshold && yDiff < finalClickThreshold ) {
