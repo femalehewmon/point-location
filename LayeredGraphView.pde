@@ -7,6 +7,7 @@ class LayeredGraphView extends View {
 	int subLayerToDraw;
 	boolean layerInitialized;
 	boolean meshTraversalComplete;
+	int lastSelected = -1;
 
 	float xDiv;
 	float yDiv;
@@ -15,6 +16,7 @@ class LayeredGraphView extends View {
 	ArrayList<Polygon> polygonsToDraw;
 	ArrayList<Polygon> polygonsToHighlight;
 	ArrayList<MeshLayerEdge> graphEdgesToDraw;
+	ArrayList<MeshLayerEdge> selectedEdges;
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
@@ -39,6 +41,7 @@ class LayeredGraphView extends View {
 		this.polygonsToDraw = new ArrayList<Polygon>();
 		this.polygonsToHighlight = new ArrayList<Polygon>();
 		this.graphEdgesToDraw = new ArrayList<MeshLayerEdge>();
+		this.selectedEdges = new ArrayList<MeshLayerEdge>()
 	}
 
 	public void setMesh( LayeredMesh mesh, Polygon polygon ) {
@@ -60,6 +63,7 @@ class LayeredGraphView extends View {
 		polygonsToDraw.clear();
 		polygonsToHighlight.clear();
 		graphEdgesToDraw.clear();
+		selectedEdges.clear();
 
 		// initialize y position outside of bounds of view
 		// this sets up positing correctly for first layer in graph
@@ -142,6 +146,7 @@ class LayeredGraphView extends View {
 			}
 			currScale = Math.min( xDiv / maxWidth, yDiv / maxHeight );
 			polygonsToHighlight.clear();
+			graphEdgesToDraw.clear();
 			return true;
 		}
 
@@ -181,6 +186,11 @@ class LayeredGraphView extends View {
 				graphEdgesToDraw.clear();
 				subLayer = layer.subLayers.get( subLayerToDraw + 1 );
 				polygonsToHighlight = subLayer.getPolygonsRemovedFromLayer();
+				/*
+				graphEdgesToDraw.addAll(
+						mesh.getMultipleChildMeshConnections(
+							polygonsToHighlight, true, null));
+				*/
 			}
 		}
 
@@ -194,10 +204,22 @@ class LayeredGraphView extends View {
 		int i, j, k;
 
 		// get list of selected polygons
-		ArrayList<Integer> selectedShapes = new ArrayList<Integer>();
+		ArrayList<Integer> selected = new ArrayList<Integer>();
+		boolean polySelected = false;
 		for ( i = 0; i < messages.size(); i++) {
 			if (messages.get(i).k == MSG_TRIANGLE) {
-				selectedShapes.add(messages.get(i).v);
+				polySelected = true;
+				// should be made to handle multiple selected polys,
+				// but this view can only have one selected at a time,
+				// so leaving it for now
+				if ( messages.get(i).v != lastSelected ) {
+					lastSelected = messages.get(i).v;
+					selectedEdges.clear();
+					selectedEdges.addAll(
+							mesh.getChildMeshConnections(
+								messages.get(i).v, true, null));
+				}
+				selected.add(messages.get(i).v);
 			}
 		}
 
@@ -205,13 +227,25 @@ class LayeredGraphView extends View {
 		for ( i = 0; i < this.graphEdgesToDraw.size(); i++ ) {
 			this.graphEdgesToDraw.get(i).render();
 		}
-
+		if ( polySelected ) {
+			// draw selected graph edges
+			for ( i = 0; i < selectedEdges.size(); i++ ) {
+				selectedEdges.get(i).render();
+				if (selectedEdges.get(i).start != null) {
+					selected.add(selectedEdges.get(i).start.id);
+				}
+				if (selectedEdges.get(i).end != null) {
+					selected.add(selectedEdges.get(i).end.id);
+				}
+			}
+		}
 
 		// render polygons to draw
 		for( i = 0; i < polygonsToDraw.size(); i++ ) {
 			// flip true/false selected to show white majority of time
-			if ( selectedShapes.contains(polygonsToDraw.get(i).id) ||
-			  polygonsToDraw.get(i).parentId == this.polygon.id ||
+			if ( selected.contains(polygonsToDraw.get(i).id) ||
+			  ( (layerToDraw == 0 || (layerToDraw == 1 && subLayerToDraw == 0))
+				&& polygonsToDraw.get(i).parentId == this.polygon.id ) ||
 			  polygonsToHighlight.contains(polygonsToDraw.get(i).id) ) {
 				polygonsToDraw.get(i).selected = false;
 			} else {
