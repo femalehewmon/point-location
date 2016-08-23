@@ -28,8 +28,6 @@ class CompGeoHelper {
 		console.log("Creating KP Data Structure");
 		}
 		int i, j;
-		ArrayList<color> layerColors = new ArrayList<color>();
-		layerColors.add(color(random(255), random(255), random(255)));
 
 		// A LayeredMesh will serve as Kirkpatrick's Data Structure
 		LayeredMesh mesh = new LayeredMesh( );
@@ -60,8 +58,8 @@ class CompGeoHelper {
 			if(DEBUG){
 			console.log("Found set of " + ildv.size() + " ILDV");
 			}
-			layerColors.add(color(random(255), random(255), random(255)));
 			int currLayer = mesh.createNewLayer();
+			color layerColor = color(random(255), random(255), random(255));
 			for ( i = 0; i < ildv.size(); i++ ) {
 				if(DEBUG){
 				console.log("Processing ILDV: " + ildv.get(i).description);
@@ -70,12 +68,8 @@ class CompGeoHelper {
 				ArrayList<Face> faces = mesh.facesOfVertex( ildv.get(i) );
 				// set colors of polygons removed on this layer
 				for ( j = 0; j < faces.size(); j++ ) {
-					if ( mesh.polygons.get(faces.get(j).id).parentId !=
-							poly.id ){
-						mesh.polygons.get(faces.get(j).id).cFill =
-							layerColors.get(mesh.layers.size() - 1);
-					} else {
-						mesh.polygons.get(faces.get(j).id).cFill = poly.cFill;
+					if ( mesh.polygons.get(faces.get(j).id).parentId != poly.id ){
+						mesh.polygons.get(faces.get(j).id).cFill = layerColor;
 					}
 				}
 
@@ -125,12 +119,12 @@ class CompGeoHelper {
 			}
 		}
 
+		/*
 		for ( j = 0; j < mesh.faces.size(); j++ ) {
 			mesh.polygons.get(faces.get(j).id).cFill =
 				layerColors.get(layerColors.size() - 1);
 		}
-
-		mesh.setLayerColors( layerColors );
+		*/
 
 		return mesh;
 	}
