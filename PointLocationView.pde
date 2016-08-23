@@ -8,18 +8,17 @@ class PointLocationView extends View {
 	// they are independent objects that are positioned and sized differently
 	LayeredMesh kpMesh;							// mesh of KP data structure
 	LayeredMesh lgraphMesh;						// mesh of layered graph
-	HashMap<Integer, ArrayList<Integer>> adjList;
 
 	int layerToDraw;							// current layer to draw
 	ArrayList<ArrayList<Polygon>> kpLayers;		// renderable layers
-	ArrayList<ArrayList<GraphEdge>> edges;		// renderable edges
+	ArrayList<ArrayList<MeshLayerEdge>> edges;		// renderable edges
 	// NOTE: graph layers drawn based off of kpLayers since IDs are shared
 
 	// used to speed up graph edge drawing on mouse hover selection
 	// prevents re-recursive search on each render loop
 	int lastSelected = -1;
 	boolean pointInside;
-	ArrayList<GraphEdge> selectedEdges;
+	ArrayList<MeshLayerEdge> selectedEdges;
 
 	public PointLocationView( float x1, float y1, float x2, float y2) {
 		super(x1, y1, x2, y2);
@@ -34,10 +33,9 @@ class PointLocationView extends View {
 
 		this.layerToDraw = 0;
 		this.kpLayers = new ArrayList<ArrayList<Polygon>>();
-		this.edges = new ArrayList<ArrayList<GraphEdge>>();
-		this.adjList = new HashMap<Integer, ArrayList<Integer>>();
+		this.edges = new ArrayList<ArrayList<MeshLayerEdge>>();
 
-		this.selectedEdges = new ArrayList<GraphEdge>();
+		this.selectedEdges = new ArrayList<MeshLayerEdge>();
 	}
 
 	public void setMesh(
@@ -58,35 +56,6 @@ class PointLocationView extends View {
 				kpMesh.getVisiblePolygonIdsByLayer(
 					kpMesh.layers.size() - 1).get(0));
 
-		// create adjacency list of graph
-		this.adjList.clear();
-		// first, populate temporary hashmap to associate ids with parent ids
-		HashMap<Integer, ArrayList<Integer>> parentToPoly =
-			new HashMap<Integer, ArrayList<Integer>>();
-		Iterator<Integer> iterator = kpMesh.polygons.keySet().iterator();
-		while( iterator.hasNext() ) {
-			Integer polyId = iterator.next();
-			if (!parentToPoly.containsKey(
-						kpMesh.polygons.get(polyId).parentId)){
-				parentToPoly.put(
-						kpMesh.polygons.get(polyId).parentId,
-						new ArrayList<Integer>());
-			}
-			parentToPoly.get(kpMesh.polygons.get(polyId).parentId).add(polyId);
-			adjList.put(polyId, new ArrayList<Integer>());
-		}
-		iterator = kpMesh.polygons.keySet().iterator();
-		while( iterator.hasNext() ) {
-			Integer polyId = iterator.next();
-			Polygon currPoly = kpMesh.polygons.get(polyId);
-			if ( currPoly.childId != -1 ) {
-				for(int i = 0; i < parentToPoly.get(currPoly.childId).size(); i++){
-					adjList.get(parentToPoly.get(currPoly.childId).get(i)).add(
-							polyId);
-				}
-			}
-		}
-
 		reset();
 	}
 
@@ -101,7 +70,7 @@ class PointLocationView extends View {
 		this.kpLayers.add( new ArrayList<Polygon>() );
 		this.kpLayers.get(this.kpLayers.size() - 1).add(root);
 		this.edges.clear();
-		this.edges.add( new ArrayList<GraphEdge>() );
+		this.edges.add( new ArrayList<MeshLayerEdge>() );
 	}
 
 	public boolean evaluatePoint( float x, float y ) {
@@ -124,20 +93,20 @@ class PointLocationView extends View {
 		ArrayList<Polygon> visiblePolys = new ArrayList<Polygon>();
 		visiblePolys.add( root );
 
-		ArrayList<GraphEdge> pathEdges = new ArrayList<GraphEdge>();
+		ArrayList<MeshLayerEdge> pathEdges = new ArrayList<MeshLayerEdge>();
 		ArrayList<Polygon> nextLayer;
-		ArrayList<GraphEdge> nextEdges;
+		ArrayList<MeshLayerEdge> nextEdges;
 
 		int i, j;
 		Polygon visiblePoly;
 		do {
 
 			nextLayer = new ArrayList<Polygon>();
-			nextEdges = new ArrayList<GraphEdge>();
+			nextEdges = new ArrayList<MeshLayerEdge>();
 
 			// create new copy of visiblePolys to work with in next layer
 			visiblePolys = new ArrayList<Polygon>(visiblePolys);
-			pathEdges = new ArrayList<GraphEdge>(pathEdges);
+			pathEdges = new ArrayList<MeshLayerEdge>(pathEdges);
 
 			for ( i = visiblePolys.size() - 1; i >= 0 ; i-- ) {
 				visiblePoly = visiblePolys.get(i);
@@ -150,23 +119,24 @@ class PointLocationView extends View {
 
 					if ( pathEdges.size() == 0 ) {
 						pathEdges.add(
-								new GraphEdge(
+								new MeshLayerEdge(
 									lgraphMesh.polygons.get(root.id),
 									lgraphMesh.polygons.get(visiblePoly.id)));
 					} else {
 						pathEdges.add(
-								new GraphEdge(
+								new MeshLayerEdge(
 									pathEdges.get(pathEdges.size() - 1).end,
 									lgraphMesh.polygons.get(visiblePoly.id)));
 					}
 
-					ArrayList<Integer> childIds = adjList.get(visiblePoly.id);
+					ArrayList<Integer> childIds =
+						lgraphMesh.meshConnections.get(visiblePoly.id);
 					for ( j = 0; j < childIds.size(); j++ ) {
 						// add polygon to next layer
 						nextLayer.add( kpMesh.polygons.get(childIds.get(j)));
 						// add edge to next layer
 						nextEdges.add(
-								new GraphEdge(
+								new MeshLayerEdge(
 									lgraphMesh.polygons.get(visiblePoly.id),
 									lgraphMesh.polygons.get(childIds.get(j))));
 
@@ -220,68 +190,6 @@ class PointLocationView extends View {
 		return true;
 	}
 
-	public ArrayList<GraphEdge> findConnectedParentEdges(
-			Polygon poly, boolean recurse){
-		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
-		ArrayList<GraphEdge> subConnected;
-		GraphEdge edge;
-		Iterator<Integer> iterator = lgraphMesh.polygons.keySet().iterator();
-		while( iterator.hasNext() ) {
-			Integer polyId = iterator.next();
-			if ( poly.childId == lgraphMesh.polygons.get(polyId).parentId ) {
-				edge = new GraphEdge(
-						poly,
-						lgraphMesh.polygons.get(polyId));
-				if ( !connected.contains(edge) ) {
-					connected.add(edge);
-				}
-				if ( recurse ) {
-					// prevents same edge being drawn over multiple times
-					subConnected = findConnectedParentEdges(
-								lgraphMesh.polygons.get(polyId), recurse );
-					for ( i = 0; i < subConnected.size(); i++ ){
-						if ( !connected.contains(subConnected.get(i)) ) {
-							connected.add(subConnected.get(i));
-						}
-					}
-				}
-			}
-		}
-		return connected;
-	}
-
-	public ArrayList<GraphEdge> findConnectedEdges(
-			Polygon poly, boolean recurse, ArrayList<Integer> evaluated ) {
-		int i, j;
-		if ( evaluated == null ) {
-			evaluated = new ArrayList<Integer>();
-		}
-		evaluated.add(poly.id);
-		ArrayList<GraphEdge> connected = new ArrayList<GraphEdge>();
-		ArrayList<GraphEdge> subConnected;
-		GraphEdge edge;
-		ArrayList<Integer> childIds = adjList.get(poly.id);
-		for ( i = 0; i < childIds.size(); i++ ) {
-			edge = new GraphEdge(
-					poly, lgraphMesh.polygons.get(childIds.get(i)));
-			if ( !connected.contains(edge) ) {
-
-			}
-			connected.add(edge);
-			if ( recurse && !(evaluated.contains(childIds.get(i)))) {
-				// prevents same edge being drawn over multiple times
-				subConnected = findConnectedEdges(
-							lgraphMesh.polygons.get(childIds.get(i)), recurse,
-							evaluated);
-				for ( j = 0; j < subConnected.size(); j++ ) {
-					connected.add(subConnected.get(j));
-				}
-			}
-
-		}
-		return connected;
-	}
-
 	public void render() {
 		if(!visible){return;}
 
@@ -314,15 +222,8 @@ class PointLocationView extends View {
 						lastSelected = messages.get(i).v;
 						selectedEdges.clear();
 						selectedEdges.addAll(
-								findConnectedEdges(
-								lgraphMesh.polygons.get(
-									messages.get(i).v), true, null));
-						/*
-						selectedEdges.addAll(
-								findConnectedParentEdges(
-								lgraphMesh.polygons.get(
-									messages.get(i).v), true));
-						*/
+								lgraphMesh.getChildMeshConnections(
+									messages.get(i).v, true, null));
 					}
 					selected.add(messages.get(i).v);
 				}
@@ -421,31 +322,3 @@ class PointLocationView extends View {
 
 }
 
-class GraphEdge {
-
-	Polygon start;
-	Polygon end;
-
-	public GraphEdge( Polygon start, Polygon end ) {
-		this.start = start;
-		this.end = end;
-	}
-
-	public void render() {
-		if ( start != null && end  != null ) {
-			fill(color(0));
-			line( start.getCenter().x, start.getCenter().y,
-					end.getCenter().x, end.getCenter().y);
-		}
-	}
-
-	public boolean equals(Object obj) {
-		if ( obj instanceof GraphEdge ) {
-			GraphEdge other = (GraphEdge) obj;
-			return ((other.start.id == start.id && other.end.id == end.id) || (
-						other.start.id == end.id && other.end.id == start.id));
-		}
-		return false;
-	}
-
-}

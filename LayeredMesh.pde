@@ -3,6 +3,9 @@ class LayeredMesh extends Mesh {
 	ArrayList<MeshLayer> layers;
 	ArrayList<color> layerColors;
 	HashMap<Integer, Polygon> polygons;
+	// adj list connecting polygons that replaced other polygons
+	HashMap<Integer, ArrayList<Integer>> meshConnections;
+
 
 	// Organizes faces into layers by id as they are added and removed,
 	// but underneath the mesh is one cohesive layer, so once a face/vertex is
@@ -12,6 +15,7 @@ class LayeredMesh extends Mesh {
 		this.polygons = new HashMap<Integer, Polygon>();
 		this.layers = new ArrayList<MeshLayer>();
 		this.layerColors = new ArrayList<color>();
+		this.meshConnections = new HashMap<Integer, ArrayList<Integer>>();
 	}
 
 	public LayeredMesh copy() {
@@ -20,6 +24,8 @@ class LayeredMesh extends Mesh {
 		while( iterator.hasNext() ) {
 			Integer polyId = iterator.next();
 			copy.polygons.put( polyId, this.polygons.get(polyId).copy() );
+			copy.meshConnections.put(polyId,
+					new ArrayList<Integer>(meshConnections.get(polyId)));
 		}
 		for( int i = 0; i < layers.size(); i++ ) {
 			copy.layers.add( layers.get(i).copy() );
@@ -54,11 +60,20 @@ class LayeredMesh extends Mesh {
 			console.log( "ERROR: layer does not exist, cannot add tris");
 			return;
 		}
+		// if not base layer, add connections to those tris that were replaced
+		ArrayList<Integer> replacedTris = new ArrayList<Integer>();
+		if ( layer > 0 ) {
+			replacedTris =
+				layers.get(layer).getPolygonsRemovedFromLastSubLayer();
+		}
 		ArrayList<Integer> polyIds = new ArrayList<Integer>();
 		for ( int i = 0; i < tris.size(); i++ ) {
 			if ( !polygons.containsKey( tris.get(i).id )) {
 				// add polygon to master list
 				polygons.put( tris.get(i).id, tris.get(i) );
+				// add connections to adjacency list
+				meshConnections.put(tris.get(i).id,
+						new ArrayList<Integer>(replacedTris));
 			}
 			polyIds.add( tris.get(i).id );
 		}
@@ -176,6 +191,66 @@ class LayeredMesh extends Mesh {
 		return this.polygons.get( polyId );
 	}
 
+	public ArrayList<MeshLayerEdge> getChildMeshConnections(
+			int poly, boolean recurse, ArrayList<Integer> evaluated ) {
+		int i, j;
+		if ( evaluated == null ) {
+			evaluated = new ArrayList<Integer>();
+		}
+		evaluated.add(poly);
+		ArrayList<MeshLayerEdge> connected = new ArrayList<MeshLayerEdge>();
+		ArrayList<MeshLayerEdge> subConnected;
+		MeshLayerEdge edge;
+		ArrayList<Integer> childIds = meshConnections.get(poly);
+		for ( i = 0; i < childIds.size(); i++ ) {
+			edge = new MeshLayerEdge(
+					polygons.get(poly), polygons.get(childIds.get(i)));
+			if ( !connected.contains(edge) ) {
+				connected.add(edge);
+			}
+			if ( recurse && !(evaluated.contains(childIds.get(i)))) {
+				// prevents same edge being drawn over multiple times
+				subConnected = getChildMeshConnections(
+							childIds.get(i), recurse,
+							evaluated);
+				for ( j = 0; j < subConnected.size(); j++ ) {
+					connected.add(subConnected.get(j));
+				}
+			}
+
+		}
+		return connected;
+	}
+
+	public ArrayList<MeshLayerEdge> getParentMeshConnections(
+			Polygon poly, boolean recurse){
+		ArrayList<MeshLayerEdge> connected = new ArrayList<MeshLayerEdge>();
+		ArrayList<MeshLayerEdge> subConnected;
+		MeshLayerEdge edge;
+		Iterator<Integer> iterator = polygons.keySet().iterator();
+		while( iterator.hasNext() ) {
+			Integer polyId = iterator.next();
+			if ( poly.childId == polygons.get(polyId).parentId ) {
+				edge = new MeshLayerEdge(
+						poly, polygons.get(polyId));
+				if ( !connected.contains(edge) ) {
+					connected.add(edge);
+				}
+				if ( recurse ) {
+					// prevents same edge being drawn over multiple times
+					subConnected = getParentMeshConnections(
+								polygons.get(polyId), recurse );
+					for ( i = 0; i < subConnected.size(); i++ ){
+						if ( !connected.contains(subConnected.get(i)) ) {
+							connected.add(subConnected.get(i));
+						}
+					}
+				}
+			}
+		}
+		return connected;
+	}
+
 }
 
 class MeshLayer {
@@ -232,6 +307,12 @@ class MeshLayer {
 		return polyIds;
 	}
 
+	public ArrayList<Integer> getPolygonsRemovedFromLastSubLayer() {
+		ArrayList<Integer> polyIds = new ArrayList<Integer>(
+				subLayers.get(subLayers.size()-1).getPolygonsRemovedFromLayer());
+		return polyIds;
+	}
+
 	public ArrayList<Vertex> getVerticesRemovedFromLayer() {
 		int i, j;
 		ArrayList<Vertex> verts = new ArrayList<Vertex>( verticesRemoved );
@@ -285,3 +366,32 @@ class MeshLayer {
 	}
 
 }
+
+class MeshLayerEdge {
+
+	Polygon start;
+	Polygon end;
+
+	public MeshLayerEdge( Polygon start, Polygon end ) {
+		this.start = start;
+		this.end = end;
+	}
+
+	public void render() {
+		if ( start != null && end  != null ) {
+			fill(color(0));
+			line( start.getCenter().x, start.getCenter().y,
+					end.getCenter().x, end.getCenter().y);
+		}
+	}
+
+	public boolean equals(Object obj) {
+		if ( obj instanceof MeshLayerEdge ) {
+			MeshLayerEdge other = (MeshLayerEdge) obj;
+			return ((other.start.id == start.id && other.end.id == end.id) || (
+						other.start.id == end.id && other.end.id == start.id));
+		}
+		return false;
+	}
+}
+

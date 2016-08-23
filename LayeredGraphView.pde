@@ -14,7 +14,7 @@ class LayeredGraphView extends View {
 	ArrayList<Integer> currPosition;
 	ArrayList<Polygon> polygonsToDraw;
 	ArrayList<Polygon> polygonsToHighlight;
-	ArrayList<GraphEdge> graphEdgesToDraw;
+	ArrayList<MeshLayerEdge> graphEdgesToDraw;
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
@@ -38,7 +38,7 @@ class LayeredGraphView extends View {
 
 		this.polygonsToDraw = new ArrayList<Polygon>();
 		this.polygonsToHighlight = new ArrayList<Polygon>();
-		this.graphEdgesToDraw = new ArrayList<GraphEdge>();
+		this.graphEdgesToDraw = new ArrayList<MeshLayerEdge>();
 	}
 
 	public void setMesh( LayeredMesh mesh, Polygon polygon ) {
@@ -162,8 +162,8 @@ class LayeredGraphView extends View {
 					// increase x position to next location
 					currPosition[0] += xDiv;
 					for ( j = 0; j < polygonsToHighlight.size(); j++) {
-						GraphEdge newEdge =
-							new GraphEdge(currPoly,
+						MeshLayerEdge newEdge =
+							new MeshLayerEdge(currPoly,
 									mesh.polygons.get(
 										polygonsToHighlight.get(j)));
 						graphEdgesToDraw.add(newEdge);
@@ -178,6 +178,7 @@ class LayeredGraphView extends View {
 			ArrayList<Integer> verticesRemoved = subLayer.getVerticesRemovedFromLayer();
 			if ( verticesRemoved.size() > 0 ) {
 				polygonsToHighlight.clear();
+				graphEdgesToDraw.clear();
 				subLayer = layer.subLayers.get( subLayerToDraw + 1 );
 				polygonsToHighlight = subLayer.getPolygonsRemovedFromLayer();
 			}
@@ -201,7 +202,6 @@ class LayeredGraphView extends View {
 		}
 
 		// draw graph edges
-		GraphEdge edge;
 		for ( i = 0; i < this.graphEdgesToDraw.size(); i++ ) {
 			this.graphEdgesToDraw.get(i).render();
 		}
