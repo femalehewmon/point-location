@@ -3,6 +3,7 @@ final boolean DEBUG = false;
 
 // Global variables
 boolean animationPaused;
+boolean animationReset;
 ArrayList<Integer> animatingPolygons;
 
 // Helper global classes
@@ -62,6 +63,7 @@ void setup() {
 	plocateView.visible = false;
 
 	animationPaused = false;
+	animationReset = false;
 }
 
 void setText(String text) {
@@ -95,6 +97,7 @@ void pauseAnimation() {
 void replayAnimation() {
 	sceneControl.restart();
 	showReplayControls(false);
+	animationReset = true;
 }
 
 void showReplayControls(boolean show) {
@@ -193,6 +196,9 @@ void draw() {
 				kpView.update();
 				graphView.reset();
 				sceneControl.ready();
+				if ( animationReset || pcreateView.isDemo ) {
+					kpView.update();
+				}
 			}
 
 			if ( sceneControl.update() ) {

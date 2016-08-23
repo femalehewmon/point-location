@@ -87,7 +87,7 @@ class KirkpatrickMeshView extends View {
 		outerTri.selected = false;
 
 		subScene = EXPLAIN;
-		explanation = 1;
+		explanation = 0;
 		initialized = false;
 		polygonsToDraw.add(polygon);
 
@@ -150,7 +150,7 @@ class KirkpatrickMeshView extends View {
 				} else if ( explanation == 3 ){
 					showPlaybackButton(true);
 					setText(sceneControl.explanation3);
-				} else {
+				} else if ( explanation > 3 ){
 					setText(sceneControl.before_begin);
 				}
 				explanation++;
