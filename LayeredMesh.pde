@@ -222,6 +222,17 @@ class LayeredMesh extends Mesh {
 		return connected;
 	}
 
+	public ArrayList<MeshLayerEdge> getMultipleChildMeshConnections(
+			ArrayList<Integer> polys,
+			boolean recurse, ArrayList<Integer> evaluated ) {
+		ArrayList<MeshLayerEdge> edges = new ArrayList<MeshLayerEdge>();
+		for ( int i = 0; i < polys.size(); i++ ) {
+			edges.addAll(
+					getChildMeshConnections(polys.get(i), recurse, evaluated));
+		}
+		return edges;
+	}
+
 	public ArrayList<MeshLayerEdge> getParentMeshConnections(
 			Polygon poly, boolean recurse){
 		ArrayList<MeshLayerEdge> connected = new ArrayList<MeshLayerEdge>();
