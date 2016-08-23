@@ -182,15 +182,16 @@ void draw() {
 				kpView.setMesh(kpDataStruct,
 						pcreateView.polygon,
 						pcreateView.outerTri);
-				graphView.setMesh(kpDataStruct);
+				graphView.setMesh(kpDataStruct, pcreateView.polygon);
 
 				pcreateView.visible = false;
 				kpView.visible = true;
-				graphView.visible = false;
+				graphView.visible = true;
 				plocateView.visible = false;
 
 				kpView.reset();
 				kpView.update();
+				graphView.reset();
 				sceneControl.ready();
 			}
 
@@ -209,7 +210,6 @@ void draw() {
 				kpView.visible = true;
 				graphView.visible = true;
 				plocateView.visible = false;
-				graphView.reset();
 				sceneControl.ready();
 			}
 
@@ -220,7 +220,7 @@ void draw() {
 					sceneControl.reset();
 					if ( kpView.finalized ) {
 						showPlaybackControls(false);
-						sceneControl.enableAutoUpdate();
+						//sceneControl.enableAutoUpdate();
 					}
 				} else {
 					showPlaybackControls(true);

@@ -18,6 +18,7 @@ class KirkpatrickMeshView extends View {
 	ArrayList<Polygon> polygonsToDraw;
 	ArrayList<Vertex> verticesToDraw;
 	PolyPoint ildvToDraw;
+	ArrayList<Integer> polygonsToHighlight;
 
 	int layerToDraw;
 	int subLayerToDraw;
@@ -40,6 +41,7 @@ class KirkpatrickMeshView extends View {
 		this.polygonsToDraw = new ArrayList<Polygon>();
 		this.verticesToDraw = new ArrayList<Vertex>();
 		this.ildvToDraw = null;
+		this.polygonsToHighlight = new ArrayList<Integer>();
 
 		this.initialized = true;
 		this.finalized = false;
@@ -77,6 +79,7 @@ class KirkpatrickMeshView extends View {
 		layerToDraw = 1;
 		polygonsToDraw.clear();
 		verticesToDraw.clear();
+		polygonsToHighlight.clear();
 		ildvToDraw = null;
 		layerInitialized = false;
 
@@ -160,12 +163,15 @@ class KirkpatrickMeshView extends View {
 				polygonsToDraw.addAll(mesh.getPolygonsById(
 							mesh.layers.get(0).subLayers.get(1).
 							getPolygonsAddedToLayer()));
+				graphView.update();
+				graphView.update();
 				return nextSubScene();
 			case ADD_OUTER_TRI:
 				setText(sceneControl.add_outer_tri);
 				drawOuterTriangle = true;
 				return nextSubScene();
 			case TRIANGULATE_OUTER_TRI:
+				graphView.update();
 				setText(sceneControl.triangulate_outer_tri);
 				polygonsToDraw.addAll(mesh.getPolygonsByParentId(outerTri.id));
 				return nextSubScene();
@@ -223,6 +229,7 @@ class KirkpatrickMeshView extends View {
 				ildv.cFill = color(0);
 				verticesToDraw.add( ildv );
 			}
+			polygonsToHighlight.clear();
 			return true;
 		} else {
 			ildvToDraw = null;
@@ -239,15 +246,15 @@ class KirkpatrickMeshView extends View {
 				ArrayList<Integer> verticesRemoved =
 					subLayer.getVerticesRemovedFromLayer();
 
-				if ( verticesRemoved.size() > 0 ) {
-					setText(sceneControl.ildv_selected);
-					for ( i = 0; i < verticesRemoved.size(); i++ ) {
-						Vertex ildv = verticesRemoved.get(i);
-						if ( verticesToDraw.contains( ildv ) ) {
-							ildvToDraw = verticesToDraw.get(
-									verticesToDraw.indexOf(ildv));
-							verticesToDraw.remove(ildvToDraw);
-						}
+				if ( polysAdded.size() > 0 ) {
+					setText(sceneControl.retriangulate);
+					for ( i = 0; i < polysAdded.size(); i++ ) {
+						polygonsToDraw.add( mesh.polygons.get(polysAdded.get(i)) );
+					}
+					// don't highlight base polygons
+					// since no vertices/triangles are removed
+					if ( layerToDraw > 0 ) {
+						polygonsToHighlight.addAll( polysAdded );
 					}
 				}
 
@@ -260,12 +267,23 @@ class KirkpatrickMeshView extends View {
 					}
 				}
 
-				if ( polysAdded.size() > 0 ) {
-					setText(sceneControl.retriangulate);
-					for ( i = 0; i < polysAdded.size(); i++ ) {
-						polygonsToDraw.add( mesh.polygons.get(polysAdded.get(i)) );
+				if ( verticesRemoved.size() > 0 ) {
+					setText(sceneControl.ildv_selected);
+					for ( i = 0; i < verticesRemoved.size(); i++ ) {
+						Vertex ildv = verticesRemoved.get(i);
+						if ( verticesToDraw.contains( ildv ) ) {
+							ildvToDraw = verticesToDraw.get(
+									verticesToDraw.indexOf(ildv));
+							verticesToDraw.remove(ildvToDraw);
+						}
 					}
+					polygonsToHighlight.clear();
+					subLayer = mesh.layers.get(layerToDraw).subLayers.get(
+							subLayerToDraw + 1);
+					polygonsToHighlight =
+						subLayer.getPolygonsRemovedFromLayer();
 				}
+
 			}
 
 			return nextLevel();
@@ -300,8 +318,7 @@ class KirkpatrickMeshView extends View {
 			if ( polygonsToDraw.get(i).parentId == polygon.id ||
 					polygonsToDraw.get(i).id == polygon.id ||
 					this.finalized ||
-					( ildvToDraw != null &&
-					polygonsToDraw.get(i).points.contains(ildvToDraw)) ||
+					polygonsToHighlight.contains(polygonsToDraw.get(i).id)||
 					selectedShapes.contains(polygonsToDraw.get(i).id) ) {
 				polygonsToDraw.get(i).selected = false;
 			} else {
