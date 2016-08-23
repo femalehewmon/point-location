@@ -144,19 +144,20 @@ String centered = "That's better. We are now ready to start creating our data st
 
 String explanation1 = "We are going to step through the creation of a data structure that allows for the efficient identification of a point inside an arbitrarily sized polygon. Proposed by David Kirkpatrick in his 1983 paper \"Optimal search in planar subdivisions\", the creation of this structure relies on the ability to remove a constant fraction of vertices in each stage of the algorithm. In doing so, a directed acyclic graph, which can be queried in O(logn) time, is created.";
 
-String explanation2 = "The creation of the data structure begins by triangulating the polygon and its surrounding area. Once triangulated, a set of independent vertices connected to <= 8 edges are identified, their connected triangles are removed, and the resulting holes are once again triangulated. This process is repeated until there is a single triangle remaining that encompasses the area of the original outer triangle. The resulting data structure is created and can be stored in O(n) time and space on the order of the number of vertices in the original polygon.";
+String explanation2 = "The creation of the data structure begins by triangulating the polygon and its surrounding area. Once triangulated, a set of independent vertices connected to <= 8 edges are identified, their connected triangles are removed, and the resulting holes are once again triangulated. This process is repeated until there is a single triangle remaining that encompasses the total area in which point location is desired.";
 
 String explanation3 = "Ok? Let's begin! You'll notice that a play button has appeared at the bottom of the screen. Press it at any time to begin auto-playing the animation. Otherwise, continue to step through manually by pressing the space bar.";
 
 String triangulate_poly = "First, we triangulate the original polygon and its convex hull.";
 String add_outer_tri = "Next, we surround the outer area of the polygon with a large triangle. This outer triangle can be arbitrarily large to encompass as much potential space as your point location needs to cover.";
 String triangulate_outer_tri = "Now, we triangulate the space between the triangulated polygon and the edges of the outer triangle.";
-String before_begin = "Looking good. We can now begin to build our directed acyclic graph by identifying, removing, and re-triangulating sets of independent low degree vertices.";
+String before_begin1 = "Looking good. We can now begin to build our directed acyclic graph by identifying, removing, and re-triangulating sets of independent low degree vertices. The resulting graph is created and can be stored in O(n) time and space on the order of the number of vertices in the original polygon.";
+String before_begin2 = "Hover over the triangles in the graph at any point in the creation process to see the graph connections made so far.";
 
 String ildv_identified = "Identify a set of independent low degree vertices.";
-String ildv_selected = "Select one of those vertices.";
+String ildv_selected = "Select one of the vertices in the set and identify its surrounding triangles.";
 String ildv_removed = "Remove the independent low degree vertex and its surrounding triangles.";
-String retriangulate = "Re-triangulate the hole.";
+String retriangulate = "Re-triangulate the hole and connect the newly created triangles to the graph via directed edges to the triangles they replaced.";
 String graph_complete = "Finally, we add the root triangle to the hierarchy, and our directed acyclic graph is complete!";
 
 String place_point = "Place a point anywhere inside the colored triangle.";

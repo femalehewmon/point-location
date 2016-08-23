@@ -13,6 +13,7 @@ class KirkpatrickMeshView extends View {
 	int MESH_TRAVERSAL=5;
 	int ADD_ROOT_TRI=6;
 	int explanation;
+	boolean explanationPause;
 	boolean initialized;
 
 	ArrayList<Polygon> polygonsToDraw;
@@ -89,6 +90,7 @@ class KirkpatrickMeshView extends View {
 		subScene = EXPLAIN;
 		explanation = 0;
 		initialized = false;
+		explanationPause = false;
 		polygonsToDraw.add(polygon);
 
 		this.finalized = false;
@@ -112,12 +114,17 @@ class KirkpatrickMeshView extends View {
 	}
 
 	private boolean nextSubScene() {
+		if ( explanationPause ) {
+			explanationPause = false;
+			return true;
+		}
 		switch(subScene) {
 			case EXPLAIN:
-				if ( explanation < 4 ) {
+				if ( explanation < 5 ) {
 					subScene = EXPLAIN;
-				} else if ( explanation == 4) {
+				} else if ( explanation == 5) {
 					subScene = TRIANGULATE_POLY;
+					explanationPause = true;
 				} else {
 					initialized = true;
 					subScene = MESH_TRAVERSAL;
@@ -125,9 +132,11 @@ class KirkpatrickMeshView extends View {
 				break;
 			case TRIANGULATE_POLY:
 				subScene = ADD_OUTER_TRI;
+				explanationPause = true;
 				break;
 			case ADD_OUTER_TRI:
 				subScene = TRIANGULATE_OUTER_TRI;
+				explanationPause = true;
 				break;
 			case TRIANGULATE_OUTER_TRI:
 				subScene = EXPLAIN;
@@ -150,30 +159,42 @@ class KirkpatrickMeshView extends View {
 				} else if ( explanation == 3 ){
 					showPlaybackButton(true);
 					setText(sceneControl.explanation3);
-				} else if ( explanation > 3 ){
-					setText(sceneControl.before_begin);
+				} else if ( explanation == 4 ){
+					setText(sceneControl.triangulate_poly);
+				} else if ( explanation > 4 ){
+					setText(sceneControl.before_begin2);
 				}
 				explanation++;
 				return nextSubScene();
 			case TRIANGULATE_POLY:
-				setText(sceneControl.triangulate_poly);
-				polygonsToDraw.clear();
-				polygonsToDraw.addAll(
-						mesh.getPolygonsByParentId(polygon.id));
-				polygonsToDraw.addAll(mesh.getPolygonsById(
-							mesh.layers.get(0).subLayers.get(1).
-							getPolygonsAddedToLayer()));
-				graphView.update();
-				graphView.update();
+				if ( !explanationPause ) {
+					setText(sceneControl.add_outer_tri);
+				} else {
+					polygonsToDraw.clear();
+					polygonsToDraw.addAll(
+							mesh.getPolygonsByParentId(polygon.id));
+					polygonsToDraw.addAll(mesh.getPolygonsById(
+								mesh.layers.get(0).subLayers.get(1).
+								getPolygonsAddedToLayer()));
+					graphView.update();
+					graphView.update();
+				}
 				return nextSubScene();
 			case ADD_OUTER_TRI:
-				setText(sceneControl.add_outer_tri);
-				drawOuterTriangle = true;
+				if ( !explanationPause ) {
+					setText(sceneControl.triangulate_outer_tri);
+				} else {
+					drawOuterTriangle = true;
+				}
 				return nextSubScene();
 			case TRIANGULATE_OUTER_TRI:
-				graphView.update();
-				setText(sceneControl.triangulate_outer_tri);
-				polygonsToDraw.addAll(mesh.getPolygonsByParentId(outerTri.id));
+				if ( !explanationPause ) {
+					setText(sceneControl.before_begin1);
+				} else {
+					graphView.update();
+					polygonsToDraw.addAll(
+							mesh.getPolygonsByParentId(outerTri.id));
+				}
 				return nextSubScene();
 			case MESH_TRAVERSAL:
 				if( updateMeshTraversal() ){
@@ -312,10 +333,12 @@ class KirkpatrickMeshView extends View {
 			// reverse highlight so triangles are white by default
 			// highlight triangle with color if it:
 			//  - belongs to the original polygon
+			//  - the view is in setup mode and it is an orig triangulation tri
 			//  - the view is finalized and displaying the root triangle
 			//  - is connected to the currently highlighted ILDV
 			//  - is selected by the user by mouse hover
-			if ( polygonsToDraw.get(i).parentId == polygon.id ||
+			if ( (subScene < MESH_TRAVERSAL &&
+					polygonsToDraw.get(i).parentId == polygon.id) ||
 					polygonsToDraw.get(i).id == polygon.id ||
 					this.finalized ||
 					polygonsToHighlight.contains(polygonsToDraw.get(i).id)||
