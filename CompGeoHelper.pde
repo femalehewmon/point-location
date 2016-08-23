@@ -209,6 +209,16 @@ class CompGeoHelper {
 						poly.points.get(poly.points.size() - 1).x,
 						poly.points.get(poly.points.size() - 1).y);
 			}
+		} else {
+			if ( foundHole ) {
+				// hole was unfinished at end of polygon, which
+			    // means that it wraps around to first point in the poly
+				hole.addPoint(
+						poly.points.get(0).x,
+						poly.points.get(0).y);
+				holes.add(hole);
+			}
+		}
 		}
 
 		if ( triangulate ) {
