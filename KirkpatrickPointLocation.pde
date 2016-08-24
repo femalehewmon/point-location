@@ -189,12 +189,11 @@ void draw() {
 
 				pcreateView.visible = false;
 				kpView.visible = true;
-				graphView.visible = true;
+				graphView.visible = false;
 				plocateView.visible = false;
 
 				kpView.reset();
 				kpView.update();
-				graphView.reset();
 				sceneControl.ready();
 				if ( animationReset || pcreateView.isDemo ) {
 					kpView.update();
@@ -216,6 +215,7 @@ void draw() {
 				kpView.visible = true;
 				graphView.visible = true;
 				plocateView.visible = false;
+				graphView.reset();
 				sceneControl.ready();
 			}
 
@@ -226,7 +226,7 @@ void draw() {
 					sceneControl.reset();
 					if ( kpView.finalized ) {
 						showPlaybackControls(false);
-						//sceneControl.enableAutoUpdate();
+						sceneControl.enableAutoUpdate();
 					}
 				} else {
 					showPlaybackControls(true);

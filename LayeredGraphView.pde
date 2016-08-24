@@ -1,29 +1,23 @@
 class LayeredGraphView extends View {
 
 	LayeredMesh mesh;
-	Polygon polygon;
 
 	int layerToDraw;
 	int subLayerToDraw;
 	boolean layerInitialized;
 	boolean meshTraversalComplete;
-	int lastSelected = -1;
 
 	float xDiv;
 	float yDiv;
 	float currScale;
 	ArrayList<Integer> currPosition;
 	ArrayList<Polygon> polygonsToDraw;
-	ArrayList<Polygon> polygonsToHighlight;
-	ArrayList<MeshLayerEdge> graphEdgesToDraw;
-	ArrayList<MeshLayerEdge> selectedEdges;
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
 		this.cFill = color(255);
 
 		this.mesh = null;
-		this.polygon = null;
 
 		this.layerToDraw = 1;
 		this.subLayerToDraw = 0;
@@ -39,18 +33,14 @@ class LayeredGraphView extends View {
 		this.currScale = 1.0;
 
 		this.polygonsToDraw = new ArrayList<Polygon>();
-		this.polygonsToHighlight = new ArrayList<Polygon>();
-		this.graphEdgesToDraw = new ArrayList<MeshLayerEdge>();
-		this.selectedEdges = new ArrayList<MeshLayerEdge>()
 	}
 
-	public void setMesh( LayeredMesh mesh, Polygon polygon ) {
+	public void setMesh( LayeredMesh mesh ) {
 		if ( this.mesh != null ) {
 			this.mesh.clear();
 		}
 
 		this.mesh = mesh.copy();
-		this.polygon = polygon.copy();
 		// must be called after mesh is set so yDiv can be calculated
 		reset();
 	}
@@ -58,12 +48,9 @@ class LayeredGraphView extends View {
 	public void reset() {
 		subLayerToDraw = 0;
 		// skip rendering the first layer to align with update of kpMeshView
-		layerToDraw = 0;
+		layerToDraw = 1;
 
 		polygonsToDraw.clear();
-		polygonsToHighlight.clear();
-		graphEdgesToDraw.clear();
-		selectedEdges.clear();
 
 		// initialize y position outside of bounds of view
 		// this sets up positing correctly for first layer in graph
@@ -74,8 +61,6 @@ class LayeredGraphView extends View {
 		layerInitialized = false;
 		meshTraversalComplete = false;
 		finalized = false;
-		// initialize first layer
-		update();
 	}
 
 	private boolean nextLevel() {
@@ -91,8 +76,11 @@ class LayeredGraphView extends View {
 
 	public void update() {
 		if ( !finalized ) {
-			if( !updateMeshTraversal() ) {
-				//addRootPolygon();
+			if ( !meshTraversalComplete ) {
+				meshTraversalComplete = !updateMeshTraversal();
+			} else {
+				// one additional update round to add final polygon to top of graph
+				addRootPolygon();
 				setText(sceneControl.graph_complete);
 				finalized = true;
 			}
@@ -119,20 +107,18 @@ class LayeredGraphView extends View {
 
 			MeshLayer currLayer = mesh.layers.get( layerToDraw );
 			// calculate new x division based on number of triangles in layer
-			xDiv = w / currLayer.getPolygonsAddedToLayer().size();
+			xDiv = w / currLayer.getPolygonsRemovedFromLayer().size();
 
 			// adjust starting position for new layer of triangles
 			currPosition[0] = this.x1 + (xDiv / 2);
 			currPosition[1] -= yDiv;
 			ArrayList<Polygon> layerPolys =
-				mesh.getPolygonsById(currLayer.getPolygonsAddedToLayer());
+				mesh.getPolygonsById(currLayer.getPolygonsRemovedFromLayer());
 			// no polygons removed from first layer, so do not increase
 			// the first visual layer in the graph unless not first layer
-			/*
 			if ( layerToDraw == 0 ) {
 				currPosition[1] += yDiv;
 			}
-			*/
 			// calculate new scaling factor based on triangles in new layer
 			double maxWidth  = -1;
 			double maxHeight = -1;
@@ -145,56 +131,28 @@ class LayeredGraphView extends View {
 				}
 			}
 			currScale = Math.min( xDiv / maxWidth, yDiv / maxHeight );
-			polygonsToHighlight.clear();
-			graphEdgesToDraw.clear();
-			return true;
-		}
 
-		MeshLayer layer = mesh.layers.get( layerToDraw );
-		MeshLayer subLayer = layer.subLayers.get( subLayerToDraw );
-		if ( subLayer != null ) {
+			return true;
+		} else {
+
+			MeshLayer layer = mesh.layers.get( layerToDraw );
+			MeshLayer subLayer = layer.subLayers.get( subLayerToDraw );
 
 			// get list of polygons added to current subLayer
 			// if new triangles added, add to graph
 			Polygon currPoly;
-			ArrayList<Integer> polysAdded = subLayer.getPolygonsAddedToLayer();
-			if ( polysAdded.size() > 0 ) {
-				for ( i = 0; i < polysAdded.size(); i++ ) {
-					currPoly = mesh.polygons.get( polysAdded.get(i) );
-					currPoly.move( currPosition[0], currPosition[1] );
-					currPoly.scale( currScale );
-					polygonsToDraw.add( currPoly );
-					// increase x position to next location
-					currPosition[0] += xDiv;
-					for ( j = 0; j < polygonsToHighlight.size(); j++) {
-						MeshLayerEdge newEdge =
-							new MeshLayerEdge(currPoly,
-									mesh.polygons.get(
-										polygonsToHighlight.get(j)));
-						graphEdgesToDraw.add(newEdge);
-					}
-				}
-				// first layer should remain unconnected since
-				// no vertices/triangles are removed
-				if ( layerToDraw > 0 ) {
-					polygonsToHighlight.addAll(polysAdded);
-				}
+			ArrayList<Integer> polysAdded = subLayer.getPolygonsRemovedFromLayer();
+			for ( i = 0; i < polysAdded.size(); i++ ) {
+				currPoly = mesh.polygons.get( polysAdded.get(i) );
+				currPoly.move( currPosition[0], currPosition[1] );
+				currPoly.scale( currScale );
+				polygonsToDraw.add( currPoly );
+				// increase x position to next location
+				currPosition[0] += xDiv;
 			}
-			ArrayList<Integer> verticesRemoved = subLayer.getVerticesRemovedFromLayer();
-			if ( verticesRemoved.size() > 0 ) {
-				polygonsToHighlight.clear();
-				graphEdgesToDraw.clear();
-				subLayer = layer.subLayers.get( subLayerToDraw + 1 );
-				polygonsToHighlight = subLayer.getPolygonsRemovedFromLayer();
-				/*
-				graphEdgesToDraw.addAll(
-						mesh.getMultipleChildMeshConnections(
-							polygonsToHighlight, true, null));
-				*/
-			}
-		}
 
-		return nextLevel();
+			return nextLevel();
+		}
 	}
 
 	public void render() {
@@ -205,51 +163,42 @@ class LayeredGraphView extends View {
 
 		// get list of selected polygons
 		ArrayList<Integer> selected = new ArrayList<Integer>();
-		boolean polySelected = false;
+		ArrayList<MeshLayerEdge> selectedEdges = new ArrayList<MeshLayerEdge>();
 		for ( i = 0; i < messages.size(); i++) {
 			if (messages.get(i).k == MSG_TRIANGLE) {
-				polySelected = true;
-				// should be made to handle multiple selected polys,
-				// but this view can only have one selected at a time,
-				// so leaving it for now
-				if ( messages.get(i).v != lastSelected ) {
-					lastSelected = messages.get(i).v;
+				if (polygonsToDraw.contains(
+							mesh.polygons.get(messages.get(i).v)) ) {
+					// should be made to handle multiple selected polys,
+					// but this view can only have one selected at a time,
+					// so leaving it for now
 					selectedEdges.clear();
 					selectedEdges.addAll(
 							mesh.getChildMeshConnections(
 								messages.get(i).v, true, null));
+					//selected.add(messages.get(i).v);
 				}
-				selected.add(messages.get(i).v);
 			}
 		}
 
-		// draw graph edges
-		for ( i = 0; i < this.graphEdgesToDraw.size(); i++ ) {
-			this.graphEdgesToDraw.get(i).render();
-		}
-		if ( polySelected ) {
-			// draw selected graph edges
-			for ( i = 0; i < selectedEdges.size(); i++ ) {
-				selectedEdges.get(i).render();
-				if (selectedEdges.get(i).start != null) {
-					selected.add(selectedEdges.get(i).start.id);
-				}
-				if (selectedEdges.get(i).end != null) {
-					selected.add(selectedEdges.get(i).end.id);
-				}
+		// draw selected graph edges
+		for ( i = 0; i < selectedEdges.size(); i++ ) {
+			selectedEdges.get(i).render();
+			/*
+			if (selectedEdges.get(i).start != null) {
+				selected.add(selectedEdges.get(i).start.id);
 			}
+			if (selectedEdges.get(i).end != null) {
+				selected.add(selectedEdges.get(i).end.id);
+			}
+			*/
 		}
 
 		// render polygons to draw
 		for( i = 0; i < polygonsToDraw.size(); i++ ) {
-			// flip true/false selected to show white majority of time
-			if ( selected.contains(polygonsToDraw.get(i).id) ||
-			  ( (layerToDraw == 0 || (layerToDraw == 1 && subLayerToDraw == 0))
-				&& polygonsToDraw.get(i).parentId == this.polygon.id ) ||
-			  polygonsToHighlight.contains(polygonsToDraw.get(i).id) ) {
-				polygonsToDraw.get(i).selected = false;
-			} else {
+			if ( selected.contains(polygonsToDraw.get(i).id) ) {
 				polygonsToDraw.get(i).selected = true;
+			} else {
+				polygonsToDraw.get(i).selected = false;
 			}
 			polygonsToDraw.get(i).render(false);
 		}
@@ -272,3 +221,4 @@ class LayeredGraphView extends View {
 	}
 
 }
+
