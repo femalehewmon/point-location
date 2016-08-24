@@ -12,11 +12,12 @@ class LayeredGraphView extends View {
 	float xDiv;
 	float yDiv;
 	float currScale;
-	ArrayList<Integer> currPosition;
 	ArrayList<Polygon> polygonsToDraw;
 	ArrayList<Polygon> polygonsToHighlight;
 	ArrayList<MeshLayerEdge> graphEdgesToDraw;
 	ArrayList<MeshLayerEdge> selectedEdges;
+
+	HashMap<Integer, GraphPosition> graphLayout;
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
@@ -31,17 +32,12 @@ class LayeredGraphView extends View {
 		this.meshTraversalComplete = false;
 		this.finalized = false;
 
-		this.currPosition = new ArrayList<Integer>();
-		this.currPosition.add(this.x1);
-		this.currPosition.add(this.y2);
-		this.yDiv = 0;
-		this.xDiv = 0;
-		this.currScale = 1.0;
-
 		this.polygonsToDraw = new ArrayList<Polygon>();
 		this.polygonsToHighlight = new ArrayList<Polygon>();
 		this.graphEdgesToDraw = new ArrayList<MeshLayerEdge>();
-		this.selectedEdges = new ArrayList<MeshLayerEdge>()
+		this.selectedEdges = new ArrayList<MeshLayerEdge>();
+
+		this.graphLayout = new HashMap<Integer, GraphPosition>();
 	}
 
 	public void setMesh( LayeredMesh mesh, Polygon polygon ) {
@@ -53,6 +49,8 @@ class LayeredGraphView extends View {
 		this.polygon = polygon.copy();
 		// must be called after mesh is set so yDiv can be calculated
 		reset();
+
+		setupGraphLayout();
 	}
 
 	public void reset() {
@@ -65,12 +63,6 @@ class LayeredGraphView extends View {
 		graphEdgesToDraw.clear();
 		selectedEdges.clear();
 
-		// initialize y position outside of bounds of view
-		// this sets up positing correctly for first layer in graph
-		this.yDiv = this.h / (this.mesh.layers.size());
-		currPosition[0] = this.x1;
-		currPosition[1] = this.y2 + yDiv/2.0;
-
 		layerInitialized = false;
 		meshTraversalComplete = false;
 		finalized = false;
@@ -79,7 +71,8 @@ class LayeredGraphView extends View {
 	}
 
 	private boolean nextLevel() {
-		if (subLayerToDraw >= mesh.layers.get(layerToDraw).subLayers.size()-1){
+		if ( subLayerToDraw >=
+				mesh.layers.get(layerToDraw).subLayers.size() - 1 ){
 			subLayerToDraw = 0;
 			layerToDraw++;
 			layerInitialized = false;
@@ -101,6 +94,66 @@ class LayeredGraphView extends View {
 		return false;
 	}
 
+	public void setupGraphLayout() {
+		int i, j;
+
+		graphLayout.clear();
+
+		float xDiv;
+		float yDiv = this.h / (this.mesh.layers.size());
+
+		float xPos = this.x1;
+		float yPos = this.y2 + yDiv/2.0;
+		double maxWidth  = -1;
+		double maxHeight = -1;
+		float currScale = -1;
+
+		MeshLayer currLayer;
+		ArrayList<Polygon> layerPolys;
+		for ( i = 0; i < mesh.layers.size(); i++ ) {
+			currLayer = mesh.layers.get( i );
+
+			// get Polygons removed from this layer
+			layerPolys = mesh.getPolygonsById(
+						currLayer.getPolygonsRemovedFromLayer());
+
+			// calculate the X position for each polygon on this layer
+			xDiv = w / currLayer.getPolygonsRemovedFromLayer().size();
+
+			// calculate the scaling factor for this layer
+			maxWidth  = -1;
+			maxHeight = -1;
+			for( j = 0; j < layerPolys.size(); j++ ) {
+				if( layerPolys.get(j).getWidth() > maxWidth ) {
+					maxWidth = layerPolys.get(j).getWidth();
+				}
+				if( layerPolys.get(j).getHeight() > maxHeight ) {
+					maxHeight = (layerPolys.get(j).getHeight() * 1.1);
+				}
+			}
+			currScale = Math.min( xDiv / maxWidth, yDiv / maxHeight );
+
+			xPos = this.x1 + (xDiv / 2.0);
+			for ( j = 0; j < layerPolys.size(); j++ ) {
+				graphPosition = new GraphPosition(xPos, yPos, currScale);
+				graphLayout.put(layerPolys.get(j).id, graphPosition);
+				xPos += xDiv;
+				console.log("ADDING gp for " + layerPolys.get(j).id);
+			}
+
+			// update the Y position for the next layer
+			yPos -= yDiv;
+		}
+
+		// Finally, add the root polygon position
+		// done separately because it is never removed from the mesh
+		Polygon root =
+			mesh.getVisiblePolygonsByLayer(mesh.layers.size() - 1).get(0);
+		graphPosition = new GraphPosition(this.x1 + (w/2.0), yPos,
+				Math.min(xDiv / root.getWidth(), yDiv / root.getHeight()));
+		graphLayout.put( root.id, graphPosition );
+	}
+
 	public void addRootPolygon() {
 		Polygon root =
 			mesh.getVisiblePolygonsByLayer(mesh.layers.size() - 1).get(0);
@@ -116,35 +169,6 @@ class LayeredGraphView extends View {
 		int i;
 		if ( !layerInitialized ) {
 			layerInitialized = true;
-
-			MeshLayer currLayer = mesh.layers.get( layerToDraw );
-			// calculate new x division based on number of triangles in layer
-			xDiv = w / currLayer.getPolygonsAddedToLayer().size();
-
-			// adjust starting position for new layer of triangles
-			currPosition[0] = this.x1 + (xDiv / 2);
-			currPosition[1] -= yDiv;
-			ArrayList<Polygon> layerPolys =
-				mesh.getPolygonsById(currLayer.getPolygonsAddedToLayer());
-			// no polygons removed from first layer, so do not increase
-			// the first visual layer in the graph unless not first layer
-			/*
-			if ( layerToDraw == 0 ) {
-				currPosition[1] += yDiv;
-			}
-			*/
-			// calculate new scaling factor based on triangles in new layer
-			double maxWidth  = -1;
-			double maxHeight = -1;
-			for( i = 0; i < layerPolys.size(); i++ ) {
-				if( layerPolys.get(i).getWidth() > maxWidth ) {
-					maxWidth = layerPolys.get(i).getWidth();
-				}
-				if( layerPolys.get(i).getHeight() > maxHeight ) {
-					maxHeight = (layerPolys.get(i).getHeight() * 1.1);
-				}
-			}
-			currScale = Math.min( xDiv / maxWidth, yDiv / maxHeight );
 			polygonsToHighlight.clear();
 			graphEdgesToDraw.clear();
 			return true;
@@ -158,14 +182,21 @@ class LayeredGraphView extends View {
 			// if new triangles added, add to graph
 			Polygon currPoly;
 			ArrayList<Integer> polysAdded = subLayer.getPolygonsAddedToLayer();
+			GraphPosition graphPosition;
 			if ( polysAdded.size() > 0 ) {
 				for ( i = 0; i < polysAdded.size(); i++ ) {
 					currPoly = mesh.polygons.get( polysAdded.get(i) );
-					currPoly.move( currPosition[0], currPosition[1] );
-					currPoly.scale( currScale );
+					graphPosition = graphLayout.get( polysAdded.get(i) );
+					console.log(graphPosition);
+					console.log(currPoly.id);
+
+					// adjust polygon to position in graph
+					currPoly.move( graphPosition.x, graphPosition.y );
+					currPoly.scale( graphPosition.scale );
 					polygonsToDraw.add( currPoly );
-					// increase x position to next location
-					currPosition[0] += xDiv;
+
+					// add edges from newly added polygons to the currently
+					// highlighted polygons (last removed)
 					for ( j = 0; j < polygonsToHighlight.size(); j++) {
 						MeshLayerEdge newEdge =
 							new MeshLayerEdge(currPoly,
@@ -180,12 +211,18 @@ class LayeredGraphView extends View {
 					polygonsToHighlight.addAll(polysAdded);
 				}
 			}
-			ArrayList<Integer> verticesRemoved = subLayer.getVerticesRemovedFromLayer();
+
+			ArrayList<Integer> verticesRemoved =
+				subLayer.getVerticesRemovedFromLayer();
 			if ( verticesRemoved.size() > 0 ) {
+				// clear currently displayed graph edges and highlighted polys
 				polygonsToHighlight.clear();
 				graphEdgesToDraw.clear();
+				// set just removed polygons to highlight
 				subLayer = layer.subLayers.get( subLayerToDraw + 1 );
 				polygonsToHighlight = subLayer.getPolygonsRemovedFromLayer();
+				// [commented] highlight all the way down the graph
+				// from the removed polygons
 				/*
 				graphEdgesToDraw.addAll(
 						mesh.getMultipleChildMeshConnections(
@@ -199,8 +236,6 @@ class LayeredGraphView extends View {
 
 	public void render() {
 		if(!visible){return;}
-		//noStroke();
-		//super.render(); // draw view background
 		int i, j, k;
 
 		// get list of selected polygons
@@ -271,4 +306,15 @@ class LayeredGraphView extends View {
 		}
 	}
 
+}
+
+class GraphPosition{
+	float x;
+	float y;
+	float scale;
+	public GraphPosition(float x, float y, float scale) {
+		this.x = x;
+		this.y = y;
+		this.scale = scale;
+	}
 }
