@@ -15,7 +15,7 @@ class KirkpatrickMeshView extends View {
 	int explanation;
 	boolean initialized;
 
-	ArrayList<Polygon> polygonsToDraw;
+	ArrayList<Integer> polygonsToDraw;
 	ArrayList<Vertex> verticesToDraw;
 	PolyPoint ildvToDraw;
 
@@ -37,7 +37,7 @@ class KirkpatrickMeshView extends View {
 		this.outerTri = null;
 
 		this.polygonTris = new ArrayList<Integer>();
-		this.polygonsToDraw = new ArrayList<Polygon>();
+		this.polygonsToDraw = new ArrayList<Integer>();
 		this.verticesToDraw = new ArrayList<Vertex>();
 		this.ildvToDraw = null;
 
@@ -52,7 +52,8 @@ class KirkpatrickMeshView extends View {
 		this.outerTri = outerTri.copy();
 
 		reset();
-		this.polygonsToDraw.add(this.polygon);
+		// add polygon to mesh as workaround for keying by ID
+		this.polygonsToDraw.add(this.polygon.id);
 
 		// clear previously set mesh
 		this.ildvToDraw = null;
@@ -61,6 +62,7 @@ class KirkpatrickMeshView extends View {
 		}
 
 		this.mesh = mesh.copy();
+		this.mesh.polygons.put(this.polygon.id, this.polygon);
 
 		// set polygon and outer triangle tris
 		Iterator<Integer> iterator = mesh.polygons.keySet().iterator();
@@ -86,7 +88,7 @@ class KirkpatrickMeshView extends View {
 		subScene = EXPLAIN;
 		explanation = 1;
 		initialized = false;
-		polygonsToDraw.add(polygon);
+		polygonsToDraw.add(polygon.id);
 
 		this.finalized = false;
 	}
@@ -156,10 +158,10 @@ class KirkpatrickMeshView extends View {
 				setText(sceneControl.triangulate_poly);
 				polygonsToDraw.clear();
 				polygonsToDraw.addAll(
-						mesh.getPolygonsByParentId(polygon.id));
-				polygonsToDraw.addAll(mesh.getPolygonsById(
+						mesh.getPolygonIdsByParentId(polygon.id));
+				polygonsToDraw.addAll(
 							mesh.layers.get(0).subLayers.get(1).
-							getPolygonsAddedToLayer()));
+							getPolygonsAddedToLayer());
 				return nextSubScene();
 			case ADD_OUTER_TRI:
 				setText(sceneControl.add_outer_tri);
@@ -167,7 +169,8 @@ class KirkpatrickMeshView extends View {
 				return nextSubScene();
 			case TRIANGULATE_OUTER_TRI:
 				setText(sceneControl.triangulate_outer_tri);
-				polygonsToDraw.addAll(mesh.getPolygonsByParentId(outerTri.id));
+				polygonsToDraw.addAll(
+						mesh.getPolygonIdsByParentId(outerTri.id));
 				return nextSubScene();
 			case MESH_TRAVERSAL:
 				if( updateMeshTraversal() ){
@@ -200,7 +203,7 @@ class KirkpatrickMeshView extends View {
 			// add all polygons visible on previous layer
 			polygonsToDraw.clear();
 			polygonsToDraw.addAll(
-					mesh.getVisiblePolygonsByLayer(layerToDraw - 1));
+					mesh.getVisiblePolygonIdsByLayer(layerToDraw - 1));
 
 			// add all ildv vertices to be removed on this layer
 			layerInitialized = true;
@@ -256,14 +259,14 @@ class KirkpatrickMeshView extends View {
 					for ( i = 0; i < polysRemoved.size(); i++ ) {
 						polygonsToDraw.remove(
 								polygonsToDraw.indexOf(
-									mesh.polygons.get(polysRemoved.get(i))));
+									polysRemoved.get(i)));
 					}
 				}
 
 				if ( polysAdded.size() > 0 ) {
 					setText(sceneControl.retriangulate);
 					for ( i = 0; i < polysAdded.size(); i++ ) {
-						polygonsToDraw.add( mesh.polygons.get(polysAdded.get(i)) );
+						polygonsToDraw.add(polysAdded.get(i));
 					}
 				}
 			}
@@ -297,17 +300,18 @@ class KirkpatrickMeshView extends View {
 			//  - the view is finalized and displaying the root triangle
 			//  - is connected to the currently highlighted ILDV
 			//  - is selected by the user by mouse hover
-			if ( polygonsToDraw.get(i).parentId == polygon.id ||
-					polygonsToDraw.get(i).id == polygon.id ||
+			Polygon currPoly = mesh.polygons.get(polygonsToDraw.get(i));
+			if ( currPoly.parentId == polygon.id ||
+					currPoly.id == polygon.id ||
 					this.finalized ||
 					( ildvToDraw != null &&
-					polygonsToDraw.get(i).points.contains(ildvToDraw)) ||
-					selectedShapes.contains(polygonsToDraw.get(i).id) ) {
-				polygonsToDraw.get(i).selected = false;
+					currPoly.points.contains(ildvToDraw)) ||
+					selectedShapes.contains(currPoly.id) ) {
+				currPoly.selected = false;
 			} else {
-				polygonsToDraw.get(i).selected = true;
+				currPoly.selected = true;
 			}
-			polygonsToDraw.get(i).render(false);
+			currPoly.render(false);
 		}
 
 		// draw vertices
@@ -329,10 +333,10 @@ class KirkpatrickMeshView extends View {
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
 			for( int i; i < polygonsToDraw.size(); i++ ) {
-				if (polygonsToDraw.get(i).pickColor == c) {
+				if (mesh.polygons.get(polygonsToDraw.get(i)).pickColor == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
-					msg.v = polygonsToDraw.get(i).id;
+					msg.v = polygonsToDraw.get(i);
 					messages.add(msg);
 				}
 			}

@@ -11,7 +11,7 @@ class LayeredGraphView extends View {
 	float yDiv;
 	float currScale;
 	ArrayList<Integer> currPosition;
-	ArrayList<Polygon> polygonsToDraw;
+	ArrayList<Integer> polygonsToDraw;
 
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
@@ -32,7 +32,7 @@ class LayeredGraphView extends View {
 		this.xDiv = 0;
 		this.currScale = 1.0;
 
-		this.polygonsToDraw = new ArrayList<Polygon>();
+		this.polygonsToDraw = new ArrayList<Integer>();
 	}
 
 	public void setMesh( LayeredMesh mesh ) {
@@ -97,7 +97,7 @@ class LayeredGraphView extends View {
 		currScale = Math.min(xDiv / root.getWidth(), yDiv / root.getHeight());
 		root.animateMove( currPosition[0], currPosition[1] );
 		root.animateScale( currScale );
-		polygonsToDraw.add( root );
+		polygonsToDraw.add( root.id );
 	}
 
 	public void updateMeshTraversal() {
@@ -146,7 +146,7 @@ class LayeredGraphView extends View {
 				currPoly = mesh.polygons.get( polysAdded.get(i) );
 				currPoly.move( currPosition[0], currPosition[1] );
 				currPoly.scale( currScale );
-				polygonsToDraw.add( currPoly );
+				polygonsToDraw.add( currPoly.id );
 				// increase x position to next location
 				currPosition[0] += xDiv;
 			}
@@ -166,8 +166,7 @@ class LayeredGraphView extends View {
 		ArrayList<MeshLayerEdge> selectedEdges = new ArrayList<MeshLayerEdge>();
 		for ( i = 0; i < messages.size(); i++) {
 			if (messages.get(i).k == MSG_TRIANGLE) {
-				if (polygonsToDraw.contains(
-							mesh.polygons.get(messages.get(i).v)) ) {
+				if (polygonsToDraw.contains( messages.get(i).v) ) {
 					// should be made to handle multiple selected polys,
 					// but this view can only have one selected at a time,
 					// so leaving it for now
@@ -195,12 +194,12 @@ class LayeredGraphView extends View {
 
 		// render polygons to draw
 		for( i = 0; i < polygonsToDraw.size(); i++ ) {
-			if ( selected.contains(polygonsToDraw.get(i).id) ) {
-				polygonsToDraw.get(i).selected = true;
+			if ( selected.contains(polygonsToDraw.get(i)) ) {
+				mesh.polygons.get(polygonsToDraw.get(i)).selected = true;
 			} else {
-				polygonsToDraw.get(i).selected = false;
+				mesh.polygons.get(polygonsToDraw.get(i)).selected = false;
 			}
-			polygonsToDraw.get(i).render(false);
+			mesh.polygons.get(polygonsToDraw.get(i)).render(false);
 		}
 	}
 
@@ -210,10 +209,10 @@ class LayeredGraphView extends View {
 		int i;
 		if ( layerToDraw < this.mesh.layers.size() ) {
 			for( int i; i < polygonsToDraw.size(); i++ ) {
-				if (polygonsToDraw.get(i).pickColor == c) {
+				if (mesh.polygons.get(polygonsToDraw.get(i)).pickColor == c) {
 					Message msg = new Message();
 					msg.k = MSG_TRIANGLE;
-					msg.v = polygonsToDraw.get(i).id;
+					msg.v = polygonsToDraw.get(i);
 					messages.add(msg);
 				}
 			}
