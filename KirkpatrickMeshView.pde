@@ -110,6 +110,29 @@ class KirkpatrickMeshView extends View {
 		return true;
 	}
 
+	public boolean previousLevel() {
+		if (subLayerToDraw == 0 ) {
+			if ( layerInitialized ) {
+				layerInitialized = false;
+			} else if ( layerToDraw > 1 ) {
+				layerToDraw--;
+				subLayerToDraw =
+					mesh.layers.get(layerToDraw).subLayers.size() - 1;
+				layerInitialized = true;
+			} else {
+				// keep layer as it was and return false to indicate
+				// last layer exceeded
+				return false;
+			}
+		} else {
+			subLayerToDraw--;
+		}
+
+		rollbackMeshTraversal();
+
+		return true;
+	}
+
 	private boolean nextSubScene() {
 		switch(subScene) {
 			case EXPLAIN:
@@ -207,8 +230,6 @@ class KirkpatrickMeshView extends View {
 
 			// add all ildv vertices to be removed on this layer
 			layerInitialized = true;
-			// outerTri's selected color (dark gray) used to show hole
-			outerTri.selected = false;
 
 			// verticesToDraw should be empty, verify
 			if ( verticesToDraw.size() > 0 ) {
@@ -272,6 +293,69 @@ class KirkpatrickMeshView extends View {
 			}
 
 			return nextLevel();
+		}
+	}
+
+	private void rollbackMeshTraversal() {
+		if ( !layerInitialized ) {
+			// if final layer, do not set ILDV text
+			setText(sceneControl.ildv_identified);
+
+			// add all polygons visible on next layer
+			//polygonsToDraw.clear();
+			//polygonsToDraw.addAll(
+			//			mesh.getVisiblePolygonIdsByLayer( layerToDraw ));
+
+			//verticesToDraw.clear();
+		} else {
+			int i;
+			MeshLayer layer = mesh.layers.get( layerToDraw );
+			if ( subLayerToDraw < layer.subLayers.size() - 1 ) {
+				MeshLayer subLayer = layer.subLayers.get(subLayerToDraw);
+
+				// get list of polygons added and removed from current layer
+				// Should be either a list of added or removed,
+				// but check for and handle both
+				ArrayList<Integer> polysAdded =
+					subLayer.getPolygonsAddedToLayer();
+				ArrayList<Integer> polysRemoved =
+					subLayer.getPolygonsRemovedFromLayer();
+				ArrayList<Integer> verticesRemoved =
+					subLayer.getVerticesRemovedFromLayer();
+
+				if ( verticesRemoved.size() > 0 ) {
+					setText(sceneControl.ildv_removed);
+					ildvToDraw.selected = false;
+					verticesToDraw.add( ildvToDraw );
+					ildvToDraw = null;
+				}
+
+				if ( polysRemoved.size() > 0 ) {
+					setText(sceneControl.retriangulate);
+					for ( i = 0; i < polysRemoved.size(); i++ ) {
+						polygonsToDraw.add(polysRemoved.get(i));
+					}
+					// get previous subLayer ILDV
+					subLayer = layer.subLayers.get(subLayerToDraw - 1);
+					verticesRemoved = subLayer.getVerticesRemovedFromLayer();
+					for ( i = 0; i < verticesRemoved.size(); i++ ) {
+						PolyPoint ildv = new PolyPoint(
+									verticesRemoved.get(i).x,
+									verticesRemoved.get(i).y);
+						ildv.cFill = color(0);
+						ildvToDraw = ildv;
+					}
+				}
+
+				if ( polysAdded.size() > 0 ) {
+					setText(sceneControl.ildv_selected);
+					for ( i = 0; i < polysAdded.size(); i++ ) {
+						polygonsToDraw.remove(
+								polygonsToDraw.indexOf(
+									polysAdded.get(i)));
+					}
+				}
+			}
 		}
 	}
 
