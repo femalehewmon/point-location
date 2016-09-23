@@ -94,6 +94,14 @@ void pauseAnimation() {
 	$("#pause-controls").hide();
 }
 
+void previousScene() {
+	console.log("previous level");
+	if ( !kpView.rollback() ) {
+		//sceneControl.previousScene();
+	}
+	graphView.previousLevel();
+}
+
 void replayAnimation() {
 	sceneControl.restart();
 	showReplayControls(false);

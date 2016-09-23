@@ -8,7 +8,6 @@ class SceneController {
 	int sceneDuration;
 
 	final String CREATE_POLYGON = "CREATE POLYGON";
-	final String SETUP_KIRKPATRICK_DATA_STRUCTURE = "SETUP KP DATA STRUCT";
 	final String CREATE_KIRKPATRICK_DATA_STRUCTURE = "CREATE KP DATA STRUCT";
 	final String POINT_LOCATION = "POINT LOCATION";
 
@@ -29,7 +28,7 @@ class SceneController {
 	public void restart() {
 		reset();
 		this.sceneReady = false;
-		this.currScene = SETUP_KIRKPATRICK_DATA_STRUCTURE;
+		this.currScene = CREATE_KIRKPATRICK_DATA_STRUCTURE;
 	}
 
 	public void reset() {
@@ -46,6 +45,7 @@ class SceneController {
 	}
 
 	public void enableAutoUpdate() {
+		// forces the next scene to continue with auto update
 		updateOnSceneDuration(false);
 		this.autoUpdate = true;
 	}
@@ -95,11 +95,8 @@ class SceneController {
 		switch ( this.currScene ) {
 			case CREATE_POLYGON:
 				break;
-			case SETUP_KIRKPATRICK_DATA_STRUCTURE:
-				this.currScene = CREATE_POLYGON;
-				break;
 			case CREATE_KIRKPATRICK_DATA_STRUCTURE:
-				this.currScene = SETUP_KIRKPATRICK_DATA_STRUCTURE;
+				this.currScene = CREATE_POLYGON;
 				break;
 			case POINT_LOCATION:
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCTURE;
@@ -109,15 +106,11 @@ class SceneController {
 		console.log("Previous scene " + this.currScene);
 		}
 		reset();
-		this.sceneReady = false;
 	}
 
 	public void nextScene() {
 		switch ( this.currScene ) {
 			case CREATE_POLYGON:
-				this.currScene = SETUP_KIRKPATRICK_DATA_STRUCTURE;
-				break;
-			case SETUP_KIRKPATRICK_DATA_STRUCTURE:
 				this.currScene = CREATE_KIRKPATRICK_DATA_STRUCTURE;
 				break;
 			case CREATE_KIRKPATRICK_DATA_STRUCTURE:
