@@ -171,7 +171,7 @@ void draw() {
 				}
 			}
 			break;
-		case sceneControl.SETUP_KIRKPATRICK_DATA_STRUCTURE:
+		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCTURE:
 			if ( !sceneControl.sceneReady ) {
 				// reconfigure view to show playback controls
 				showPlaybackControls(true);
@@ -189,11 +189,12 @@ void draw() {
 
 				pcreateView.visible = false;
 				kpView.visible = true;
-				graphView.visible = false;
+				graphView.visible = true;
 				plocateView.visible = false;
 
 				kpView.reset();
 				kpView.update();
+				graphView.reset();
 				sceneControl.ready();
 				if ( animationReset || pcreateView.isDemo ) {
 					kpView.update();
@@ -201,27 +202,10 @@ void draw() {
 			}
 
 			if ( sceneControl.update() ) {
-				kpView.update();
-				if ( kpView.initialized ) {
-					sceneControl.nextScene();
-				} else {
-					sceneControl.reset();
-				}
-			}
-			break;
-		case sceneControl.CREATE_KIRKPATRICK_DATA_STRUCTURE:
-			if ( !sceneControl.sceneReady ) {
-				pcreateView.visible = false;
-				kpView.visible = true;
-				graphView.visible = true;
-				plocateView.visible = false;
-				graphView.reset();
-				sceneControl.ready();
-			}
-
-			if ( sceneControl.update() ) {
 				boolean notFinalized = kpView.update();
-				notFinalized = graphView.update() || notFinalized;
+				if ( kpView.initialized ) {
+					notFinalized = graphView.update() || notFinalized;
+				}
 				if ( notFinalized) {
 					sceneControl.reset();
 					if ( kpView.finalized ) {

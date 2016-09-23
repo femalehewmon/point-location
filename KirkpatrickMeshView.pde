@@ -141,7 +141,6 @@ class KirkpatrickMeshView extends View {
 				} else if ( explanation == 4) {
 					subScene = TRIANGULATE_POLY;
 				} else {
-					initialized = true;
 					subScene = MESH_TRAVERSAL;
 				}
 				break;
@@ -197,6 +196,7 @@ class KirkpatrickMeshView extends View {
 				return nextSubScene();
 			case MESH_TRAVERSAL:
 				if( updateMeshTraversal() ){
+					initialized = true;
 					return true;
 				}
 				return nextSubScene();
