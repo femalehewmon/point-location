@@ -41,7 +41,7 @@ class KirkpatrickMeshView extends View {
 		this.verticesToDraw = new ArrayList<Vertex>();
 		this.ildvToDraw = null;
 
-		this.initialized = true;
+		this.initialized = false;
 		this.finalized = false;
 	}
 
@@ -100,8 +100,9 @@ class KirkpatrickMeshView extends View {
 				layerToDraw++;
 				layerInitialized = false;
 			} else {
-				// keep layer as it was and return false to indicate
-				// last layer exceeded
+				subLayerToDraw = 0;
+				layerToDraw++;
+				layerInitialized = false;
 				return false;
 			}
 		} else {
@@ -116,6 +117,7 @@ class KirkpatrickMeshView extends View {
 				layerInitialized = false;
 			} else if ( layerToDraw > 1 ) {
 				layerToDraw--;
+				console.log("sublayers " + layerToDraw );
 				subLayerToDraw =
 					mesh.layers.get(layerToDraw).subLayers.size() - 1;
 				layerInitialized = true;
@@ -127,8 +129,6 @@ class KirkpatrickMeshView extends View {
 		} else {
 			subLayerToDraw--;
 		}
-
-		rollbackMeshTraversal();
 
 		return true;
 	}
@@ -143,6 +143,7 @@ class KirkpatrickMeshView extends View {
 				} else {
 					subScene = MESH_TRAVERSAL;
 				}
+				explanation++;
 				break;
 			case TRIANGULATE_POLY:
 				subScene = ADD_OUTER_TRI;
@@ -160,6 +161,46 @@ class KirkpatrickMeshView extends View {
 		return true;
 	}
 
+	private boolean previousSubScene() {
+		console.log(subScene);
+		switch(subScene) {
+			case EXPLAIN:
+				if ( explanation < 4 ) {
+					subScene = EXPLAIN;
+				} else if ( explanation == 4) {
+					subScene = TRIANGULATE_POLY;
+				} else {
+					subScene = TRIANGULATE_OUTER_TRI;
+				}
+				explanation--;
+				if ( explanation < 0 ){
+					explanation = 0;
+					return false;
+				}
+				break;
+			case TRIANGULATE_POLY:
+				subScene = EXPLAIN;
+				break;
+			case ADD_OUTER_TRI:
+				subScene = TRIANGULATE_POLY;
+				break;
+			case TRIANGULATE_OUTER_TRI:
+				subScene = ADD_OUTER_TRI;
+				break;
+			case MESH_TRAVERSAL:
+				console.log("NO LONGER INITIALIED");
+				initialized = false;
+				subScene = EXPLAIN;
+				return false;
+				break;
+			case ADD_ROOT_TRI:
+				subScene = MESH_TRAVERSAL;
+				break;
+		}
+		console.log(subScene);
+		return true;
+	}
+
 	public boolean update() {
 		// show polygon alone
 		switch(subScene) {
@@ -174,7 +215,6 @@ class KirkpatrickMeshView extends View {
 				} else {
 					setText(sceneControl.before_begin);
 				}
-				explanation++;
 				return nextSubScene();
 			case TRIANGULATE_POLY:
 				setText(sceneControl.triangulate_poly);
@@ -195,14 +235,56 @@ class KirkpatrickMeshView extends View {
 						mesh.getPolygonIdsByParentId(outerTri.id));
 				return nextSubScene();
 			case MESH_TRAVERSAL:
+				this.initialized = true;
+				this.finalized = false;
 				if( updateMeshTraversal() ){
-					initialized = true;
 					return true;
 				}
 				return nextSubScene();
 			case ADD_ROOT_TRI:
 				this.finalized = true;
 				return false;
+		}
+	}
+
+	public boolean rollback() {
+		// show polygon alone
+		switch(subScene) {
+			case EXPLAIN:
+				if ( explanation == 1 ) {
+					setText(sceneControl.explanation1);
+					return false;
+				} else if ( explanation == 2 ){
+					setText(sceneControl.explanation2);
+				} else if ( explanation == 3 ){
+					showPlaybackButton(true);
+					setText(sceneControl.explanation3);
+				} else {
+					setText(sceneControl.before_begin);
+				}
+				return previousSubScene();
+			case TRIANGULATE_POLY:
+				polygonsToDraw.clear();
+				return previousSubScene();
+			case ADD_OUTER_TRI:
+				setText(sceneControl.triangulate_poly);
+				drawOuterTriangle = false;
+				return previousSubScene();
+			case TRIANGULATE_OUTER_TRI:
+				setText(sceneControl.add_outer_tri);
+				polygonsToDraw.removeAll(
+						mesh.getPolygonIdsByParentId(outerTri.id));
+				return previousSubScene();
+			case MESH_TRAVERSAL:
+				if( rollbackMeshTraversal() ){
+					return true;
+				}
+				setText(sceneControl.triangulate_outer_tri);
+				return previousSubScene();
+			case ADD_ROOT_TRI:
+				this.finalized = false;
+				rollbackMeshTraversal();
+				return previousSubScene();
 		}
 	}
 
@@ -297,20 +379,18 @@ class KirkpatrickMeshView extends View {
 	}
 
 	private void rollbackMeshTraversal() {
+		if ( !previousLevel() ) {
+			return false;
+		}
+
 		if ( !layerInitialized ) {
 			// if final layer, do not set ILDV text
 			setText(sceneControl.ildv_identified);
-
-			// add all polygons visible on next layer
-			//polygonsToDraw.clear();
-			//polygonsToDraw.addAll(
-			//			mesh.getVisiblePolygonIdsByLayer( layerToDraw ));
-
-			//verticesToDraw.clear();
+			verticesToDraw.clear();
 		} else {
 			int i;
 			MeshLayer layer = mesh.layers.get( layerToDraw );
-			if ( subLayerToDraw < layer.subLayers.size() - 1 ) {
+			if ( subLayerToDraw <= layer.subLayers.size() - 1 ) {
 				MeshLayer subLayer = layer.subLayers.get(subLayerToDraw);
 
 				// get list of polygons added and removed from current layer
@@ -357,6 +437,7 @@ class KirkpatrickMeshView extends View {
 				}
 			}
 		}
+		return true;
 	}
 
 	public void render() {
@@ -372,6 +453,7 @@ class KirkpatrickMeshView extends View {
 			}
 		}
 
+		polygon.render();
 		if( drawOuterTriangle ) {
 			outerTri.render();
 		}

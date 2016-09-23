@@ -13,6 +13,9 @@ class LayeredGraphView extends View {
 	ArrayList<Integer> currPosition;
 	ArrayList<Integer> polygonsToDraw;
 
+	int currLevel;
+	int maxLevelReached;
+
 	public LayeredGraphView( float x1, float y1, float x2, float y2 ) {
 		super(x1, y1, x2, y2);
 		this.cFill = color(255);
@@ -49,6 +52,8 @@ class LayeredGraphView extends View {
 		subLayerToDraw = 0;
 		// skip rendering the first layer to align with update of kpMeshView
 		layerToDraw = 1;
+		currLevel = 1;
+		maxLevelReached = currLevel;
 
 		polygonsToDraw.clear();
 
@@ -71,7 +76,37 @@ class LayeredGraphView extends View {
 		} else {
 			subLayerToDraw++;
 		}
+		maxLevelReached =
+			(currLevel > maxLevelReached) ? currLevel : maxLevelReached;
 		return ( layerToDraw <= mesh.layers.size() - 1 );
+	}
+
+	private boolean previousLevel() {
+		meshTraversalComplete = false;
+		if (subLayerToDraw == 0 ) {
+			if ( layerInitialized ) {
+				layerInitialized = false;
+			} else {
+				if ( layerToDraw > 1 ) {
+					layerToDraw--;
+					subLayerToDraw =
+						mesh.layers.get(layerToDraw).subLayers.size() - 1;
+					layerInitialized = true;
+				} else {
+					layerToDraw--;
+					subLayerToDraw =
+						mesh.layers.get(layerToDraw).subLayers.size() - 1;
+					// keep layer as it was and return false to indicate
+					// last layer exceeded
+					return false;
+				}
+			}
+		} else {
+			layerInitialized = true;
+			subLayerToDraw--;
+		}
+
+		return true;
 	}
 
 	public void update() {
@@ -87,6 +122,13 @@ class LayeredGraphView extends View {
 			return true;
 		}
 		return false;
+	}
+
+	public void rollback() {
+		if ( meshTraversalComplete ) {
+			meshTraversalComplete = false;
+		}
+		rollbackMeshTraversal();
 	}
 
 	public void addRootPolygon() {
@@ -105,33 +147,36 @@ class LayeredGraphView extends View {
 		if ( !layerInitialized ) {
 			layerInitialized = true;
 
-			MeshLayer currLayer = mesh.layers.get( layerToDraw );
-			// calculate new x division based on number of triangles in layer
-			xDiv = w / currLayer.getPolygonsRemovedFromLayer().size();
+			// initialized should only be done if layer has not yet
+			// been reached
+			if ( currLevel == maxLevelReached ) {
+				MeshLayer currLayer = mesh.layers.get( layerToDraw );
+				// calculate new x division based on number of triangles in layer
+				xDiv = w / currLayer.getPolygonsRemovedFromLayer().size();
 
-			// adjust starting position for new layer of triangles
-			currPosition[0] = this.x1 + (xDiv / 2);
-			currPosition[1] -= yDiv;
-			ArrayList<Polygon> layerPolys =
-				mesh.getPolygonsById(currLayer.getPolygonsRemovedFromLayer());
-			// no polygons removed from first layer, so do not increase
-			// the first visual layer in the graph unless not first layer
-			if ( layerToDraw == 0 ) {
-				currPosition[1] += yDiv;
-			}
-			// calculate new scaling factor based on triangles in new layer
-			double maxWidth  = -1;
-			double maxHeight = -1;
-			for( i = 0; i < layerPolys.size(); i++ ) {
-				if( layerPolys.get(i).getWidth() > maxWidth ) {
-					maxWidth = layerPolys.get(i).getWidth();
+				// adjust starting position for new layer of triangles
+				currPosition[0] = this.x1 + (xDiv / 2);
+				currPosition[1] -= yDiv;
+				ArrayList<Polygon> layerPolys =
+					mesh.getPolygonsById(currLayer.getPolygonsRemovedFromLayer());
+				// no polygons removed from first layer, so do not increase
+				// the first visual layer in the graph unless not first layer
+				if ( layerToDraw == 0 ) {
+					currPosition[1] += yDiv;
 				}
-				if( layerPolys.get(i).getHeight() > maxHeight ) {
-					maxHeight = (layerPolys.get(i).getHeight() * 1.1);
+				// calculate new scaling factor based on triangles in new layer
+				double maxWidth  = -1;
+				double maxHeight = -1;
+				for( i = 0; i < layerPolys.size(); i++ ) {
+					if( layerPolys.get(i).getWidth() > maxWidth ) {
+						maxWidth = layerPolys.get(i).getWidth();
+					}
+					if( layerPolys.get(i).getHeight() > maxHeight ) {
+						maxHeight = (layerPolys.get(i).getHeight() * 1.1);
+					}
 				}
+				currScale = Math.min( xDiv / maxWidth, yDiv / maxHeight );
 			}
-			currScale = Math.min( xDiv / maxWidth, yDiv / maxHeight );
-
 			return true;
 		} else {
 
@@ -141,18 +186,46 @@ class LayeredGraphView extends View {
 			// get list of polygons added to current subLayer
 			// if new triangles added, add to graph
 			Polygon currPoly;
-			ArrayList<Integer> polysAdded = subLayer.getPolygonsRemovedFromLayer();
+			ArrayList<Integer> polysAdded =
+				subLayer.getPolygonsRemovedFromLayer();
 			for ( i = 0; i < polysAdded.size(); i++ ) {
 				currPoly = mesh.polygons.get( polysAdded.get(i) );
-				currPoly.move( currPosition[0], currPosition[1] );
-				currPoly.scale( currScale );
+				if ( currLevel == maxLevelReached ) {
+					currPoly.move( currPosition[0], currPosition[1] );
+					currPoly.scale( currScale );
+					// increase x position to next location
+					currPosition[0] += xDiv;
+				}
 				polygonsToDraw.add( currPoly.id );
-				// increase x position to next location
-				currPosition[0] += xDiv;
 			}
 
+			currLevel++;
 			return nextLevel();
 		}
+	}
+
+	public boolean rollbackMeshTraversal() {
+		if ( !previousLevel() ) {
+			return false;
+		}
+		if ( layerInitialized ) {
+			MeshLayer layer = mesh.layers.get( layerToDraw );
+			if ( subLayerToDraw <= layer.subLayers.size() - 1 ) {
+				MeshLayer subLayer = layer.subLayers.get( subLayerToDraw );
+
+				// get list of polygons added to current subLayer
+				// if new triangles added, add to graph
+				Polygon currPoly;
+				ArrayList<Integer> polysAdded =
+					subLayer.getPolygonsRemovedFromLayer();
+				for ( i = 0; i < polysAdded.size(); i++ ) {
+					currPoly = mesh.polygons.get( polysAdded.get(i) );
+					polygonsToDraw.remove(polygonsToDraw.indexOf(currPoly.id));
+				}
+			}
+			currLevel--;
+		}
+		return true;
 	}
 
 	public void render() {
