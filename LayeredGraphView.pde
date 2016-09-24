@@ -13,6 +13,7 @@ class LayeredGraphView extends View {
 	float currScale;
 	ArrayList<Integer> currPosition;
 	ArrayList<Integer> polygonsToDraw;
+	ArrayList<MeshLayerEdge> edgesToDraw;
 
 	int currLevel;
 	int maxLevelReached;
@@ -37,6 +38,7 @@ class LayeredGraphView extends View {
 		this.currScale = 1.0;
 
 		this.polygonsToDraw = new ArrayList<Integer>();
+		this.edgesToDraw = new ArrayList<MeshLayerEdge>();
 	}
 
 	public void setMesh( LayeredMesh mesh, Polygon polygon ) {
@@ -58,6 +60,7 @@ class LayeredGraphView extends View {
 		maxLevelReached = currLevel;
 
 		polygonsToDraw.clear();
+		edgesToDraw.clear();
 
 		// initialize y position outside of bounds of view
 		// this sets up positing correctly for first layer in graph
@@ -144,6 +147,7 @@ class LayeredGraphView extends View {
 		root.animateMove( currPosition[0], currPosition[1] );
 		root.animateScale( currScale );
 		polygonsToDraw.add( root.id );
+		//edgesToDraw.add( root.id );
 	}
 
 	public void updateMeshTraversal() {
@@ -161,8 +165,8 @@ class LayeredGraphView extends View {
 				// adjust starting position for new layer of triangles
 				currPosition[0] = this.x1 + (xDiv / 2);
 				currPosition[1] -= yDiv;
-				ArrayList<Polygon> layerPolys =
-					mesh.getPolygonsById(currLayer.getPolygonsRemovedFromLayer());
+				ArrayList<Polygon> layerPolys = mesh.getPolygonsById(
+							currLayer.getPolygonsRemovedFromLayer());
 				// no polygons removed from first layer, so do not increase
 				// the first visual layer in the graph unless not first layer
 				if ( layerToDraw == 0 ) {
@@ -192,15 +196,22 @@ class LayeredGraphView extends View {
 			Polygon currPoly;
 			ArrayList<Integer> polysAdded =
 				subLayer.getPolygonsRemovedFromLayer();
-			for ( i = 0; i < polysAdded.size(); i++ ) {
-				currPoly = mesh.polygons.get( polysAdded.get(i) );
-				if ( currLevel == maxLevelReached ) {
-					currPoly.move( currPosition[0], currPosition[1] );
-					currPoly.scale( currScale );
-					// increase x position to next location
-					currPosition[0] += xDiv;
+			if ( polysAdded.size() > 0 ) {
+				for ( i = 0; i < polysAdded.size(); i++ ) {
+					currPoly = mesh.polygons.get( polysAdded.get(i) );
+					if ( currLevel == maxLevelReached ) {
+						currPoly.move( currPosition[0], currPosition[1] );
+						currPoly.scale( currScale );
+						// increase x position to next location
+						currPosition[0] += xDiv;
+					}
+					polygonsToDraw.add( currPoly.id );
+					edgesToDraw.addAll(
+							mesh.getChildMeshConnections(
+								currPoly.id, false, null));
 				}
-				polygonsToDraw.add( currPoly.id );
+			} else {
+				edgesToDraw.clear();
 			}
 
 			currLevel++;
@@ -226,6 +237,7 @@ class LayeredGraphView extends View {
 					currPoly = mesh.polygons.get( polysAdded.get(i) );
 					polygonsToDraw.remove(polygonsToDraw.indexOf(currPoly.id));
 				}
+				edgesToDraw.clear();
 			}
 			currLevel--;
 		}
@@ -258,6 +270,7 @@ class LayeredGraphView extends View {
 
 		// draw selected graph edges
 		for ( i = 0; i < selectedEdges.size(); i++ ) {
+			fill(color(0));
 			selectedEdges.get(i).render();
 			/*
 			if (selectedEdges.get(i).start != null) {
@@ -267,6 +280,9 @@ class LayeredGraphView extends View {
 				selected.add(selectedEdges.get(i).end.id);
 			}
 			*/
+		}
+		for ( i = 0; i < edgesToDraw.size(); i++ ) {
+			edgesToDraw.get(i).render();
 		}
 
 		// render polygons to draw
