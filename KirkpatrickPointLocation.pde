@@ -197,7 +197,8 @@ void draw() {
 					kpView.setMesh(kpDataStruct,
 							pcreateView.polygon,
 							pcreateView.outerTri);
-					graphView.setMesh(kpDataStruct, pcreateView.polygon);
+					graphView.setMesh(kpDataStruct,
+							pcreateView.polygon);
 				}
 
 				pcreateView.visible = false;

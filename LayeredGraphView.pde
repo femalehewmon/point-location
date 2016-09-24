@@ -1,6 +1,7 @@
 class LayeredGraphView extends View {
 
 	LayeredMesh mesh;
+	Polygon polygon;
 
 	int layerToDraw;
 	int subLayerToDraw;
@@ -38,12 +39,13 @@ class LayeredGraphView extends View {
 		this.polygonsToDraw = new ArrayList<Integer>();
 	}
 
-	public void setMesh( LayeredMesh mesh ) {
+	public void setMesh( LayeredMesh mesh, Polygon polygon ) {
 		if ( this.mesh != null ) {
 			this.mesh.clear();
 		}
 
 		this.mesh = mesh.copy();
+		this.polygon = polygon;
 		// must be called after mesh is set so yDiv can be calculated
 		reset();
 	}
@@ -134,6 +136,8 @@ class LayeredGraphView extends View {
 	public void addRootPolygon() {
 		Polygon root =
 			mesh.getVisiblePolygonsByLayer(mesh.layers.size() - 1).get(0);
+		PolyPoint polyCenter = polygon.getCenter();
+		root.move( polyCenter.x, polyCenter.y );
 		currPosition[0] = this.x1 + (w / 2.0);
 		currPosition[1] -= yDiv;
 		currScale = Math.min(xDiv / root.getWidth(), yDiv / root.getHeight());
