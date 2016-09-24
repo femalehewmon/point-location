@@ -5,6 +5,7 @@ final boolean DEBUG = false;
 boolean animationPaused;
 boolean animationReset;
 ArrayList<Integer> animatingPolygons;
+boolean firstRun;
 
 // Helper global classes
 SceneController sceneControl;
@@ -64,6 +65,7 @@ void setup() {
 
 	animationPaused = false;
 	animationReset = false;
+	firstRun = true;
 }
 
 void setText(String text) {
@@ -106,6 +108,7 @@ void replayAnimation() {
 	sceneControl.restart();
 	showReplayControls(false);
 	animationReset = true;
+	firstRun = false;
 }
 
 void showReplayControls(boolean show) {
@@ -186,14 +189,16 @@ void draw() {
 				showPlaybackButton(false);
 				pauseAnimation(true);
 
-				// create kirkpatrick data structure
-				LayeredMesh kpDataStruct =
-					compGeoHelper.createKirkpatrickDataStructure(
-							pcreateView.polygon, pcreateView.outerTri);
-				kpView.setMesh(kpDataStruct,
-						pcreateView.polygon,
-						pcreateView.outerTri);
-				graphView.setMesh(kpDataStruct, pcreateView.polygon);
+				if ( firstRun ) {
+					// create kirkpatrick data structure
+					LayeredMesh kpDataStruct =
+						compGeoHelper.createKirkpatrickDataStructure(
+								pcreateView.polygon, pcreateView.outerTri);
+					kpView.setMesh(kpDataStruct,
+							pcreateView.polygon,
+							pcreateView.outerTri);
+					graphView.setMesh(kpDataStruct, pcreateView.polygon);
+				}
 
 				pcreateView.visible = false;
 				kpView.visible = true;
